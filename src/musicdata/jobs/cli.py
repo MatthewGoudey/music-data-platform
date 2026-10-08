@@ -79,13 +79,21 @@ def ingest(
 
 @app.command()
 def resolve(
-    limit: int = typer.Option(500, help="Max MusicBrainz lookups this run (1 req/s)."),
+    limit: int = typer.Option(500, help="Max mapped release groups this run (1 req/s each)."),
+    unmapped_limit: int = typer.Option(100, help="Max unmapped release groups this run."),
+    min_listens: int = typer.Option(3, help="Skip unmapped groups with fewer listens."),
 ) -> None:
     """Fetch MusicBrainz metadata and canonical tracklists, most-listened groups first."""
     from musicdata.jobs import runs
     from musicdata.resolve.job import resolve as resolve_job
 
-    raise typer.Exit(runs.run("resolve", resolve_job(limit=limit), trigger=_trigger()))
+    raise typer.Exit(
+        runs.run(
+            "resolve",
+            resolve_job(limit=limit, unmapped_limit=unmapped_limit, min_listens=min_listens),
+            trigger=_trigger(),
+        )
+    )
 
 
 @app.command()

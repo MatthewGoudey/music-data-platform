@@ -1,8 +1,9 @@
-"""The resolve job: mapped release groups → MusicBrainz metadata and canonical tracklists.
+"""The resolve job: release groups → MusicBrainz metadata and canonical tracklists.
 
 Most-listened groups go first, so a partial pass (`--limit`) covers the albums that
 matter. Each group is one MusicBrainz request and one transaction. A group MusicBrainz
-cannot answer is stored as `unresolved` and retried after RETRY_AFTER.
+cannot answer is stored as `unresolved` and retried after RETRY_AFTER. After the mapped
+groups, the unmapped tail is settled by tracklist overlap (resolve/unmapped.py).
 """
 
 from __future__ import annotations
@@ -117,7 +118,7 @@ async def write_unresolved(conn: asyncpg.Connection, rg_id: int, note: str) -> N
     )
 
 
-def resolve(*, limit: int) -> JobFn:
+def resolve(*, limit: int, unmapped_limit: int = 100, min_listens: int = 3) -> JobFn:
     async def _run(ctx: RunContext) -> None:
         settings = get_settings()
         async with connection(ctx.pool) as conn:
@@ -150,6 +151,11 @@ def resolve(*, limit: int) -> JobFn:
                         "resolve progress",
                         extra={"done": i, "of": len(todo), "unresolved": unresolved},
                     )
+            from musicdata.resolve.unmapped import resolve_unmapped
+
+            tail = await resolve_unmapped(
+                ctx.pool, mb, limit=unmapped_limit, min_listens=min_listens
+            )
             requests = mb.requests
         async with connection(ctx.pool) as conn:
             remaining = await conn.fetchval(f"SELECT count(*) {PENDING}")
@@ -160,6 +166,7 @@ def resolve(*, limit: int) -> JobFn:
             unresolved=unresolved,
             musicbrainz_requests=requests,
             remaining=remaining,
+            unmapped=tail,
         )
 
     return _run

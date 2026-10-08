@@ -21,6 +21,11 @@ BROWSE_LIMIT = 100
 MAX_RELEASES = 300  # Beatles-sized groups: the canonical release is among the first pages
 
 
+def _lucene(text: str) -> str:
+    """Escape a phrase for a quoted Lucene term."""
+    return text.replace("\\", "\\\\").replace('"', '\\"')
+
+
 class NotFoundError(Exception):
     """The MBID is gone from MusicBrainz (merged or deleted)."""
 
@@ -80,6 +85,17 @@ class MusicBrainzClient:
             r.raise_for_status()
             return r.json()
         raise RuntimeError("unreachable")
+
+    async def search_release_groups(
+        self, title: str, *, artist_name: str, artist_mbid: str | None = None, limit: int = 5
+    ) -> list[dict]:
+        """Release groups matching a title by an artist, best score first."""
+        artist = f"arid:{artist_mbid}" if artist_mbid else f'artist:"{_lucene(artist_name)}"'
+        body = await self._get(
+            "/release-group",
+            {"query": f'releasegroup:"{_lucene(title)}" AND {artist}', "limit": limit},
+        )
+        return body.get("release-groups", [])
 
     async def releases_of_group(self, release_group_mbid: str) -> list[dict]:
         """Every release in the group with media, tracks, artist credit and group metadata."""
