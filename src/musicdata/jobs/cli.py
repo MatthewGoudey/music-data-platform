@@ -87,6 +87,9 @@ def resolve(
     limit: int = typer.Option(500, help="Max mapped release groups this run (1 req/s each)."),
     unmapped_limit: int = typer.Option(100, help="Max unmapped release groups this run."),
     min_listens: int = typer.Option(3, help="Skip unmapped groups with fewer listens."),
+    retry_unresolved: bool = typer.Option(
+        False, "--retry-unresolved", help="Retry unmapped groups marked unresolved now."
+    ),
 ) -> None:
     """Fetch MusicBrainz metadata and canonical tracklists, most-listened groups first."""
     from musicdata.jobs import runs
@@ -95,7 +98,12 @@ def resolve(
     raise typer.Exit(
         runs.run(
             "resolve",
-            resolve_job(limit=limit, unmapped_limit=unmapped_limit, min_listens=min_listens),
+            resolve_job(
+                limit=limit,
+                unmapped_limit=unmapped_limit,
+                min_listens=min_listens,
+                retry_unresolved=retry_unresolved,
+            ),
             trigger=_trigger(),
         )
     )

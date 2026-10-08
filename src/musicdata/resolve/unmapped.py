@@ -5,7 +5,11 @@ For each unmapped group with enough listens (most-listened first):
 1. Mapped groups of the same artist and key already in the database are the candidates
    (no request needed). This is the case ingest leaves apart on purpose.
 2. Otherwise MusicBrainz search supplies up to three candidates whose title has the same key.
+   A title that finds nothing is searched again cut before its edition words
+   ("DAMN. COLLECTORS EDITION." → "DAMN. COLLECTORS" → "DAMN."), since an edition is
+   a release inside the group, not a group of its own.
 3. The candidate whose tracklist shares the most titles with what was actually played wins.
+   Titles match exactly or nearly ("luv sic pt3" ~ "luv sic part 3") with equal numbers.
    A tie, or no overlap at all, is recorded as unresolved with the reason, for review.
 
 A winner already in the database absorbs the unmapped group (listens and aliases move,
@@ -14,25 +18,59 @@ the unmapped row goes). A winner not yet in the database gives the unmapped row 
 
 from __future__ import annotations
 
+import re
 from collections.abc import Hashable
+from difflib import SequenceMatcher
 
 import asyncpg
 
 from musicdata.clients.musicbrainz import MusicBrainzClient, NotFoundError
 from musicdata.db import connection
-from musicdata.identity import album_key
+from musicdata.identity import album_key, has_edition_marker, strip_edition_markers
 from musicdata.resolve.canonical import Resolution, resolve_group
 from musicdata.resolve.job import RETRY_AFTER, write_resolution, write_unresolved
 
 MIN_SCORE = 90
 MAX_CANDIDATES = 3
+NEAR = 0.85
+_DIGITS = re.compile(r"\d+")
+
+
+def titles_match(a: str, b: str) -> bool:
+    """Equal, or nearly equal with the same numbers ("pt3" ~ "part 3", never "1" ~ "2")."""
+    if a == b:
+        return True
+    if _DIGITS.findall(a) != _DIGITS.findall(b) or min(len(a), len(b)) < 4:
+        return False
+    return SequenceMatcher(None, a, b).ratio() >= NEAR
+
+
+def _shared(listened: set[str], titles: set[str]) -> int:
+    return sum(1 for t in listened if t in titles or any(titles_match(t, x) for x in titles))
+
+
+def search_titles(title: str) -> list[str]:
+    """The title, then shorter forms without its edition words: at most three searches."""
+    out = [title]
+    stripped = strip_edition_markers(title)
+    if stripped and stripped != title:
+        out.append(stripped)
+    words = stripped.split()
+    first = next((i for i, w in enumerate(words) if has_edition_marker(w)), None)
+    if first:
+        out.append(" ".join(words[:first]))
+        if first > 1:
+            out.append(" ".join(words[: first - 1]))
+    return out[:3]
 
 
 def pick_by_overlap[K: Hashable](
     listened: set[str], candidates: dict[K, set[str]]
 ) -> tuple[K | None, str]:
     """The candidate sharing the most track titles with `listened`, or None and why."""
-    scores = {k: len(listened & titles) for k, titles in candidates.items()}
+    if not candidates:
+        return None, "no MusicBrainz search hit with this title and artist"
+    scores = {k: _shared(listened, titles) for k, titles in candidates.items()}
     best = max(scores.values(), default=0)
     if best == 0:
         return None, "no MusicBrainz candidate shares a track title with the listens"
@@ -68,7 +106,8 @@ PENDING_UNMAPPED = f"""
     LEFT JOIN release_group_tracklist t USING (release_group_id)
    WHERE rg.mbid IS NULL
      AND (t.release_group_id IS NULL
-          OR (t.source = 'unresolved' AND t.resolved_at < now() - interval '{RETRY_AFTER}'))
+          OR (t.source = 'unresolved'
+              AND ($4::bool OR t.resolved_at < now() - interval '{RETRY_AFTER}')))
      AND ($3::int[] IS NULL OR rg.release_group_id = ANY($3::int[]))
    GROUP BY rg.release_group_id, a.name, a.mbid
   HAVING count(*) >= $1
@@ -86,6 +125,7 @@ async def resolve_unmapped(
     limit: int,
     min_listens: int,
     release_group_ids: list[int] | None = None,
+    retry_unresolved: bool = False,
 ) -> dict[str, int]:
     counts = {"merged": 0, "mapped": 0, "unresolved": 0, "waiting": 0}
     async with connection(pool) as conn:
@@ -98,6 +138,7 @@ async def resolve_unmapped(
             min_listens,
             limit,
             release_group_ids,
+            retry_unresolved,
         )
     for row in todo:
         rg_id = row["release_group_id"]
@@ -140,19 +181,22 @@ async def resolve_unmapped(
 
         found: dict[str, Resolution] = {}
         try:
-            hits = await mb.search_release_groups(
-                row["title"], artist_name=row["artist_name"], artist_mbid=row["artist_mbid"]
-            )
-            for hit in hits:
-                if len(found) == MAX_CANDIDATES:
+            for title in search_titles(row["title"]):
+                hits = await mb.search_release_groups(
+                    title, artist_name=row["artist_name"], artist_mbid=row["artist_mbid"]
+                )
+                for hit in hits:
+                    if len(found) == MAX_CANDIDATES:
+                        break
+                    if int(hit.get("score", 0)) < MIN_SCORE:
+                        continue
+                    if album_key(hit.get("title", "")) != album_key(title):
+                        continue
+                    res = resolve_group(await mb.releases_of_group(hit["id"]))
+                    if res is not None:
+                        found[hit["id"]] = res
+                if found:
                     break
-                if int(hit.get("score", 0)) < MIN_SCORE:
-                    continue
-                if album_key(hit.get("title", "")) != row["norm_key"]:
-                    continue
-                res = resolve_group(await mb.releases_of_group(hit["id"]))
-                if res is not None:
-                    found[hit["id"]] = res
         except NotFoundError:
             pass
         winner, why = pick_by_overlap(

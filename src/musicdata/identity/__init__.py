@@ -12,6 +12,7 @@ from musicdata.identity.normalize import (
     norm_key,
     primary_artist,
     split_featured,
+    strip_edition_markers,
     title_key,
 )
 
@@ -21,5 +22,6 @@ __all__ = [
     "norm_key",
     "primary_artist",
     "split_featured",
+    "strip_edition_markers",
     "title_key",
 ]

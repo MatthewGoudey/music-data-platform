@@ -25,3 +25,36 @@ def test_no_overlap_goes_to_review() -> None:
 
 def test_no_candidates_goes_to_review() -> None:
     assert pick_by_overlap({"x"}, {})[0] is None
+
+
+def test_near_titles_with_equal_numbers_match() -> None:
+    from musicdata.resolve.unmapped import titles_match
+
+    assert titles_match("luv sic pt3", "luv sic part 3")
+    assert titles_match("feather", "feather")
+    assert not titles_match("song part 1", "song part 2")
+    assert not titles_match("intro", "outro")
+    assert not titles_match("abc", "abd")
+
+
+def test_a_near_title_counts_as_overlap() -> None:
+    winner, _ = pick_by_overlap({"luv sic pt3"}, {"modal soul": {"feather", "luv sic part 3"}})
+    assert winner == "modal soul"
+
+
+def test_no_candidates_says_so() -> None:
+    _, why = pick_by_overlap({"x"}, {})
+    assert why.startswith("no MusicBrainz search hit")
+
+
+def test_edition_titles_are_searched_again_without_the_edition() -> None:
+    from musicdata.resolve.unmapped import search_titles
+
+    assert search_titles("DAMN. COLLECTORS EDITION.") == [
+        "DAMN. COLLECTORS EDITION.",
+        "DAMN. COLLECTORS",
+        "DAMN.",
+    ]
+    assert search_titles("Rumours (Super Deluxe)") == ["Rumours (Super Deluxe)", "Rumours"]
+    assert search_titles("Modal Soul") == ["Modal Soul"]
+    assert search_titles("Deluxe") == ["Deluxe"]  # an edition word alone is the title

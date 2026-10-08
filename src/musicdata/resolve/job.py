@@ -118,7 +118,13 @@ async def write_unresolved(conn: asyncpg.Connection, rg_id: int, note: str) -> N
     )
 
 
-def resolve(*, limit: int, unmapped_limit: int = 100, min_listens: int = 3) -> JobFn:
+def resolve(
+    *,
+    limit: int,
+    unmapped_limit: int = 100,
+    min_listens: int = 3,
+    retry_unresolved: bool = False,
+) -> JobFn:
     async def _run(ctx: RunContext) -> None:
         settings = get_settings()
         async with connection(ctx.pool) as conn:
@@ -154,7 +160,11 @@ def resolve(*, limit: int, unmapped_limit: int = 100, min_listens: int = 3) -> J
             from musicdata.resolve.unmapped import resolve_unmapped
 
             tail = await resolve_unmapped(
-                ctx.pool, mb, limit=unmapped_limit, min_listens=min_listens
+                ctx.pool,
+                mb,
+                limit=unmapped_limit,
+                min_listens=min_listens,
+                retry_unresolved=retry_unresolved,
             )
             requests = mb.requests
         async with connection(ctx.pool) as conn:

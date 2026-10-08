@@ -118,6 +118,12 @@ def _strip_editions(title: str) -> str:
     return _TRAILING_EDITION.sub("", s)
 
 
+def strip_edition_markers(title: str) -> str:
+    """The raw title without bracketed or dash-suffixed edition markers, for searching
+    ("Rumours (Super Deluxe)" → "Rumours"). Keys use the same stripping."""
+    return _strip_editions(title).strip()
+
+
 def album_key(title: str) -> str:
     """The album key: edition markers stripped, 'EP' kept."""
     if title is None:
