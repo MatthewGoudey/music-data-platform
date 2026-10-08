@@ -1,4 +1,4 @@
-"""The derive job: album sessions (incremental) and the two stat tables (rebuilt).
+"""The derive job: stray tracks moved, album sessions (incremental), the stat tables (rebuilt).
 
 A release group is rebuilt when anything under it changed since the last derive run:
 new listens, a new tracklist, or new metadata (a merge bumps `updated_at`). `full`
@@ -13,6 +13,7 @@ from collections import defaultdict
 import asyncpg
 
 from musicdata.db import connection
+from musicdata.derive.redirects import apply_redirects
 from musicdata.derive.sessions import Play, Session, TrackRef, detect_sessions, eligible
 from musicdata.jobs.runs import JobFn, RunContext
 from musicdata.log import get_logger
@@ -164,6 +165,8 @@ def derive(*, full: bool = False) -> JobFn:
     async def _run(ctx: RunContext) -> None:
         async with connection(ctx.pool) as conn:
             since = None if full else await conn.fetchval(LAST_RUN)
+            # Strays move first; the groups they touch count as changed below.
+            moved = await apply_redirects(conn)
             if since is None:
                 rows = await conn.fetch("SELECT release_group_id FROM release_group")
             else:
@@ -189,6 +192,7 @@ def derive(*, full: bool = False) -> JobFn:
             sessions_written=written,
             sessions_full=totals["full"],
             sessions_partial=totals["partial"],
+            **moved,
         )
 
     return _run
