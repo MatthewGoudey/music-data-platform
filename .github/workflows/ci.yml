@@ -40,5 +40,5 @@ jobs:
       - name: smoke the CLI against the test database
         run: |
           uv run musicdata version
-          uv run musicdata ingest
+          uv run musicdata derive
           uv run musicdata dq
