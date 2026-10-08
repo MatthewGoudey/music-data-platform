@@ -9,7 +9,7 @@ from decimal import Decimal
 import asyncpg
 import pytest
 
-from musicdata.derive.job import _rebuild_chunk
+from musicdata.derive.job import REBUILD_STATS, _rebuild_chunk
 
 pytestmark = pytest.mark.integration
 
@@ -74,6 +74,35 @@ async def test_rebuild_writes_sessions_and_is_repeatable(conn) -> None:
         rg,
     )
     assert [tuple(r) for r in rows] == [("full", 5, Decimal("1")), ("partial", 3, Decimal("0.6"))]
+
+
+async def test_stats_count_a_respelled_recording_once_and_bonus_titles_apart(conn) -> None:
+    artist, rg = await _album(conn)
+    mbid = "00000000-0000-4000-8000-0000000000c1"
+    await conn.execute(
+        "UPDATE release_group_track SET recording_mbid = $2 WHERE release_group_id = $1 "
+        "AND position = 1",
+        rg,
+        mbid,
+    )
+    for n, (title, rec) in enumerate([("song one alt take", mbid), ("bonus x", None)]):
+        await conn.execute(
+            """INSERT INTO listen (listened_at, artist_id, release_group_id, track_name,
+                                   norm_title, artist_name, recording_mbid)
+               VALUES (to_timestamp(947000000 + $1), $2, $3, $4, $4, 'Zz Derive', $5)""",
+            n,
+            artist,
+            rg,
+            title,
+            rec,
+        )
+    await conn.execute(REBUILD_STATS)
+    row = await conn.fetchrow(
+        "SELECT distinct_tracks, tracks_heard, track_count FROM release_group_stat "
+        "WHERE release_group_id = $1",
+        rg,
+    )
+    assert dict(row) == {"distinct_tracks": 6, "tracks_heard": 5, "track_count": 5}
 
 
 async def test_singles_get_no_sessions_and_lose_old_ones(conn) -> None:

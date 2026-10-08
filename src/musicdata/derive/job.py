@@ -44,6 +44,14 @@ REBUILD_STATS = """
             ON t.release_group_id = l.release_group_id
            AND (t.recording_mbid = l.recording_mbid OR t.norm_title = l.norm_title)
          GROUP BY l.release_group_id
+    ), bonus AS (  -- titles played that match no track of the standard tracklist
+        SELECT l.release_group_id, count(DISTINCT l.norm_title) AS titles
+          FROM listen l
+         WHERE NOT EXISTS (SELECT 1 FROM release_group_track t
+                            WHERE t.release_group_id = l.release_group_id
+                              AND (t.recording_mbid = l.recording_mbid
+                                   OR t.norm_title = l.norm_title))
+         GROUP BY l.release_group_id
     ), sess AS (
         SELECT release_group_id,
                max(completion)                                    AS best_completion,
@@ -53,7 +61,12 @@ REBUILD_STATS = """
           FROM album_session GROUP BY release_group_id
     )
     SELECT l.release_group_id,
-           count(*), count(DISTINCT l.norm_title),
+           count(*),
+           -- With a tracklist, a track is a position heard or a distinct bonus title, so
+           -- one recording under two spellings counts once; without one, distinct titles.
+           CASE WHEN tl.track_count IS NOT NULL
+                THEN coalesce(h.tracks_heard, 0) + coalesce(b.titles, 0)
+                ELSE count(DISTINCT l.norm_title) END,
            CASE WHEN tl.track_count IS NOT NULL THEN coalesce(h.tracks_heard, 0) END,
            tl.track_count,
            s.best_completion,
@@ -64,9 +77,10 @@ REBUILD_STATS = """
       LEFT JOIN release_group_tracklist tl
              ON tl.release_group_id = l.release_group_id AND tl.source <> 'unresolved'
       LEFT JOIN heard h ON h.release_group_id = l.release_group_id
+      LEFT JOIN bonus b ON b.release_group_id = l.release_group_id
       LEFT JOIN sess s ON s.release_group_id = l.release_group_id
      WHERE l.release_group_id IS NOT NULL
-     GROUP BY l.release_group_id, tl.track_count, h.tracks_heard, s.best_completion,
+     GROUP BY l.release_group_id, tl.track_count, h.tracks_heard, b.titles, s.best_completion,
               s.full_sessions, s.partial_sessions, s.last_full_session_at;
 
     INSERT INTO artist_stat
