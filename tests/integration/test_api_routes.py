@@ -73,7 +73,25 @@ def test_query_reads_caps_rows_and_refuses_writes(client) -> None:
     assert two.status_code == 400
 
 
-def test_queue_page_needs_its_own_token(client) -> None:
+def test_catch_up_is_rate_limited_and_needs_the_token(client, monkeypatch) -> None:
+    from musicdata.api.routers import ingest
+
+    async def _no_jobs() -> None:
+        return None
+
+    monkeypatch.setattr(ingest, "_catch_up", _no_jobs)
+    assert client.post("/ingest/catch-up").status_code == 401
+    r = client.post("/ingest/catch-up", headers=AUTH)
+    assert r.status_code == 202 and "started" in r.json()
+
+
+def test_queue_page_needs_its_own_token(client, monkeypatch) -> None:
+    from musicdata.api.routers import ingest
+
+    async def _no_catch_up(pool) -> bool:
+        return False
+
+    monkeypatch.setattr(ingest, "start_catch_up", _no_catch_up)
     assert client.get("/queue").status_code == 401
     assert client.get("/queue?t=wrong").status_code == 401
     page = client.get("/queue?t=page-token")

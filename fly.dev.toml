@@ -9,6 +9,8 @@ primary_region = "ord"
 
 [env]
   MUSICDATA_ENV = "dev"
+  LISTENBRAINZ_USER = "MatthewG606"
+  MUSICBRAINZ_USER_AGENT = "musicdata/0.1 (https://github.com/MatthewGoudey/music-data-platform)"
   PORT = "8000"
 
 [http_service]

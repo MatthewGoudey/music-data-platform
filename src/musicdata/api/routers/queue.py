@@ -118,8 +118,12 @@ CARD = """<form class="card" method="post" action="/queue/verdict?t={token}">
 
 @router.get("/queue", response_class=HTMLResponse)
 async def queue_page(request: Request, pool: Pool, t: Annotated[str, Query()] = ""):
-    """Recent sessions without a verdict, newest first, with the verdict form."""
+    """Recent sessions without a verdict, newest first, with the verdict form.
+    Opening the page also starts a rate-limited catch-up ingest."""
     _check_page_token(request, t)
+    from musicdata.api.routers.ingest import start_catch_up
+
+    await start_catch_up(pool)
     async with connection(pool) as conn:
         rows = await conn.fetch(
             f"""SELECT DISTINCT ON (s.release_group_id)
