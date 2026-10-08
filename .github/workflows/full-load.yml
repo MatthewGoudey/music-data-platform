@@ -1,0 +1,114 @@
+name: full-load
+
+# Load an environment from nothing: the whole ListenBrainz history, the MusicBrainz pass
+# (two jobs, each under the 6-hour limit), sessions and stats, then the acceptance
+# checks. Each job needs the one before, so nothing has to watch from a laptop.
+# Prod runs the latest v* tag; dev runs main. Every step resumes where a failed run
+# stopped, so re-running the workflow is always safe. Environment secrets only resolve
+# in a job that names its environment, so each job carries its own env block.
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        description: "dev or prod"
+        required: true
+        default: "dev"
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    environment: ${{ github.event.inputs.env }}
+    env:
+      MUSICDATA_ENV: ${{ github.event.inputs.env }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      LISTENBRAINZ_USER: ${{ vars.LISTENBRAINZ_USER }}
+      MUSICBRAINZ_USER_AGENT: ${{ vars.MUSICBRAINZ_USER_AGENT }}
+      LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/musicdata
+        with: { env: "${{ github.event.inputs.env }}", args: "ingest --full" }
+
+  resolve-mapped:
+    needs: ingest
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    environment: ${{ github.event.inputs.env }}
+    env:
+      MUSICDATA_ENV: ${{ github.event.inputs.env }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      LISTENBRAINZ_USER: ${{ vars.LISTENBRAINZ_USER }}
+      MUSICBRAINZ_USER_AGENT: ${{ vars.MUSICBRAINZ_USER_AGENT }}
+      LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/musicdata
+        with: { env: "${{ github.event.inputs.env }}", args: "resolve --limit 9000 --unmapped-limit 0" }
+
+  resolve-rest:
+    needs: resolve-mapped
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    environment: ${{ github.event.inputs.env }}
+    env:
+      MUSICDATA_ENV: ${{ github.event.inputs.env }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      LISTENBRAINZ_USER: ${{ vars.LISTENBRAINZ_USER }}
+      MUSICBRAINZ_USER_AGENT: ${{ vars.MUSICBRAINZ_USER_AGENT }}
+      LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/musicdata
+        with:
+          env: "${{ github.event.inputs.env }}"
+          args: "resolve --limit 9000 --unmapped-limit 3000 --min-listens 3"
+
+  derive:
+    needs: resolve-rest
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: ${{ github.event.inputs.env }}
+    env:
+      MUSICDATA_ENV: ${{ github.event.inputs.env }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      LISTENBRAINZ_USER: ${{ vars.LISTENBRAINZ_USER }}
+      MUSICBRAINZ_USER_AGENT: ${{ vars.MUSICBRAINZ_USER_AGENT }}
+      LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/musicdata
+        with: { env: "${{ github.event.inputs.env }}", args: "derive --full" }
+
+  dq:
+    needs: derive
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: ${{ github.event.inputs.env }}
+    env:
+      MUSICDATA_ENV: ${{ github.event.inputs.env }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      LISTENBRAINZ_USER: ${{ vars.LISTENBRAINZ_USER }}
+      MUSICBRAINZ_USER_AGENT: ${{ vars.MUSICBRAINZ_USER_AGENT }}
+      LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/musicdata
+        with: { env: "${{ github.event.inputs.env }}", args: "dq" }
+
+  notify:
+    needs: [ingest, resolve-mapped, resolve-rest, derive, dq]
+    if: failure()
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.env }}
+    steps:
+      - name: push to ntfy
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          if [ -n "$NTFY_TOPIC" ]; then
+            curl -fsS -H "Title: musicdata ${{ github.event.inputs.env }} full-load failed" \
+                 -H "Priority: high" \
+                 -d "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+                 "https://ntfy.sh/$NTFY_TOPIC" || true
+          fi

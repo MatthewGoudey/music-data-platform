@@ -1,0 +1,29 @@
+name: musicdata job
+description: Check out the right ref, install, migrate, and run one musicdata command.
+inputs:
+  env:
+    description: dev or prod (prod runs the latest v* tag)
+    required: true
+  args:
+    description: arguments to the musicdata command
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: prod runs the latest v* tag; dev runs main
+      if: inputs.env == 'prod'
+      shell: bash
+      run: |
+        git fetch --tags --quiet
+        tag="$(git tag -l 'v*' --sort=-v:refname | head -n 1)"
+        if [ -z "$tag" ]; then echo "no v* tag yet: prod has nothing to run"; exit 1; fi
+        git checkout --quiet "$tag"
+    - uses: astral-sh/setup-uv@v3
+      with:
+        enable-cache: true
+    - run: uv sync --frozen --no-dev
+      shell: bash
+    - run: uv run alembic upgrade head
+      shell: bash
+    - run: uv run musicdata ${{ inputs.args }}
+      shell: bash
