@@ -117,7 +117,7 @@ The recommended stack runs both environments for about $7–12 a month, leaving 
 | --- | --- | --- | --- |
 | Database | Neon project `musicdata-dev` (Free plan: 1 GB storage, 100 CU-hours) | Neon project `musicdata-prod` (same) | $0 |
 | Scheduled jobs | GitHub Actions, environment `dev`, daily 02:17 America/Chicago | GitHub Actions, environment `prod`, daily 02:47 | $0 (2,000 min/month on a private repo; unlimited on a public one) |
-| API | Fly.io shared-cpu-1x, 256 MB, may scale to zero | Fly.io shared-cpu-2x, 512 MB, always on | ~$2.19 + ~$4.39 = ~$6.58 |
+| API | Fly.io shared-cpu-1x, 256 MB, may scale to zero | Fly.io shared-cpu-1x, 256 MB, scales to zero (ADR 0002 amendment) | usage-based; near $0 while idle (at most ~$2.19 each if always running) |
 | Secrets | GitHub Environment secrets + `fly secrets`, per environment | same | $0 |
 | Alerts | Actions failure email + an ntfy.sh push topic | same | $0 |
 | Old system during overlap | — | Old Neon project + Render free API, until Phase 2 promotes | $0–5 (check the Neon billing page; Render free is $0) |
