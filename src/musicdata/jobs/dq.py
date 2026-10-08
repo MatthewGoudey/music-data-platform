@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from decimal import Decimal
 
 import asyncpg
 
@@ -165,7 +166,7 @@ async def run_checks(conn: asyncpg.Connection, run_id: int | None) -> list[dict[
             run_id,
             check.name,
             passed,
-            observed,
+            None if observed is None else Decimal(str(observed)),  # 0.2, not 0.2000…0111
             check.threshold,
             json.dumps(details, default=str),
         )
