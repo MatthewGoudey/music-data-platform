@@ -67,6 +67,23 @@
     ["7th or St. Tammany", "7th or st tammany"],
     ["", ""]
   ],
+  "title_key": [
+    ["Starálfur", "staralfur"],
+    ["Heroes - 2017 Remaster", "heroes"],
+    ["Wonderwall (Remastered)", "wonderwall"],
+    ["Here Comes the Sun - Remastered 2009", "here comes the sun"],
+    ["Here Comes the Sun - 2019 Mix", "here comes the sun 2019 mix"],
+    ["Love Will Tear Us Apart - Live", "love will tear us apart live"],
+    ["Kiss Me More (feat. SZA)", "kiss me more"],
+    ["All the Stars (with SZA)", "all the stars with sza"],
+    ["The Times They Are A-Changin'", "times they are a changin"],
+    ["Hey Ya!", "hey ya"],
+    ["Mono", "mono"],
+    ["Doo Wop (That Thing)", "doo wop that thing"],
+    ["Señorita", "senorita"],
+    ["夜に駆ける", "夜に駆ける"],
+    ["!!!", "!!!"]
+  ],
   "split_featured": [
     ["Kendrick Lamar feat. SZA", ["Kendrick Lamar", ["SZA"]]],
     ["Kendrick Lamar (feat. SZA & Baby Keem)", ["Kendrick Lamar", ["SZA", "Baby Keem"]]],

@@ -22,6 +22,11 @@ album_key(title): the same pipeline, after stripping edition markers:
     mono, stereo, explicit, clean, complete, legacy) is removed;
   - a trailing " - <...> edition/version/remaster/deluxe" suffix is removed;
   - "EP" is deliberately kept: "Lately EP" and "Lately" are different keys.
+
+title_key(title): the key for a track title, used when a listen has no recording MBID.
+  The same edition stripping as album_key ("Heroes - 2017 Remaster" → heroes), then
+  the featured-artist cut as in norm_key ("Kiss Me More (feat. SZA)" → kiss me more).
+  "with X" stays: it is often part of the official title.
 """
 
 from __future__ import annotations
@@ -108,14 +113,23 @@ def norm_key(name: str) -> str:
     return _key(name, cut_featured=True)
 
 
+def _strip_editions(title: str) -> str:
+    s = _BRACKET_EDITION.sub("", str(title))
+    return _TRAILING_EDITION.sub("", s)
+
+
 def album_key(title: str) -> str:
     """The album key: edition markers stripped, 'EP' kept."""
     if title is None:
         return ""
-    s = str(title)
-    s = _BRACKET_EDITION.sub("", s)
-    s = _TRAILING_EDITION.sub("", s)
-    return _key(s, cut_featured=False)
+    return _key(_strip_editions(title), cut_featured=False)
+
+
+def title_key(title: str) -> str:
+    """The track-title key: edition markers stripped, featured artists cut."""
+    if title is None:
+        return ""
+    return _key(_strip_editions(title), cut_featured=True)
 
 
 def split_featured(name: str) -> tuple[str, list[str]]:

@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from musicdata.identity import album_key, norm_key, split_featured
+from musicdata.identity import album_key, norm_key, split_featured, title_key
 
 GOLDEN = json.loads((Path(__file__).parent / "golden" / "normalize.json").read_text("utf-8"))
 
@@ -24,6 +24,11 @@ def test_norm_key(raw: str, expected: str) -> None:
 @pytest.mark.parametrize(("raw", "expected"), GOLDEN["album_key"], ids=lambda v: repr(v)[:40])
 def test_album_key(raw: str, expected: str) -> None:
     assert album_key(raw) == expected
+
+
+@pytest.mark.parametrize(("raw", "expected"), GOLDEN["title_key"], ids=lambda v: repr(v)[:40])
+def test_title_key(raw: str, expected: str) -> None:
+    assert title_key(raw) == expected
 
 
 @pytest.mark.parametrize(("raw", "expected"), GOLDEN["split_featured"], ids=lambda v: repr(v)[:40])
