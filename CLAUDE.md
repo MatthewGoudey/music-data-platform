@@ -40,15 +40,27 @@ Read first: `docs/REDESIGN_PLAN.md` (sections "What this is for", "Data model", 
   No Docker: integration tests run against Neon dev with `--env dev` or `DATABASE_URL` set (ADR 0005).
 - Run any job against an environment from the laptop: `uv run musicdata --env dev --plain-logs <job>`.
 
-## Current state (2026-10-08)
-Phase 1 is complete: `v0.1.0` runs in dev and prod, the scheduled sync runs, a forced failure
-reaches ntfy and email, and do312 is reachable from GitHub runners (ADR 0006). Phase 1 fixes
-that diverged from the plan: README.md copied into the image, an ntfy step in `backfill.yml`,
-prod scales to zero.
+## Current state (2026-10-08, Phase 2 in progress)
+Phase 1 is complete (`v0.1.0` in dev and prod). Phase 2 code for Blocks A–F is on `main`
+and deployed to dev: identity schema (ADR 0015), ListenBrainz ingest, MusicBrainz resolve
+(mapped groups plus the unmapped tail by tracklist overlap), sessions and stats, nine
+acceptance checks, and the API (listens, artists, albums, sessions, `/query`, `/queue`,
+`/ingest/catch-up`). Dev holds the full history: 245,707 listens, equal to ListenBrainz.
+The first MusicBrainz pass on dev runs as `backfill` chunks (about 5 hours), then derive
+and dq. Prod still runs `v0.1.0` until the gate tags `v0.2.0`.
 
-Matt's open Phase 0 items (they gate retiring the old system, not Phase 2 work): disable the
-old Task Scheduler task, rotate the old Neon password and Render `API_SECRET`, export the seed
-CSVs from the old database (see "Next seven days" in the plan).
+Open items that need Matt:
+- Approve creating a read-only Postgres role (`musicdata_ro`, `pg_read_all_data`) for
+  `/query`; until then `/query` relies on a READ ONLY transaction, a 10 s timeout and a row cap.
+- Paste `docs/claude-project-instructions.md` into the claude.ai Project (gate step 19).
+- Phase 0: disable the old Task Scheduler task, rotate the old Neon password and Render
+  `API_SECRET`, export the seed CSVs (`seeds/manual_tracklists.csv` feeds resolve).
+
+Notes for the next session:
+- `daily-sync` commits `docs/status/heartbeat.txt` monthly; run `git pull` before pushing.
+- ListenBrainz drops large pages deep in the history; the client shrinks the page size,
+  and `ingest --full` resumes below the oldest stored listen.
+- Integration tests run against Neon dev; they use made-up MBIDs and clean up their rows.
 
 ## Phase 2 checklist — listening core; complete in order, report after each block
 Gate: the acceptance suite is green in dev, the dev listen count is within 0.5% of
