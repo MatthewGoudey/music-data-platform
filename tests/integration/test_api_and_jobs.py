@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
 
+import asyncpg
 import pytest
 from fastapi.testclient import TestClient
 from typer.testing import CliRunner
@@ -14,13 +16,35 @@ from musicdata.jobs.cli import app as cli
 pytestmark = pytest.mark.integration
 
 
+async def _max_run_id() -> int:
+    conn = await asyncpg.connect(os.environ["DATABASE_URL"])
+    try:
+        return await conn.fetchval("SELECT coalesce(max(id), 0) FROM pipeline_run")
+    finally:
+        await conn.close()
+
+
+async def _delete_runs_after(run_id: int) -> None:
+    conn = await asyncpg.connect(os.environ["DATABASE_URL"])
+    try:
+        # Only the rows this process wrote: cloud jobs run as dev or prod, tests as local/test.
+        await conn.execute(
+            "DELETE FROM pipeline_run WHERE id > $1 AND env IN ('local', 'test')", run_id
+        )
+    finally:
+        await conn.close()
+
+
 @pytest.fixture(autouse=True)
 def _token(monkeypatch):
+    """A test token, and no pipeline_run rows left behind (dev's /ops/status stays honest)."""
     monkeypatch.setenv("API_TOKEN", "test-token")
     from musicdata.config import get_settings
 
     get_settings.cache_clear()
+    before = asyncio.run(_max_run_id())
     yield
+    asyncio.run(_delete_runs_after(before))
     get_settings.cache_clear()
 
 
