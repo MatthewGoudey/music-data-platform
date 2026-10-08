@@ -24,63 +24,68 @@ Read first: `docs/REDESIGN_PLAN.md` (sections "What this is for", "Data model", 
 - Always write small commits whose message says why; always end a block with a short report.
 - Always use positive, active phrasing in any prompt, README or doc written for AI ingestion.
 
-## Current state (2026-10-07)
-Phase 1 scaffold committed on `main` (`26f9146`): identity normalizer with golden file, five
-no-op jobs that record `pipeline_run`, FastAPI `/health` and `/ops/status`, Alembic migration
-0001, Dockerfile, compose, Fly configs, workflows, 14 ADRs. In the authoring environment:
-migrations apply, 77 tests pass, `musicdata dq --fail` exits 1 and shows `healthy: false`.
+## Environments (live since 2026-10-08)
+| | dev | prod |
+| --- | --- | --- |
+| API | https://musicdata-dev.fly.dev (`fly.dev.toml`) | https://musicdata-prod.fly.dev (`fly.prod.toml`) |
+| Database | Neon `musicdata-dev`, pooled URL in `.env.dev` | Neon `musicdata-prod`, pooled URL in `.env.prod` |
+| Deploys | every push to `main` | every `v*` tag |
+| Daily sync | `daily-sync.yml` runs `main` | `daily-sync.yml` runs the latest `v*` tag |
 
-Local state on this laptop: no `.venv` yet, pre-commit hook not installed, the six guarded
-files still sit in `_setup\` (see `_setup\README.md`).
+- GitHub: `MatthewGoudey/music-data-platform` (public), environments `dev` and `prod`.
+- Both Fly apps are `shared-cpu-1x`, 256 MB, and scale to zero (ADR 0002 amendment).
+- `API_TOKEN` and `QUEUE_PAGE_TOKEN` per environment live in `.env.dev` / `.env.prod`.
+- Failure alerts: GitHub email plus an ntfy push to the topic in `NTFY_TOPIC` (`daily-sync` and `backfill`).
+- Laptop tools: uv, `gh` (`C:\Program Files\GitHub CLI\gh.exe`), flyctl (`%USERPROFILE%\.fly\bin\flyctl.exe`).
+  No Docker: integration tests run against Neon dev with `--env dev` or `DATABASE_URL` set (ADR 0005).
+- Run any job against an environment from the laptop: `uv run musicdata --env dev --plain-logs <job>`.
 
-## Phase 1 checklist — complete in order, report after each block
+## Current state (2026-10-08)
+Phase 1 is complete: `v0.1.0` runs in dev and prod, the scheduled sync runs, a forced failure
+reaches ntfy and email, and do312 is reachable from GitHub runners (ADR 0006). Phase 1 fixes
+that diverged from the plan: README.md copied into the image, an ntfy step in `backfill.yml`,
+prod scales to zero.
 
-### Block A — laptop
-1. Move the guarded files into place and remove the leftovers:
-   `Move-Item _setup\.pre-commit-config.yaml .`
-   `New-Item -ItemType Directory -Force .github\workflows | Out-Null`
-   `Move-Item _setup\.github\workflows\*.yml .github\workflows\`
-   `Remove-Item -Recurse -Force _setup`
-   `Remove-Item .github\workflows\_probe.yml`
-2. `uv sync` then `uv run pytest -q` — expect `72 passed, 5 skipped`.
-3. `uv run pre-commit install`, then commit: "Move workflows and pre-commit config into place".
-4. If `docker --version` works: `docker compose up -d db`, `Copy-Item .env.example .env`,
-   `uv run alembic upgrade head`, `uv run pytest -q` (expect `77 passed`),
-   `uv run musicdata --plain-logs ingest` (expect `job ok`),
-   `uv run musicdata --plain-logs dq --fail` (expect exit code 1). Without Docker, skip and
-   note it in `docs/adr/0005-local-database.md` as "Neon dev branch".
+Matt's open Phase 0 items (they gate retiring the old system, not Phase 2 work): disable the
+old Task Scheduler task, rotate the old Neon password and Render `API_SECRET`, export the seed
+CSVs from the old database (see "Next seven days" in the plan).
 
-### Block B — GitHub (needs: repo name and visibility from Matt; ADR 0001 recommends public)
-5. `gh auth status` (run `gh auth login` if needed), then
-   `gh repo create <name> --<public|private> --source . --remote origin --push`.
-6. Create the environments: `gh api -X PUT repos/{owner}/{repo}/environments/dev` and the same for `prod`.
-7. Set variables for both environments: `gh variable set LISTENBRAINZ_USER --env dev --body MatthewG606`
-   and `gh variable set MUSICBRAINZ_USER_AGENT --env dev --body "musicdata/0.1 (https://github.com/<owner>/<repo>)"`.
+## Phase 2 checklist — listening core; complete in order, report after each block
+Gate: the acceptance suite is green in dev, the dev listen count is within 0.5% of
+ListenBrainz `listen-count`, the version is tagged and live in prod, and the old API is retired
+for listening questions.
 
-### Block C — Neon (needs: Matt logged in at console.neon.tech)
-8. Ask Matt to create two Free-plan projects, `musicdata-dev` and `musicdata-prod`, and paste
-   each project's POOLED connection string (contains `-pooler`, keep `sslmode=require`).
-   Alternative he may prefer: `npm i -g neonctl`, `neonctl auth`, `neonctl projects create --name musicdata-dev`.
-9. `gh secret set DATABASE_URL --env dev --body "<dev url>"`; same for prod.
-10. Verify and migrate dev from the laptop once: `$env:DATABASE_URL="<dev url>"; uv run alembic upgrade head; uv run pytest -q` (expect `77 passed`).
+### Block A — identity and listen schema
+1. Migration 0002: `artist`, `artist_alias`, `release_group`, `release_group_alias`.
+2. Migration 0003: `listen` with `artist_id` NOT NULL and UNIQUE (`listened_at`, `artist_id`, `norm_title`).
+3. `title_key` for track titles in `normalize.py`, with golden cases.
+4. Integration tests for the constraints; apply to dev.
 
-### Block D — Fly (needs: Matt logged in via `fly auth login`)
-11. Install flyctl (`winget install -e --id Fly.flyctl` or the PowerShell installer from fly.io/docs), then `fly auth login`.
-12. `fly launch --no-deploy --copy-config --config fly.dev.toml --name musicdata-dev --region ord` and the
-    same for `fly.prod.toml` / `musicdata-prod`. If a name is taken, choose `musicdata-dev-<suffix>` and update `app =` in that toml.
-13. Generate tokens with `uv run python -c "import secrets; print(secrets.token_urlsafe(32))"` (one per value), then
-    `fly secrets set --config fly.dev.toml DATABASE_URL="<dev url>" API_TOKEN="<t1>" QUEUE_PAGE_TOKEN="<t2>"`;
-    same for prod with prod values. Save each environment's `API_TOKEN` in `.env.dev` / `.env.prod` (gitignored) and tell Matt where.
-14. `fly tokens create deploy -x 8760h --config fly.dev.toml` → `gh secret set FLY_API_TOKEN --env dev --body "<token>"`; same for prod.
+### Block B — ListenBrainz ingest
+5. `clients/listenbrainz.py`: page backwards with `max_ts`, honour the `X-RateLimit-*` headers.
+6. `ingest/`: identity assignment at ingest (MBIDs first, `norm_key` fallback, aliases recorded),
+   batched upserts, a 3-day overlap below the watermark so late listens land.
+7. `musicdata ingest` replaces the no-op; `musicdata ingest --full` loads the whole history.
+8. Full load into dev; compare against `listen-count`.
 
-### Block E — alerts (needs: Matt's phone)
-15. Ask Matt to install the ntfy app and subscribe to `musicdata-<random suffix>`; then
-    `gh secret set NTFY_TOPIC --env dev --body "<topic>"` and the same for prod.
+### Block C — resolve
+9. `clients/musicbrainz.py` at 1 request/second with the configured User-Agent.
+10. `resolve/`: release-group metadata (type, secondary types, first year), the canonical
+    release by the edition rule, and its tracklist into `release_group_tracklist` / `release_group_track`.
+11. Unmapped tail: MusicBrainz search; Last.fm only once `LASTFM_API_KEY` exists. Manual overrides from seeds.
+12. Resumable by `--limit`; the first full pass runs as `backfill` chunks.
 
-### Block F — the Phase 1 gate
-16. `git push` → `gh run watch` the `deploy-api` run → `curl https://musicdata-dev.fly.dev/health` shows `"status":"ok"` and `"database":"up"`.
-17. `git tag v0.1.0; git push --tags` → prod deploys → `/health` on `musicdata-prod.fly.dev` is ok.
-18. `gh workflow run daily-sync -f env=dev` → watch → `curl -H "Authorization: Bearer <dev API_TOKEN>" https://musicdata-dev.fly.dev/ops/status` lists all five jobs with `"status":"ok"`.
-19. `gh workflow run spike-scrapers` → read the do312 status code and event count → record the result and the decision in `docs/adr/0006-do312-fallback.md`.
-20. `gh workflow run backfill -f env=dev -f job=dq -f args=--fail` → confirm the ntfy push and the GitHub email arrive and `/ops/status` shows `"healthy":false`; then `gh workflow run backfill -f env=dev -f job=dq` to clear it.
-21. Final report: a table of steps passed, steps that needed Matt, and anything that diverged from `docs/REDESIGN_PLAN.md`. Phase 1 is complete when 16–20 all pass; Phase 2 (ListenBrainz ingest, identity, sessions) starts next.
+### Block D — derive
+13. `album_session` by the edge rules (30-minute gap; full ≥ 0.8; partial ≥ 0.25 with ≥ 3 tracks).
+14. `artist_stat`, `release_group_stat`, rebuilt after each ingest. Manual sessions table support.
+
+### Block E — acceptance checks
+15. `tests/dq` queries with thresholds from the plan; `musicdata dq` writes `dq_result` and exits 1 on a failure.
+
+### Block F — API
+16. `/listens/*`, `/artists`, `/albums`, `/sessions`, `POST /sessions`, `POST /query` (read-only role, 10 s timeout, row cap).
+17. A first `/queue` page: recent sessions plus the verdict form.
+
+### Block G — the Phase 2 gate
+18. Dev green on the gate criteria → tag → prod full load and green.
+19. Matt switches his listening questions to the new API; final report.
