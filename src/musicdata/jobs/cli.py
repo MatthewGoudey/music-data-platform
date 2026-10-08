@@ -97,12 +97,14 @@ def resolve(
 
 
 @app.command()
-def derive() -> None:
-    """Recompute album sessions and stats (Phase 2). No-op for now."""
+def derive(
+    full: bool = typer.Option(False, "--full", help="Rebuild every release group's sessions."),
+) -> None:
+    """Rebuild album sessions for changed release groups, then the stat tables."""
+    from musicdata.derive.job import derive as derive_job
     from musicdata.jobs import runs
-    from musicdata.jobs.stubs import noop
 
-    raise typer.Exit(runs.run("derive", noop({}), trigger=_trigger()))
+    raise typer.Exit(runs.run("derive", derive_job(full=full), trigger=_trigger()))
 
 
 @app.command()

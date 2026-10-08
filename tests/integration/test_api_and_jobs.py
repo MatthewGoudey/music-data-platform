@@ -42,12 +42,12 @@ def test_ops_status_requires_token() -> None:
 
 def test_noop_job_records_a_run() -> None:
     runner = CliRunner()
-    result = runner.invoke(cli, ["derive"])
+    result = runner.invoke(cli, ["shows"])
     assert result.exit_code == 0, result.output
     with TestClient(app) as client:
         r = client.get("/ops/status", headers={"Authorization": "Bearer test-token"})
     jobs = r.json()["jobs"]
-    assert jobs["derive"]["status"] == "ok"
+    assert jobs["shows"]["status"] == "ok"
 
 
 def test_forced_failure_is_recorded_and_exits_nonzero() -> None:

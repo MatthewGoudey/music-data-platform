@@ -56,6 +56,9 @@ async def merge_release_group(conn: asyncpg.Connection, src: int, dst: int) -> N
         dst,
     )
     await conn.execute("DELETE FROM release_group WHERE release_group_id = $1", src)
+    await conn.execute(  # derive rebuilds the sessions of a group that changed
+        "UPDATE release_group SET updated_at = now() WHERE release_group_id = $1", dst
+    )
 
 
 PENDING_UNMAPPED = f"""
