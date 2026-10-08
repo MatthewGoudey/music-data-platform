@@ -35,19 +35,21 @@ Read first: `docs/REDESIGN_PLAN.md` (sections "What this is for", "Data model", 
 - GitHub: `MatthewGoudey/music-data-platform` (public), environments `dev` and `prod`.
 - Both Fly apps are `shared-cpu-1x`, 256 MB, and scale to zero (ADR 0002 amendment).
 - `API_TOKEN` and `QUEUE_PAGE_TOKEN` per environment live in `.env.dev` / `.env.prod`.
-- Failure alerts: GitHub email plus an ntfy push to the topic in `NTFY_TOPIC` (`daily-sync` and `backfill`).
+- Failure alerts: GitHub email plus an ntfy push to the topic in `NTFY_TOPIC` (`daily-sync`, `backfill`, `full-load`).
 - Laptop tools: uv, `gh` (`C:\Program Files\GitHub CLI\gh.exe`), flyctl (`%USERPROFILE%\.fly\bin\flyctl.exe`).
   No Docker: integration tests run against Neon dev with `--env dev` or `DATABASE_URL` set (ADR 0005).
 - Run any job against an environment from the laptop: `uv run musicdata --env dev --plain-logs <job>`.
 
-## Current state (2026-10-08, Phase 2 in progress)
-Phase 1 is complete (`v0.1.0` in dev and prod). Phase 2 code for Blocks A–F is on `main`
-and deployed to dev: identity schema (ADR 0015), ListenBrainz ingest, MusicBrainz resolve
-(mapped groups plus the unmapped tail by tracklist overlap), sessions and stats, nine
-acceptance checks, and the API (listens, artists, albums, sessions, `/query`, `/queue`,
-`/ingest/catch-up`). Dev holds the full history: 245,707 listens, equal to ListenBrainz.
-The first MusicBrainz pass on dev runs as `backfill` chunks (about 5 hours), then derive
-and dq. Prod still runs `v0.1.0` until the gate tags `v0.2.0`.
+## Current state (2026-10-08, Phase 2 gate in progress)
+Phase 2 code (Blocks A–F) is on `main`, tagged `v0.2.1`, and deployed to dev and prod.
+Dev passes all nine acceptance checks on the full history (245,707 listens, equal to
+ListenBrainz; 16,695 resolved albums; 7,022 album sessions). Prod is loading through
+the `full-load` workflow (ingest → resolve ×2 → derive → dq, about 7 hours); when its dq
+job passes, Phase 2 gate step 18 is done.
+
+Load or reload an environment with `gh workflow run full-load -f env=<dev|prod>`; every
+step resumes, so a re-run is safe. `ingest --rekey` re-applies identity rules to stored
+listens after an identity fix (it repaired 3,484 comma-joined listens in dev).
 
 Open items that need Matt:
 - Approve creating a read-only Postgres role (`musicdata_ro`, `pg_read_all_data`) for
@@ -58,6 +60,8 @@ Open items that need Matt:
 
 Notes for the next session:
 - `daily-sync` commits `docs/status/heartbeat.txt` monthly; run `git pull` before pushing.
+- GitHub ran the first scheduled `daily-sync` 7 hours late (15:36 for the 08:17 slot);
+  schedules are best-effort, and `/ingest/catch-up` covers freshness between runs.
 - ListenBrainz drops large pages deep in the history; the client shrinks the page size,
   and `ingest --full` resumes below the oldest stored listen.
 - Integration tests run against Neon dev; they use made-up MBIDs and clean up their rows.
