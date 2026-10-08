@@ -1,6 +1,8 @@
 name: full-load
 
-# Load an environment from nothing: the whole ListenBrainz history, the MusicBrainz pass
+# Load an environment from nothing (mode load), or re-apply identity rules to it (mode
+# repair: rekey instead of a full ingest, and retry unresolved albums). Then the whole
+# ListenBrainz history, the MusicBrainz pass
 # (two jobs, each under the 6-hour limit), sessions and stats, then the acceptance
 # checks. Each job needs the one before, so nothing has to watch from a laptop.
 # Prod runs the latest v* tag; dev runs main. Every step resumes where a failed run
@@ -13,6 +15,10 @@ on:
         description: "dev or prod"
         required: true
         default: "dev"
+      mode:
+        description: "load (from nothing) or repair (after an identity rule change)"
+        required: true
+        default: "load"
 
 jobs:
   ingest:
@@ -28,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/musicdata
-        with: { env: "${{ github.event.inputs.env }}", args: "ingest --full" }
+        with: { env: "${{ github.event.inputs.env }}", args: "${{ github.event.inputs.mode == 'repair' && 'ingest --rekey' || 'ingest --full' }}" }
 
   resolve-mapped:
     needs: ingest
@@ -62,7 +68,7 @@ jobs:
       - uses: ./.github/actions/musicdata
         with:
           env: "${{ github.event.inputs.env }}"
-          args: "resolve --limit 9000 --unmapped-limit 3000 --min-listens 3"
+          args: "resolve --limit 9000 --unmapped-limit 3000 --min-listens 3${{ github.event.inputs.mode == 'repair' && ' --retry-unresolved' || '' }}"
 
   derive:
     needs: resolve-rest

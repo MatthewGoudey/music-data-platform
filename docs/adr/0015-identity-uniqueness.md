@@ -33,3 +33,24 @@ ListenBrainz credits a track to a list of artists ("Kendrick Lamar feat. SZA" is
 credit order; for an unmapped listen it is the name before any "feat." marker. Featured
 artists stay visible in the raw `artist_name`. A `listen_artist` table for per-credit stats
 is deferred until a question needs it.
+
+## Amendment (2026-10-08): one album, one group
+
+Spot checks found albums split across groups ("islands"); about 200 listening runs
+switched between two groups with the same title. Three rules close the main causes:
+
+- **Album artist.** An unmapped album is keyed to the release's artist when the listen
+  carries one (`release_artist_name`), not to each track's artist, so a soundtrack or a
+  collaboration credited per track is one group. The listen itself keeps its track artist.
+- **Local merge without a minimum.** An unmapped group folds into a mapped namesake
+  (same artist and key) by tracklist overlap whatever its listen count; only MusicBrainz
+  searches keep the three-listen minimum.
+- **Stray tracks.** When ListenBrainz files one track of an album run under another group
+  (the single, a compilation, a live bootleg), derive moves it to the album around it,
+  if that album's standard tracklist has the recording and the other group cannot place
+  it. Each correction is learned once into `release_group_redirect`, so re-ingests keep it.
+  In dev this moved 2,157 listens (0.9%) through 110 corrections.
+
+Re-recordings named for their artist ("Red (Taylor's Version)") are different albums,
+so "<name>'s Version" stays in the album key. The acceptance checks report
+`listening_runs_split_across_groups` (not gated) to track what remains.

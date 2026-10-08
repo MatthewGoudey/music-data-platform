@@ -113,6 +113,27 @@ async def _split_sessions(conn: asyncpg.Connection) -> Result:
     )
 
 
+async def _split_runs(conn: asyncpg.Connection) -> Result:
+    """Reported, not gated: places where one listening run switches between two groups
+    with the same album key, the trace an album split across groups leaves."""
+    flips, pairs = await conn.fetchrow(
+        """WITH l AS (
+               SELECT l.release_group_id, rg.norm_key,
+                      lag(l.release_group_id) OVER w AS prev_rg,
+                      lag(rg.norm_key) OVER w AS prev_key,
+                      l.listened_at - lag(l.listened_at) OVER w AS gap
+                 FROM listen l JOIN release_group rg USING (release_group_id)
+               WINDOW w AS (ORDER BY l.listened_at))
+           SELECT count(*),
+                  count(DISTINCT least(release_group_id, prev_rg) || '-'
+                                 || greatest(release_group_id, prev_rg))
+             FROM l
+            WHERE gap < interval '30 minutes' AND norm_key = prev_key
+              AND release_group_id <> prev_rg"""
+    )
+    return float(flips), True, {"switches": flips, "group_pairs": pairs}
+
+
 async def _overshoot(conn: asyncpg.Connection) -> Result:
     resolved, over = await conn.fetchrow(
         """SELECT count(*), count(*) FILTER (WHERE distinct_tracks > 1.5 * track_count)
@@ -150,6 +171,7 @@ CHECKS = (
     Check("heavy_albums_without_tracklist_pct", "<= 5", _heavy_without_tracks),
     Check("heavy_albums_resolved_pct", ">= 90", _heavy_resolved),
     Check("sessions_split_across_aliases", "= 0", _split_sessions),
+    Check("listening_runs_split_across_groups", "report", _split_runs),
     Check("completion_overshoot_pct", "<= 2", _overshoot),
     Check("artist_stat_matches_listens", "exact", _artist_count),
     Check("daily_sync_minutes", "< 15", _sync_wall_time),
