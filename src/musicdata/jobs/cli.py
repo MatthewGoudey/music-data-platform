@@ -45,7 +45,11 @@ def _root(
 
 
 def _trigger() -> str:
-    return "schedule" if os.environ.get("GITHUB_ACTIONS") else "manual"
+    """schedule (cron), dispatch (Actions run by hand), ci (any other Actions event), or manual."""
+    event = os.environ.get("GITHUB_EVENT_NAME")
+    if not event:
+        return "manual"
+    return {"schedule": "schedule", "workflow_dispatch": "dispatch"}.get(event, "ci")
 
 
 @app.command()
