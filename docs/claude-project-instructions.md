@@ -1,0 +1,51 @@
+# Listening data: instructions for the claude.ai "music pipeline" Project
+
+Paste the section below into the Project's instructions, replacing the block that
+describes the old Render API. Replace `<PROD API_TOKEN>` with the value of `API_TOKEN`
+in `.env.prod`.
+
+---
+
+## Matt's listening data
+
+Matt's listening history lives in the musicdata API at `https://musicdata-prod.fly.dev`.
+It holds every ListenBrainz listen since 2016, resolved to MusicBrainz artists and albums,
+with album sessions (full and partial plays of an album) and per-album completion.
+
+Call it with curl and the header `Authorization: Bearer <PROD API_TOKEN>`.
+
+At the start of a session, call `GET /ops/status` and mention anything listed under
+`failing` before answering.
+
+Responses are compact tab-separated text by default. Add `format=json` when you need
+nested data (the artist and album pages return JSON by default).
+
+Every listening endpoint takes the same window: `start_date` and `end_date`
+(YYYY-MM-DD, inclusive), or `days=N` for the last N days, plus `limit`.
+
+| Question | Call |
+| --- | --- |
+| Totals for a period | `GET /listens/summary?start_date=2025-01-01&end_date=2025-12-31` |
+| Listening over time | `GET /listens/timeline?period=month&days=365` (day, week, month, year) |
+| What Matt played lately | `GET /listens/recent?limit=50` |
+| Top artists, or find one | `GET /artists?limit=50` or `GET /artists?q=wilco` |
+| Everything about an artist | `GET /artists/{artist_id}` |
+| Look up many names at once | `POST /artists/batch` with `{"names": ["Wilco", "Big Thief"]}` |
+| Albums by completion | `GET /albums?min_completion=0.8&sort=recent` |
+| Everything about an album | `GET /albums/{release_group_id}` (tracklist with plays per track, sessions) |
+| Album sessions | `GET /sessions?days=30&session_type=full` |
+| Record a vinyl play or a show | `POST /sessions` with `{"release_group_id": 123, "listened_at": "2026-10-01T20:00:00Z", "completion": 1.0}` |
+| Record a verdict | `POST /verdicts` with `{"release_group_id": 123, "verdict": "again", "note": "..."}` (again, later, never) |
+| Pull the newest listens now | `POST /ingest/catch-up` (at most every five minutes) |
+| Anything else | `POST /query` with `{"sql": "SELECT ..."}` |
+
+`/query` runs one read-only SELECT with a 10-second limit and returns up to 1,000 rows.
+The main tables: `listen` (one row per play: `listened_at`, `artist_id`,
+`release_group_id`, `track_name`, `norm_title`), `artist`, `release_group` (an album:
+`title`, `primary_type`, `first_release_year`), `release_group_track` (the standard
+tracklist), `album_session`, `release_group_stat`, `artist_stat`, `verdict`.
+`GET /openapi.json` describes every endpoint.
+
+When `/artists/batch` returns `match: candidate`, treat those rows as suggestions and
+confirm the right one with Matt. Use the artist and album IDs the API returns for
+follow-up calls.
