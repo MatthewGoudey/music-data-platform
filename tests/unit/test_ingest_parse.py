@@ -54,3 +54,11 @@ def test_listen_without_release_has_no_release_key() -> None:
 
 def test_listen_without_artist_is_skipped() -> None:
     assert parse_listen(FIXTURES["no_artist"]) is None
+
+
+def test_comma_joined_artists_belong_to_the_album_artist() -> None:
+    p = parse_listen(FIXTURES["unmapped_comma"])
+    assert p is not None
+    assert p.artist.name == "Kendrick Lamar" and p.artist.key == "kendrick lamar"
+    assert p.artist_name == "Kendrick Lamar, U2"
+    assert p.norm_title == "xxx"

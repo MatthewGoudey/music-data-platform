@@ -2,7 +2,7 @@
 
 A listen is mapped when ListenBrainz attached an `mbid_mapping` (about 88% of them):
 then the artist credit carries a MusicBrainz ID and the release group is known. An
-unmapped listen has only raw strings; its artist is the part before any "feat."
+unmapped listen has only raw strings; its artist comes from `primary_artist`
 (ADR 0015: a listen belongs to its first credited artist).
 """
 
@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from musicdata.identity import album_key, norm_key, split_featured, title_key
+from musicdata.identity import album_key, norm_key, primary_artist, title_key
 
 
 @dataclass(frozen=True)
@@ -79,7 +79,9 @@ def parse_listen(raw: dict) -> ParsedListen | None:
             artist = Credit(name=name, mbid=_str(a.get("artist_mbid")), key=norm_key(name))
             break
     if artist is None:
-        primary, _featured = split_featured(artist_name)
+        primary = primary_artist(
+            artist_name, info.get("artist_names"), _str(info.get("release_artist_name"))
+        )
         if not norm_key(primary):
             return None
         artist = Credit(name=primary, mbid=None, key=norm_key(primary))

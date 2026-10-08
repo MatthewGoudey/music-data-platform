@@ -132,6 +132,25 @@ def title_key(title: str) -> str:
     return _key(_strip_editions(title), cut_featured=True)
 
 
+def primary_artist(
+    artist_name: str, artist_names: list[str] | None = None, release_artist: str | None = None
+) -> str:
+    """The raw name of the first credited artist of an unmapped listen.
+
+    Players like Spotify join a track's artists with commas ("Kendrick Lamar, U2"), and
+    commas also live inside real names ("Tyler, The Creator"), so a comma alone never
+    splits. In order: the submitted artist list's first entry; the album artist when
+    the name starts with it and a comma; otherwise the name before any "feat.".
+    """
+    names = [n.strip() for n in artist_names or [] if n and n.strip()]
+    if names:
+        return split_featured(names[0])[0]
+    release = (release_artist or "").strip()
+    if release and artist_name.startswith(release + ","):
+        return release
+    return split_featured(artist_name)[0]
+
+
 _EDITION_MARKER = re.compile(rf"\b(?:{_EDITION_WORDS})\b", re.IGNORECASE)
 
 

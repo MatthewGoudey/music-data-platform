@@ -84,6 +84,18 @@
     ["夜に駆ける", "夜に駆ける"],
     ["!!!", "!!!"]
   ],
+  "primary_artist": [
+    [["Kendrick Lamar, U2", ["Kendrick Lamar", "U2"], null], "Kendrick Lamar"],
+    [["Kendrick Lamar, U2", null, "Kendrick Lamar"], "Kendrick Lamar"],
+    [["Rav, Kill Bill: The Rapper, Scuare", null, "Rav"], "Rav"],
+    [["Tyler, The Creator", ["Tyler, The Creator"], null], "Tyler, The Creator"],
+    [["Tyler, The Creator", null, "Tyler, The Creator"], "Tyler, The Creator"],
+    [["Earth, Wind & Fire", null, null], "Earth, Wind & Fire"],
+    [["Crosby, Stills, Nash & Young", null, "Crosby, Stills, Nash & Young"], "Crosby, Stills, Nash & Young"],
+    [["Kendrick Lamar feat. SZA", null, null], "Kendrick Lamar"],
+    [["Mello Music Group, Open Mike Eagle", null, "Various Artists"], "Mello Music Group, Open Mike Eagle"],
+    [["Wilco", [], null], "Wilco"]
+  ],
   "split_featured": [
     ["Kendrick Lamar feat. SZA", ["Kendrick Lamar", ["SZA"]]],
     ["Kendrick Lamar (feat. SZA & Baby Keem)", ["Kendrick Lamar", ["SZA", "Baby Keem"]]],

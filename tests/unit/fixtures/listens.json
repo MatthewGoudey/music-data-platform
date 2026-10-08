@@ -51,6 +51,15 @@
       "track_name": "Mister Bluebird - 2025 Remaster"
     }
   },
+  "unmapped_comma": {
+    "listened_at": 1772233513,
+    "track_metadata": {
+      "additional_info": {"release_artist_name": "Kendrick Lamar", "music_service": "spotify.com"},
+      "artist_name": "Kendrick Lamar, U2",
+      "release_name": "DAMN. COLLECTORS EDITION.",
+      "track_name": "XXX. (feat. U2)"
+    }
+  },
   "no_release": {
     "listened_at": 1791200000,
     "track_metadata": {"artist_name": "Wilco", "track_name": "Jesus, Etc."}
