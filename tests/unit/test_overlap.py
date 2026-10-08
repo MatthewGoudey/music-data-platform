@@ -58,3 +58,21 @@ def test_edition_titles_are_searched_again_without_the_edition() -> None:
     assert search_titles("Rumours (Super Deluxe)") == ["Rumours (Super Deluxe)", "Rumours"]
     assert search_titles("Modal Soul") == ["Modal Soul"]
     assert search_titles("Deluxe") == ["Deluxe"]  # an edition word alone is the title
+
+
+def test_a_title_only_hit_needs_two_shared_titles() -> None:
+    winner, why = pick_by_overlap({"pop song"}, {"other pop": {"pop song", "b"}}, min_shared=2)
+    assert winner is None and why.startswith("weak")
+    winner, _ = pick_by_overlap({"a", "b"}, {"comp": {"a", "b", "c"}}, min_shared=2)
+    assert winner == "comp"
+
+
+def test_artist_searches_narrow_then_widen() -> None:
+    from musicdata.resolve.unmapped import artist_searches
+
+    assert artist_searches("Rav, Kill Bill: The Rapper", None) == [
+        ("Rav, Kill Bill: The Rapper", None),
+        ("Rav", None),
+        (None, None),
+    ]
+    assert artist_searches("Nujabes", "mbid-1") == [("Nujabes", "mbid-1"), (None, None)]

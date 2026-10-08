@@ -7,7 +7,10 @@ For each unmapped group with enough listens (most-listened first):
 2. Otherwise MusicBrainz search supplies up to three candidates whose title has the same key.
    A title that finds nothing is searched again cut before its edition words
    ("DAMN. COLLECTORS EDITION." → "DAMN. COLLECTORS" → "DAMN."), since an edition is
-   a release inside the group, not a group of its own.
+   a release inside the group, not a group of its own. The artist narrows the search:
+   by MBID, by name, by the name before a comma ("Rav, Kill Bill: The Rapper" → "Rav"),
+   and finally not at all (compilations credit "Various Artists"); a title-only winner
+   must share at least two played titles.
 3. The candidate whose tracklist shares the most titles with what was actually played wins.
    Titles match exactly or nearly ("luv sic pt3" ~ "luv sic part 3") with equal numbers.
    A tie, or no overlap at all, is recorded as unresolved with the reason, for review.
@@ -65,7 +68,7 @@ def search_titles(title: str) -> list[str]:
 
 
 def pick_by_overlap[K: Hashable](
-    listened: set[str], candidates: dict[K, set[str]]
+    listened: set[str], candidates: dict[K, set[str]], *, min_shared: int = 1
 ) -> tuple[K | None, str]:
     """The candidate sharing the most track titles with `listened`, or None and why."""
     if not candidates:
@@ -74,6 +77,8 @@ def pick_by_overlap[K: Hashable](
     best = max(scores.values(), default=0)
     if best == 0:
         return None, "no MusicBrainz candidate shares a track title with the listens"
+    if best < min_shared:
+        return None, f"weak: a title-only search hit shares {best} title, {min_shared} needed"
     winners = [k for k, s in scores.items() if s == best]
     if len(winners) > 1:
         return None, f"ambiguous: {len(winners)} candidates each share {best} titles"
@@ -112,6 +117,42 @@ PENDING_UNMAPPED = f"""
    GROUP BY rg.release_group_id, a.name, a.mbid
   HAVING count(*) >= $1
 """
+
+
+def artist_searches(name: str, mbid: str | None) -> list[tuple[str | None, str | None]]:
+    """(artist_name, artist_mbid) narrowings to try in order; (None, None) is title-only."""
+    out: list[tuple[str | None, str | None]] = [(name, mbid)]
+    if not mbid and ", " in name:
+        out.append((name.split(", ", 1)[0], None))
+    out.append((None, None))
+    return out
+
+
+async def _candidates(
+    mb: MusicBrainzClient, title: str, artist_name: str, artist_mbid: str | None
+) -> tuple[dict[str, Resolution], int]:
+    """Up to MAX_CANDIDATES resolved groups for the first search that finds any, and the
+    number of shared titles a winner needs (2 when the artist was left out)."""
+    for name, mbid in artist_searches(artist_name, artist_mbid):
+        found: dict[str, Resolution] = {}
+        for search_title in search_titles(title):
+            hits = await mb.search_release_groups(search_title, artist_name=name, artist_mbid=mbid)
+            for hit in hits:
+                if len(found) == MAX_CANDIDATES:
+                    break
+                if int(hit.get("score", 0)) < MIN_SCORE:
+                    continue
+                if album_key(hit.get("title", "")) != album_key(search_title):
+                    continue
+                try:
+                    res = resolve_group(await mb.releases_of_group(hit["id"]))
+                except NotFoundError:
+                    continue
+                if res is not None:
+                    found[hit["id"]] = res
+            if found:
+                return found, 1 if (name or mbid) else 2
+    return {}, 1
 
 
 async def _titles(conn: asyncpg.Connection, sql: str, *args: object) -> set[str]:
@@ -179,28 +220,13 @@ async def resolve_unmapped(
                     counts["merged"] += 1
             continue
 
-        found: dict[str, Resolution] = {}
-        try:
-            for title in search_titles(row["title"]):
-                hits = await mb.search_release_groups(
-                    title, artist_name=row["artist_name"], artist_mbid=row["artist_mbid"]
-                )
-                for hit in hits:
-                    if len(found) == MAX_CANDIDATES:
-                        break
-                    if int(hit.get("score", 0)) < MIN_SCORE:
-                        continue
-                    if album_key(hit.get("title", "")) != album_key(title):
-                        continue
-                    res = resolve_group(await mb.releases_of_group(hit["id"]))
-                    if res is not None:
-                        found[hit["id"]] = res
-                if found:
-                    break
-        except NotFoundError:
-            pass
+        found, min_shared = await _candidates(
+            mb, row["title"], row["artist_name"], row["artist_mbid"]
+        )
         winner, why = pick_by_overlap(
-            listened, {mbid: {t.norm_title for t in r.tracks} for mbid, r in found.items()}
+            listened,
+            {mbid: {t.norm_title for t in r.tracks} for mbid, r in found.items()},
+            min_shared=min_shared,
         )
         async with connection(pool) as conn:
             if winner is None:

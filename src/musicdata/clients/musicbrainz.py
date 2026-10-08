@@ -87,14 +87,20 @@ class MusicBrainzClient:
         raise RuntimeError("unreachable")
 
     async def search_release_groups(
-        self, title: str, *, artist_name: str, artist_mbid: str | None = None, limit: int = 5
+        self,
+        title: str,
+        *,
+        artist_name: str | None = None,
+        artist_mbid: str | None = None,
+        limit: int = 5,
     ) -> list[dict]:
-        """Release groups matching a title by an artist, best score first."""
-        artist = f"arid:{artist_mbid}" if artist_mbid else f'artist:"{_lucene(artist_name)}"'
-        body = await self._get(
-            "/release-group",
-            {"query": f'releasegroup:"{_lucene(title)}" AND {artist}', "limit": limit},
-        )
+        """Release groups matching a title, by an artist when one is given; best score first."""
+        query = f'releasegroup:"{_lucene(title)}"'
+        if artist_mbid:
+            query += f" AND arid:{artist_mbid}"
+        elif artist_name:
+            query += f' AND artist:"{_lucene(artist_name)}"'
+        body = await self._get("/release-group", {"query": query, "limit": limit})
         return body.get("release-groups", [])
 
     async def releases_of_group(self, release_group_mbid: str) -> list[dict]:
