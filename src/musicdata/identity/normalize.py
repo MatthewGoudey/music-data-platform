@@ -21,7 +21,9 @@ album_key(title): the same pipeline, after stripping edition markers:
     (deluxe, remaster, expanded, anniversary, bonus, edition, version, reissue,
     mono, stereo, explicit, clean, complete, legacy) is removed;
   - a trailing " - <...> edition/version/remaster/deluxe" suffix is removed;
-  - "EP" is deliberately kept: "Lately EP" and "Lately" are different keys.
+  - "EP" is deliberately kept: "Lately EP" and "Lately" are different keys;
+  - a re-recording named for its artist ("Red (Taylor's Version)") is a different album,
+    not an edition, so "<name>'s Version" stays in the key.
 
 title_key(title): the key for a track title, used when a listen has no recording MBID.
   The same edition stripping as album_key ("Heroes - 2017 Remaster" → heroes), then
@@ -113,9 +115,16 @@ def norm_key(name: str) -> str:
     return _key(name, cut_featured=True)
 
 
+_REMAKE = re.compile(r"\b\w+['’]s\s+version\b", re.IGNORECASE)
+
+
+def _keep_remakes(match: re.Match[str]) -> str:
+    return match.group(0) if _REMAKE.search(match.group(0)) else ""
+
+
 def _strip_editions(title: str) -> str:
-    s = _BRACKET_EDITION.sub("", str(title))
-    return _TRAILING_EDITION.sub("", s)
+    s = _BRACKET_EDITION.sub(_keep_remakes, str(title))
+    return _TRAILING_EDITION.sub(_keep_remakes, s)
 
 
 def strip_edition_markers(title: str) -> str:
