@@ -6,6 +6,12 @@ tests/unit/golden/normalize.json is the contract — change the function and the
 golden file together, on purpose.
 """
 
-from musicdata.identity.normalize import album_key, norm_key, split_featured, title_key
+from musicdata.identity.normalize import (
+    album_key,
+    has_edition_marker,
+    norm_key,
+    split_featured,
+    title_key,
+)
 
-__all__ = ["album_key", "norm_key", "split_featured", "title_key"]
+__all__ = ["album_key", "has_edition_marker", "norm_key", "split_featured", "title_key"]

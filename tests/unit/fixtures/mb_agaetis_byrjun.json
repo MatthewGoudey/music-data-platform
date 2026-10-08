@@ -1,0 +1,1178 @@
+{
+ "_comment": "MusicBrainz browse of release group 62b427b8 (Ágætis byrjun), 6 of its 28 releases, trimmed. Fetched 2026-10-08.",
+ "releases": [
+  {
+   "id": "05a290ce-39b7-4ad6-a629-3412ae9bfa45",
+   "title": "Ágætis byrjun",
+   "status": "Official",
+   "date": "2009-03-09",
+   "country": "GB",
+   "disambiguation": "",
+   "media": [
+    {
+     "position": 1,
+     "id": "56386f98-bd10-391d-afda-e89723e02f7d",
+     "tracks": [
+      {
+       "title": "Svefn‐g‐englar",
+       "length": 604000,
+       "recording": {
+        "id": "733888bc-dc76-4e05-aac2-f81a6769b558",
+        "title": "Svefn‐g‐englar"
+       }
+      },
+      {
+       "title": "Starálfur",
+       "length": 407000,
+       "recording": {
+        "id": "bed3ac3d-994f-414a-bae9-c9794c46462f",
+        "title": "Starálfur"
+       }
+      },
+      {
+       "title": "Flugufrelsarinn",
+       "length": 468506,
+       "recording": {
+        "id": "53837546-8792-41e2-a0fa-2ee34dfcaec5",
+        "title": "Flugufrelsarinn"
+       }
+      },
+      {
+       "title": "Ný batterí",
+       "length": 491000,
+       "recording": {
+        "id": "0003dd36-b4d2-4216-a37e-b110f6882ecb",
+        "title": "Ný batterí"
+       }
+      }
+     ],
+     "format": "12\" Vinyl",
+     "track-count": 4,
+     "format-id": "3e9080b0-5e6c-34ab-bd15-f526b6306a64",
+     "title": "",
+     "track-offset": 0
+    },
+    {
+     "title": "",
+     "track-offset": 0,
+     "position": 2,
+     "id": "7578c469-4fb8-3ba1-8248-9b6ef31a3803",
+     "tracks": [
+      {
+       "title": "Hjartað hamast (bamm bamm bamm)",
+       "length": 430226,
+       "recording": {
+        "id": "cd96be20-9dc2-409a-8faf-b6d938def0d9",
+        "title": "Hjartað hamast (bamm bamm bamm)"
+       }
+      },
+      {
+       "title": "Viðrar vel til loftárása",
+       "length": 617746,
+       "recording": {
+        "id": "8cf770ff-b93a-48b4-ba04-cb437bc52d36",
+        "title": "Viðrar vel til loftárása"
+       }
+      },
+      {
+       "title": "Olsen Olsen",
+       "length": 483133,
+       "recording": {
+        "id": "9ca22b58-f9a8-43e3-9404-57cdef7b1f29",
+        "title": "Olsen Olsen"
+       }
+      },
+      {
+       "title": "Ágætis byrjun",
+       "length": 476000,
+       "recording": {
+        "id": "482c80fc-9281-4d3c-b570-8bf053f01b7d",
+        "title": "Ágætis byrjun"
+       }
+      },
+      {
+       "title": "Avalon",
+       "length": 241586,
+       "recording": {
+        "id": "6bc9cd53-f0eb-4cea-b4c1-27a536bb13ba",
+        "title": "Avalon"
+       }
+      }
+     ],
+     "format": "12\" Vinyl",
+     "format-id": "3e9080b0-5e6c-34ab-bd15-f526b6306a64",
+     "track-count": 5
+    }
+   ],
+   "release-group": {
+    "secondary-types": [],
+    "artist-credit": [
+     {
+      "artist": {
+       "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+       "type": "Group",
+       "name": "Sigur Rós",
+       "sort-name": "Sigur Rós",
+       "id": "f6f2326f-6b25-4170-b89d-e235b25508e8",
+       "disambiguation": "Icelandic post‐rock band",
+       "country": "IS"
+      },
+      "joinphrase": "",
+      "name": "Sigur Rós"
+     }
+    ],
+    "disambiguation": "",
+    "primary-type": "Album",
+    "title": "Ágætis byrjun",
+    "first-release-date": "1999-06",
+    "id": "62b427b8-1c52-34e7-b250-da2aa3e44860",
+    "secondary-type-ids": [],
+    "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc"
+   },
+   "artist-credit": [
+    {
+     "artist": {
+      "country": "IS",
+      "disambiguation": "Icelandic post‐rock band",
+      "id": "f6f2326f-6b25-4170-b89d-e235b25508e8",
+      "sort-name": "Sigur Rós",
+      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+      "type": "Group",
+      "name": "Sigur Rós"
+     },
+     "joinphrase": "",
+     "name": "Sigur Rós"
+    }
+   ]
+  },
+  {
+   "id": "0c623cd5-646e-4589-8ca5-8058ad666089",
+   "title": "Ágætis byrjun (A Good Beginning)",
+   "status": "Official",
+   "date": "2019-07-05",
+   "country": "US",
+   "disambiguation": "20th anniversary deluxe edition",
+   "media": [
+    {
+     "title": "Ágætis Byrjun",
+     "track-offset": 0,
+     "position": 1,
+     "id": "4c423b25-276f-3f24-81fb-5c59042f3f3d",
+     "tracks": [
+      {
+       "title": "Intro",
+       "length": 97093,
+       "recording": {
+        "id": "80c8836e-5dff-4d00-a092-8094216921f3",
+        "title": "Intro"
+       }
+      },
+      {
+       "title": "Svefn‐g‐englar",
+       "length": 606000,
+       "recording": {
+        "id": "59e24cd5-5c11-4dd8-b6c2-99ed9885553c",
+        "title": "Svefn‐g‐englar"
+       }
+      },
+      {
+       "title": "Starálfur",
+       "length": 406933,
+       "recording": {
+        "id": "9c691c15-dba1-42c8-a99b-0aead1ec0bd4",
+        "title": "Starálfur"
+       }
+      },
+      {
+       "title": "Flugufrelsarinn",
+       "length": 468506,
+       "recording": {
+        "id": "53837546-8792-41e2-a0fa-2ee34dfcaec5",
+        "title": "Flugufrelsarinn"
+       }
+      },
+      {
+       "title": "Ný batterí",
+       "length": 491000,
+       "recording": {
+        "id": "0003dd36-b4d2-4216-a37e-b110f6882ecb",
+        "title": "Ný batterí"
+       }
+      },
+      {
+       "title": "Hjartað hamast (bamm bamm bamm)",
+       "length": 430226,
+       "recording": {
+        "id": "cd96be20-9dc2-409a-8faf-b6d938def0d9",
+        "title": "Hjartað hamast (bamm bamm bamm)"
+       }
+      },
+      {
+       "title": "Viðrar vel til loftárása",
+       "length": 617746,
+       "recording": {
+        "id": "8cf770ff-b93a-48b4-ba04-cb437bc52d36",
+        "title": "Viðrar vel til loftárása"
+       }
+      },
+      {
+       "title": "Olsen Olsen",
+       "length": 483133,
+       "recording": {
+        "id": "9ca22b58-f9a8-43e3-9404-57cdef7b1f29",
+        "title": "Olsen Olsen"
+       }
+      },
+      {
+       "title": "Ágætis byrjun",
+       "length": 476000,
+       "recording": {
+        "id": "482c80fc-9281-4d3c-b570-8bf053f01b7d",
+        "title": "Ágætis byrjun"
+       }
+      },
+      {
+       "title": "Avalon",
+       "length": 241586,
+       "recording": {
+        "id": "6bc9cd53-f0eb-4cea-b4c1-27a536bb13ba",
+        "title": "Avalon"
+       }
+      }
+     ],
+     "format": "Digital Media",
+     "track-count": 10,
+     "format-id": "907a28d9-b3b2-3ef6-89a8-7b18d91d4794"
+    },
+    {
+     "format": "Digital Media",
+     "tracks": [
+      {
+       "title": "Intro (live at Íslenska Óperan, 1999)",
+       "length": 305149,
+       "recording": {
+        "id": "4931666f-d6c4-4bda-adf7-10826363c2ce",
+        "title": "Intro (live at Íslenska Óperan, 1999)"
+       }
+      },
+      {
+       "title": "Von (live at Íslenska Óperan, 1999)",
+       "length": 464706,
+       "recording": {
+        "id": "c9b88a42-50af-4c2c-beb8-136366cbaa3f",
+        "title": "Von (live at Íslenska Óperan, 1999)"
+       }
+      },
+      {
+       "title": "Syndir guðs (live at Íslenska Óperan, 1999)",
+       "length": 347400,
+       "recording": {
+        "id": "e7d9711b-73e2-480e-9222-2a98ae01369b",
+        "title": "Syndir guðs (live at Íslenska Óperan, 1999)"
+       }
+      },
+      {
+       "title": "Flugufrelsarinn (live at Íslenska Óperan 1999)",
+       "length": 547256,
+       "recording": {
+        "id": "44b4c087-0e0b-4f3e-b224-d9facc7c84a0",
+        "title": "Flugufrelsarinn (live at Íslenska Óperan 1999)"
+       }
+      },
+      {
+       "title": "Olsen Olsen (live at Íslenska Óperan 1999)",
+       "length": 367445,
+       "recording": {
+        "id": "c80a4baf-58a4-4d11-a58b-40258ecddd9a",
+        "title": "Olsen Olsen (live at Íslenska Óperan 1999)"
+       }
+      },
+      {
+       "title": "Ágætis byrjun (live at Íslenska Óperan 1999)",
+       "length": 453785,
+       "recording": {
+        "id": "880cac1e-36fe-4b9b-b0d9-d8a1c7646b15",
+        "title": "Ágætis byrjun (live at Íslenska Óperan 1999)"
+       }
+      },
+      {
+       "title": "Viðrar vel til loftárása (live at Íslenska Óperan 1999)",
+       "length": 512714,
+       "recording": {
+        "id": "92188260-2c9f-4337-a29e-f7e45955dba4",
+        "title": "Viðrar vel til loftárása (live at Íslenska Óperan 1999)"
+       }
+      },
+      {
+       "title": "Svefn-g-englar (live at Íslenska Óperan 1999)",
+       "length": 566232,
+       "recording": {
+        "id": "badb53b1-f02f-4f31-80ba-8f9754dca7f8",
+        "title": "Svefn-g-englar (live at Íslenska Óperan 1999)"
+       }
+      },
+      {
+       "title": "Ný batterí (live at Íslenska Óperan 1999)",
+       "length": 358464,
+       "recording": {
+        "id": "df2bc43c-b723-4a8a-8bae-ec8685225ae5",
+        "title": "Ný batterí (live at Íslenska Óperan 1999)"
+       }
+      },
+      {
+       "title": "Nýja lagið (live at Íslenska Óperan, 1999)",
+       "length": 569026,
+       "recording": {
+        "id": "5afd404f-8b0a-4318-bca1-4a7aab3a430f",
+        "title": "Nýja lagið (live at Íslenska Óperan, 1999)"
+       }
+      },
+      {
+       "title": "Hafsól (live at Íslenska Óperan, 1999)",
+       "length": 921176,
+       "recording": {
+        "id": "b992452c-b0be-4428-939e-4ff7497f3c27",
+        "title": "Hafsól (live at Íslenska Óperan, 1999)"
+       }
+      }
+     ],
+     "format-id": "907a28d9-b3b2-3ef6-89a8-7b18d91d4794",
+     "track-count": 11,
+     "position": 2,
+     "id": "eb212538-0170-318f-9bc5-98d1444e016b",
+     "track-offset": 0,
+     "title": "Live at Íslenska Óperan 1999"
+    },
+    {
+     "title": "Demos, Rarities and Early Live Recordings",
+     "track-offset": 0,
+     "id": "bd765b61-c96d-3e04-8e84-220d7877b2b1",
+     "position": 3,
+     "track-count": 13,
+     "format-id": "907a28d9-b3b2-3ef6-89a8-7b18d91d4794",
+     "tracks": [
+      {
+       "title": "Svefn-g-englar (live at Popp I Reykjavík 1998)",
+       "length": 710058,
+       "recording": {
+        "id": "b5692a05-4337-497f-bf87-31aaad8a4627",
+        "title": "Svefn-g-englar (live at Popp I Reykjavík 1998)"
+       }
+      },
+      {
+       "title": "Starálfur (original speed version)",
+       "length": 386784,
+       "recording": {
+        "id": "35a7429f-abfa-4b4e-ba2f-969cee9b3913",
+        "title": "Starálfur (original speed version)"
+       }
+      },
+      {
+       "title": "Flugufrelsarinn (demo 1998)",
+       "length": 527008,
+       "recording": {
+        "id": "2720952c-33cc-4c88-8c57-b782edfc18cd",
+        "title": "Flugufrelsarinn (demo 1998)"
+       }
+      },
+      {
+       "title": "Ný batterí (first mix)",
+       "length": 426922,
+       "recording": {
+        "id": "7f3535c7-b194-4848-8caa-eafb102673a2",
+        "title": "Ný batterí (first mix)"
+       }
+      },
+      {
+       "title": "Hjartað hamast (bamm bamm bamm) (demo 1995)",
+       "length": 556160,
+       "recording": {
+        "id": "5b05f26b-24a8-4cb8-a570-61499fcebe16",
+        "title": "Hjartað hamast (bamm bamm bamm) (demo 1995)"
+       }
+      },
+      {
+       "title": "Viðrar vel til loftárása (alternative ending)",
+       "length": 664619,
+       "recording": {
+        "id": "64b007f5-7d8b-4097-94d5-f4a9b50357a3",
+        "title": "Viðrar vel til loftárása (alternative ending)"
+       }
+      },
+      {
+       "title": "Olsen Olsen (demo 1998)",
+       "length": 446389,
+       "recording": {
+        "id": "d2263c8e-fdcb-41da-a033-8af161e80d9e",
+        "title": "Olsen Olsen (demo 1998)"
+       }
+      },
+      {
+       "title": "Ágætis byrjun (demo 1998)",
+       "length": 482000,
+       "recording": {
+        "id": "e9c6ca00-64fa-4bf8-bd9e-6a8afde19d45",
+        "title": "Ágætis byrjun (demo 1998)"
+       }
+      },
+      {
+       "title": "Hugmynd 1 (1998 demo)",
+       "length": 418064,
+       "recording": {
+        "id": "e288486e-5fb4-4f3c-9810-bce8dad81299",
+        "title": "Hugmynd 1 (1998 demo)"
+       }
+      },
+      {
+       "title": "Hugmynd 2 (1998 demo)",
+       "length": 242154,
+       "recording": {
+        "id": "4e746346-39c1-46b1-aab2-5aa93f54296b",
+        "title": "Hugmynd 2 (1998 demo)"
+       }
+      },
+      {
+       "title": "Hugmynd 3 (1998 demo)",
+       "length": 590549,
+       "recording": {
+        "id": "6eee077d-9df5-4d78-981b-3c1851eb3b27",
+        "title": "Hugmynd 3 (1998 demo)"
+       }
+      },
+      {
+       "title": "Debata mandire (live at Laugardashöll 1999)",
+       "length": 228714,
+       "recording": {
+        "id": "50d477eb-30a0-4002-a3c3-b9ebeb08f265",
+        "title": "Debata mandire (live at Laugardashöll 1999)"
+       }
+      },
+      {
+       "title": "Rafmagnið búið (from Ný batterí EP, 2000)",
+       "length": 360597,
+       "recording": {
+        "id": "4a707063-248e-4182-8c6a-943b4babd4cd",
+        "title": "Rafmagnið búið (from Ný batterí EP, 2000)"
+       }
+      }
+     ],
+     "format": "Digital Media"
+    }
+   ],
+   "release-group": {
+    "first-release-date": "1999-06",
+    "primary-type": "Album",
+    "title": "Ágætis byrjun",
+    "artist-credit": [
+     {
+      "artist": {
+       "country": "IS",
+       "disambiguation": "Icelandic post‐rock band",
+       "id": "f6f2326f-6b25-4170-b89d-e235b25508e8",
+       "sort-name": "Sigur Rós",
+       "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+       "type": "Group",
+       "name": "Sigur Rós"
+      },
+      "joinphrase": "",
+      "name": "Sigur Rós"
+     }
+    ],
+    "secondary-types": [],
+    "disambiguation": "",
+    "id": "62b427b8-1c52-34e7-b250-da2aa3e44860",
+    "secondary-type-ids": [],
+    "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc"
+   },
+   "artist-credit": [
+    {
+     "name": "Sigur Rós",
+     "joinphrase": "",
+     "artist": {
+      "disambiguation": "Icelandic post‐rock band",
+      "country": "IS",
+      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+      "name": "Sigur Rós",
+      "type": "Group",
+      "id": "f6f2326f-6b25-4170-b89d-e235b25508e8",
+      "sort-name": "Sigur Rós"
+     }
+    }
+   ]
+  },
+  {
+   "id": "28435663-bf54-46b9-a17a-d9cd8e6f8b98",
+   "title": "Ágætis byrjun",
+   "status": "Official",
+   "date": "2000-08",
+   "country": "GB",
+   "disambiguation": "",
+   "media": [
+    {
+     "track-offset": 0,
+     "title": "",
+     "tracks": [
+      {
+       "title": "Intro",
+       "length": 97093,
+       "recording": {
+        "id": "80c8836e-5dff-4d00-a092-8094216921f3",
+        "title": "Intro"
+       }
+      },
+      {
+       "title": "Svefn‐g‐englar",
+       "length": 606000,
+       "recording": {
+        "id": "59e24cd5-5c11-4dd8-b6c2-99ed9885553c",
+        "title": "Svefn‐g‐englar"
+       }
+      },
+      {
+       "title": "Starálfur",
+       "length": 406933,
+       "recording": {
+        "id": "9c691c15-dba1-42c8-a99b-0aead1ec0bd4",
+        "title": "Starálfur"
+       }
+      },
+      {
+       "title": "Flugufrelsarinn",
+       "length": 468506,
+       "recording": {
+        "id": "53837546-8792-41e2-a0fa-2ee34dfcaec5",
+        "title": "Flugufrelsarinn"
+       }
+      },
+      {
+       "title": "Ný batterí",
+       "length": 491000,
+       "recording": {
+        "id": "0003dd36-b4d2-4216-a37e-b110f6882ecb",
+        "title": "Ný batterí"
+       }
+      },
+      {
+       "title": "Hjartað hamast (bamm bamm bamm)",
+       "length": 430226,
+       "recording": {
+        "id": "cd96be20-9dc2-409a-8faf-b6d938def0d9",
+        "title": "Hjartað hamast (bamm bamm bamm)"
+       }
+      },
+      {
+       "title": "Viðrar vel til loftárása",
+       "length": 617746,
+       "recording": {
+        "id": "8cf770ff-b93a-48b4-ba04-cb437bc52d36",
+        "title": "Viðrar vel til loftárása"
+       }
+      },
+      {
+       "title": "Olsen Olsen",
+       "length": 483133,
+       "recording": {
+        "id": "9ca22b58-f9a8-43e3-9404-57cdef7b1f29",
+        "title": "Olsen Olsen"
+       }
+      },
+      {
+       "title": "Ágætis byrjun",
+       "length": 476000,
+       "recording": {
+        "id": "482c80fc-9281-4d3c-b570-8bf053f01b7d",
+        "title": "Ágætis byrjun"
+       }
+      },
+      {
+       "title": "Avalon",
+       "length": 241586,
+       "recording": {
+        "id": "6bc9cd53-f0eb-4cea-b4c1-27a536bb13ba",
+        "title": "Avalon"
+       }
+      }
+     ],
+     "format": "CD",
+     "format-id": "9712d52a-4509-3d4b-a1a2-67c88c643e31",
+     "track-count": 10,
+     "position": 1,
+     "id": "7e56e0d4-cc31-34f7-a6ef-81ae0b2800f5"
+    }
+   ],
+   "release-group": {
+    "id": "62b427b8-1c52-34e7-b250-da2aa3e44860",
+    "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+    "secondary-type-ids": [],
+    "secondary-types": [],
+    "artist-credit": [
+     {
+      "name": "Sigur Rós",
+      "joinphrase": "",
+      "artist": {
+       "disambiguation": "Icelandic post‐rock band",
+       "country": "IS",
+       "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+       "type": "Group",
+       "name": "Sigur Rós",
+       "id": "f6f2326f-6b25-4170-b89d-e235b25508e8",
+       "sort-name": "Sigur Rós"
+      }
+     }
+    ],
+    "disambiguation": "",
+    "title": "Ágætis byrjun",
+    "primary-type": "Album",
+    "first-release-date": "1999-06"
+   },
+   "artist-credit": [
+    {
+     "artist": {
+      "sort-name": "Sigur Rós",
+      "id": "f6f2326f-6b25-4170-b89d-e235b25508e8",
+      "type": "Group",
+      "name": "Sigur Rós",
+      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+      "country": "IS",
+      "disambiguation": "Icelandic post‐rock band"
+     },
+     "joinphrase": "",
+     "name": "Sigur Rós"
+    }
+   ]
+  },
+  {
+   "id": "712000a1-961d-4fd2-9ca0-a27f174a0ee4",
+   "title": "Ágætis byrjun (A Good Beginning) [Demos, Rarities and Live at Íslenska Óperan]",
+   "status": "Official",
+   "date": "2019-07-05",
+   "country": "XW",
+   "disambiguation": "Bandcamp",
+   "media": [
+    {
+     "title": "",
+     "track-offset": 0,
+     "position": 1,
+     "id": "6e3394f8-82e6-3b71-a765-6001c8cf217a",
+     "format": "Digital Media",
+     "tracks": [
+      {
+       "title": "Intro (live at Íslenska Óperan, 1999)",
+       "length": 305149,
+       "recording": {
+        "id": "4931666f-d6c4-4bda-adf7-10826363c2ce",
+        "title": "Intro (live at Íslenska Óperan, 1999)"
+       }
+      },
+      {
+       "title": "Von (live at Íslenska Óperan, 1999)",
+       "length": 464706,
+       "recording": {
+        "id": "c9b88a42-50af-4c2c-beb8-136366cbaa3f",
+        "title": "Von (live at Íslenska Óperan, 1999)"
+       }
+      },
+      {
+       "title": "Syndir Guðs (live at Íslenska Óperan 1999)",
+       "length": 329653,
+       "recording": {
+        "id": "81002d66-6c1e-4f3f-94a3-29e151010c5c",
+        "title": "Syndir Guðs (live at Íslenska Óperan 1999)"
+       }
+      },
+      {
+       "title": "Flugufrelsarinn (live at Íslenska Óperan 1999)",
+       "length": 547256,
+       "recording": {
+        "id": "44b4c087-0e0b-4f3e-b224-d9facc7c84a0",
+        "title": "Flugufrelsarinn (live at Íslenska Óperan 1999)"
+       }
+      },
+      {
+       "title": "Olsen Olsen (live at Íslenska Óperan 1999)",
+       "length": 367445,
+       "recording": {
+        "id": "c80a4baf-58a4-4d11-a58b-40258ecddd9a",
+        "title": "Olsen Olsen (live at Íslenska Óperan 1999)"
+       }
+      },
+      {
+       "title": "Ágætis byrjun (live at Íslenska Óperan 1999)",
+       "length": 453785,
+       "recording": {
+        "id": "880cac1e-36fe-4b9b-b0d9-d8a1c7646b15",
+        "title": "Ágætis byrjun (live at Íslenska Óperan 1999)"
+       }
+      },
+      {
+       "title": "Viðrar vel til loftárása (live at Íslenska Óperan 1999)",
+       "length": 512714,
+       "recording": {
+        "id": "92188260-2c9f-4337-a29e-f7e45955dba4",
+        "title": "Viðrar vel til loftárása (live at Íslenska Óperan 1999)"
+       }
+      },
+      {
+       "title": "Svefn-g-englar (live at Íslenska Óperan 1999)",
+       "length": 566232,
+       "recording": {
+        "id": "badb53b1-f02f-4f31-80ba-8f9754dca7f8",
+        "title": "Svefn-g-englar (live at Íslenska Óperan 1999)"
+       }
+      },
+      {
+       "title": "Ný batterí (live at Íslenska Óperan 1999)",
+       "length": 358464,
+       "recording": {
+        "id": "df2bc43c-b723-4a8a-8bae-ec8685225ae5",
+        "title": "Ný batterí (live at Íslenska Óperan 1999)"
+       }
+      },
+      {
+       "title": "Nýja lagið (live at Íslenska Óperan 1999)",
+       "length": 588000,
+       "recording": {
+        "id": "b0032aae-7761-40c7-bc76-50f79f2a293f",
+        "title": "Nýja lagið (live at Íslenska Óperan 1999)"
+       }
+      },
+      {
+       "title": "Hafsól (live at Íslenska Óperan, 1999)",
+       "length": 921176,
+       "recording": {
+        "id": "b992452c-b0be-4428-939e-4ff7497f3c27",
+        "title": "Hafsól (live at Íslenska Óperan, 1999)"
+       }
+      },
+      {
+       "title": "Svefn-g-englar (live at Popp I Reykjavík 1998)",
+       "length": 710058,
+       "recording": {
+        "id": "b5692a05-4337-497f-bf87-31aaad8a4627",
+        "title": "Svefn-g-englar (live at Popp I Reykjavík 1998)"
+       }
+      },
+      {
+       "title": "Starálfur (original speed version)",
+       "length": 386784,
+       "recording": {
+        "id": "35a7429f-abfa-4b4e-ba2f-969cee9b3913",
+        "title": "Starálfur (original speed version)"
+       }
+      },
+      {
+       "title": "Flugufrelsarinn (demo 1998)",
+       "length": 527008,
+       "recording": {
+        "id": "2720952c-33cc-4c88-8c57-b782edfc18cd",
+        "title": "Flugufrelsarinn (demo 1998)"
+       }
+      },
+      {
+       "title": "Ný batterí (first mix)",
+       "length": 426922,
+       "recording": {
+        "id": "7f3535c7-b194-4848-8caa-eafb102673a2",
+        "title": "Ný batterí (first mix)"
+       }
+      },
+      {
+       "title": "Hjartað hamast (bamm bamm bamm) (demo 1995)",
+       "length": 556160,
+       "recording": {
+        "id": "5b05f26b-24a8-4cb8-a570-61499fcebe16",
+        "title": "Hjartað hamast (bamm bamm bamm) (demo 1995)"
+       }
+      },
+      {
+       "title": "Viðrar vel til loftárása (alternative ending)",
+       "length": 664619,
+       "recording": {
+        "id": "64b007f5-7d8b-4097-94d5-f4a9b50357a3",
+        "title": "Viðrar vel til loftárása (alternative ending)"
+       }
+      },
+      {
+       "title": "Olsen Olsen (demo 1998)",
+       "length": 446389,
+       "recording": {
+        "id": "d2263c8e-fdcb-41da-a033-8af161e80d9e",
+        "title": "Olsen Olsen (demo 1998)"
+       }
+      },
+      {
+       "title": "Ágætis byrjun (demo 1998)",
+       "length": 482000,
+       "recording": {
+        "id": "e9c6ca00-64fa-4bf8-bd9e-6a8afde19d45",
+        "title": "Ágætis byrjun (demo 1998)"
+       }
+      },
+      {
+       "title": "Hugmynd 1 (1998 demo)",
+       "length": 418064,
+       "recording": {
+        "id": "e288486e-5fb4-4f3c-9810-bce8dad81299",
+        "title": "Hugmynd 1 (1998 demo)"
+       }
+      },
+      {
+       "title": "Hugmynd 2 (1998 demo)",
+       "length": 242154,
+       "recording": {
+        "id": "4e746346-39c1-46b1-aab2-5aa93f54296b",
+        "title": "Hugmynd 2 (1998 demo)"
+       }
+      },
+      {
+       "title": "Hugmynd 3 (1998 demo)",
+       "length": 590549,
+       "recording": {
+        "id": "6eee077d-9df5-4d78-981b-3c1851eb3b27",
+        "title": "Hugmynd 3 (1998 demo)"
+       }
+      },
+      {
+       "title": "Debata mandire (live at Laugardashöll 1999)",
+       "length": 228714,
+       "recording": {
+        "id": "50d477eb-30a0-4002-a3c3-b9ebeb08f265",
+        "title": "Debata mandire (live at Laugardashöll 1999)"
+       }
+      },
+      {
+       "title": "Rafmagnið búið (from Ný batterí EP, 2000)",
+       "length": 360597,
+       "recording": {
+        "id": "4a707063-248e-4182-8c6a-943b4babd4cd",
+        "title": "Rafmagnið búið (from Ný batterí EP, 2000)"
+       }
+      }
+     ],
+     "format-id": "907a28d9-b3b2-3ef6-89a8-7b18d91d4794",
+     "track-count": 24
+    }
+   ],
+   "release-group": {
+    "primary-type": "Album",
+    "first-release-date": "1999-06",
+    "title": "Ágætis byrjun",
+    "disambiguation": "",
+    "secondary-types": [],
+    "artist-credit": [
+     {
+      "artist": {
+       "disambiguation": "Icelandic post‐rock band",
+       "country": "IS",
+       "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+       "name": "Sigur Rós",
+       "type": "Group",
+       "sort-name": "Sigur Rós",
+       "id": "f6f2326f-6b25-4170-b89d-e235b25508e8"
+      },
+      "joinphrase": "",
+      "name": "Sigur Rós"
+     }
+    ],
+    "id": "62b427b8-1c52-34e7-b250-da2aa3e44860",
+    "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+    "secondary-type-ids": []
+   },
+   "artist-credit": [
+    {
+     "joinphrase": "",
+     "artist": {
+      "sort-name": "Sigur Rós",
+      "id": "f6f2326f-6b25-4170-b89d-e235b25508e8",
+      "name": "Sigur Rós",
+      "type": "Group",
+      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+      "country": "IS",
+      "disambiguation": "Icelandic post‐rock band"
+     },
+     "name": "Sigur Rós"
+    }
+   ]
+  },
+  {
+   "id": "743f2ede-a911-4fc9-9d78-c88c2c2fb429",
+   "title": "Ágætis byrjun",
+   "status": "Official",
+   "date": "1999-06",
+   "country": "IS",
+   "disambiguation": "",
+   "media": [
+    {
+     "track-offset": 0,
+     "title": "",
+     "format": "CD",
+     "tracks": [
+      {
+       "title": "Intro",
+       "length": 97093,
+       "recording": {
+        "id": "80c8836e-5dff-4d00-a092-8094216921f3",
+        "title": "Intro"
+       }
+      },
+      {
+       "title": "Svefn‐g‐englar",
+       "length": 606000,
+       "recording": {
+        "id": "59e24cd5-5c11-4dd8-b6c2-99ed9885553c",
+        "title": "Svefn‐g‐englar"
+       }
+      },
+      {
+       "title": "Starálfur",
+       "length": 406933,
+       "recording": {
+        "id": "9c691c15-dba1-42c8-a99b-0aead1ec0bd4",
+        "title": "Starálfur"
+       }
+      },
+      {
+       "title": "Flugufrelsarinn",
+       "length": 468506,
+       "recording": {
+        "id": "53837546-8792-41e2-a0fa-2ee34dfcaec5",
+        "title": "Flugufrelsarinn"
+       }
+      },
+      {
+       "title": "Ný batterí",
+       "length": 491000,
+       "recording": {
+        "id": "0003dd36-b4d2-4216-a37e-b110f6882ecb",
+        "title": "Ný batterí"
+       }
+      },
+      {
+       "title": "Hjartað hamast (bamm bamm bamm)",
+       "length": 430226,
+       "recording": {
+        "id": "cd96be20-9dc2-409a-8faf-b6d938def0d9",
+        "title": "Hjartað hamast (bamm bamm bamm)"
+       }
+      },
+      {
+       "title": "Viðrar vel til loftárása",
+       "length": 617746,
+       "recording": {
+        "id": "8cf770ff-b93a-48b4-ba04-cb437bc52d36",
+        "title": "Viðrar vel til loftárása"
+       }
+      },
+      {
+       "title": "Olsen Olsen",
+       "length": 483133,
+       "recording": {
+        "id": "9ca22b58-f9a8-43e3-9404-57cdef7b1f29",
+        "title": "Olsen Olsen"
+       }
+      },
+      {
+       "title": "Ágætis byrjun",
+       "length": 476000,
+       "recording": {
+        "id": "482c80fc-9281-4d3c-b570-8bf053f01b7d",
+        "title": "Ágætis byrjun"
+       }
+      },
+      {
+       "title": "Avalon",
+       "length": 241586,
+       "recording": {
+        "id": "6bc9cd53-f0eb-4cea-b4c1-27a536bb13ba",
+        "title": "Avalon"
+       }
+      }
+     ],
+     "track-count": 10,
+     "format-id": "9712d52a-4509-3d4b-a1a2-67c88c643e31",
+     "position": 1,
+     "id": "a3569815-27d6-3a88-b85f-fdcaf86abbd9"
+    }
+   ],
+   "release-group": {
+    "id": "62b427b8-1c52-34e7-b250-da2aa3e44860",
+    "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+    "secondary-type-ids": [],
+    "artist-credit": [
+     {
+      "artist": {
+       "id": "f6f2326f-6b25-4170-b89d-e235b25508e8",
+       "sort-name": "Sigur Rós",
+       "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+       "name": "Sigur Rós",
+       "type": "Group",
+       "country": "IS",
+       "disambiguation": "Icelandic post‐rock band"
+      },
+      "joinphrase": "",
+      "name": "Sigur Rós"
+     }
+    ],
+    "secondary-types": [],
+    "disambiguation": "",
+    "title": "Ágætis byrjun",
+    "first-release-date": "1999-06",
+    "primary-type": "Album"
+   },
+   "artist-credit": [
+    {
+     "joinphrase": "",
+     "artist": {
+      "country": "IS",
+      "disambiguation": "Icelandic post‐rock band",
+      "id": "f6f2326f-6b25-4170-b89d-e235b25508e8",
+      "sort-name": "Sigur Rós",
+      "name": "Sigur Rós",
+      "type": "Group",
+      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+     },
+     "name": "Sigur Rós"
+    }
+   ]
+  },
+  {
+   "id": "801c960c-53b6-4c95-af85-fd6c170a3a7c",
+   "title": "Ágætis byrjun",
+   "status": "Official",
+   "disambiguation": "",
+   "media": [
+    {
+     "track-offset": 0,
+     "title": "",
+     "track-count": 10,
+     "format-id": "9712d52a-4509-3d4b-a1a2-67c88c643e31",
+     "format": "CD",
+     "tracks": [
+      {
+       "title": "Intro",
+       "length": 97093,
+       "recording": {
+        "id": "80c8836e-5dff-4d00-a092-8094216921f3",
+        "title": "Intro"
+       }
+      },
+      {
+       "title": "Svefn‐g‐englar",
+       "length": 606000,
+       "recording": {
+        "id": "59e24cd5-5c11-4dd8-b6c2-99ed9885553c",
+        "title": "Svefn‐g‐englar"
+       }
+      },
+      {
+       "title": "Starálfur",
+       "length": 406933,
+       "recording": {
+        "id": "9c691c15-dba1-42c8-a99b-0aead1ec0bd4",
+        "title": "Starálfur"
+       }
+      },
+      {
+       "title": "Flugufrelsarinn",
+       "length": 468506,
+       "recording": {
+        "id": "53837546-8792-41e2-a0fa-2ee34dfcaec5",
+        "title": "Flugufrelsarinn"
+       }
+      },
+      {
+       "title": "Ný batterí",
+       "length": 491000,
+       "recording": {
+        "id": "0003dd36-b4d2-4216-a37e-b110f6882ecb",
+        "title": "Ný batterí"
+       }
+      },
+      {
+       "title": "Hjartað hamast (bamm bamm bamm)",
+       "length": 430226,
+       "recording": {
+        "id": "cd96be20-9dc2-409a-8faf-b6d938def0d9",
+        "title": "Hjartað hamast (bamm bamm bamm)"
+       }
+      },
+      {
+       "title": "Viðrar vel til loftárása",
+       "length": 617746,
+       "recording": {
+        "id": "8cf770ff-b93a-48b4-ba04-cb437bc52d36",
+        "title": "Viðrar vel til loftárása"
+       }
+      },
+      {
+       "title": "Olsen Olsen",
+       "length": 483133,
+       "recording": {
+        "id": "9ca22b58-f9a8-43e3-9404-57cdef7b1f29",
+        "title": "Olsen Olsen"
+       }
+      },
+      {
+       "title": "Ágætis byrjun",
+       "length": 476000,
+       "recording": {
+        "id": "482c80fc-9281-4d3c-b570-8bf053f01b7d",
+        "title": "Ágætis byrjun"
+       }
+      },
+      {
+       "title": "Avalon",
+       "length": 241586,
+       "recording": {
+        "id": "6bc9cd53-f0eb-4cea-b4c1-27a536bb13ba",
+        "title": "Avalon"
+       }
+      }
+     ],
+     "id": "cc98a33f-6ddc-34a5-90e1-c59d254c712c",
+     "position": 1
+    }
+   ],
+   "release-group": {
+    "primary-type": "Album",
+    "title": "Ágætis byrjun",
+    "first-release-date": "1999-06",
+    "artist-credit": [
+     {
+      "joinphrase": "",
+      "artist": {
+       "disambiguation": "Icelandic post‐rock band",
+       "country": "IS",
+       "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+       "type": "Group",
+       "name": "Sigur Rós",
+       "sort-name": "Sigur Rós",
+       "id": "f6f2326f-6b25-4170-b89d-e235b25508e8"
+      },
+      "name": "Sigur Rós"
+     }
+    ],
+    "secondary-types": [],
+    "disambiguation": "",
+    "secondary-type-ids": [],
+    "id": "62b427b8-1c52-34e7-b250-da2aa3e44860",
+    "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc"
+   },
+   "artist-credit": [
+    {
+     "artist": {
+      "disambiguation": "Icelandic post‐rock band",
+      "country": "IS",
+      "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+      "name": "Sigur Rós",
+      "type": "Group",
+      "id": "f6f2326f-6b25-4170-b89d-e235b25508e8",
+      "sort-name": "Sigur Rós"
+     },
+     "joinphrase": "",
+     "name": "Sigur Rós"
+    }
+   ]
+  }
+ ]
+}

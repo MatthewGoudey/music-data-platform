@@ -132,6 +132,15 @@ def title_key(title: str) -> str:
     return _key(_strip_editions(title), cut_featured=True)
 
 
+_EDITION_MARKER = re.compile(rf"\b(?:{_EDITION_WORDS})\b", re.IGNORECASE)
+
+
+def has_edition_marker(text: str | None) -> bool:
+    """True when a release title or disambiguation names an edition ("20th anniversary
+    deluxe edition", "Remastered"). Used to keep such releases out of the standard tracklist."""
+    return bool(text and _EDITION_MARKER.search(text))
+
+
 def split_featured(name: str) -> tuple[str, list[str]]:
     """Return (primary artist raw name, [featured raw names]) without normalizing.
 

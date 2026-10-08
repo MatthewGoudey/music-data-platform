@@ -81,11 +81,11 @@ def ingest(
 def resolve(
     limit: int = typer.Option(500, help="Max MusicBrainz lookups this run (1 req/s)."),
 ) -> None:
-    """Resolve listens to artists, release groups and tracklists (Phase 2). No-op for now."""
+    """Fetch MusicBrainz metadata and canonical tracklists, most-listened groups first."""
     from musicdata.jobs import runs
-    from musicdata.jobs.stubs import noop
+    from musicdata.resolve.job import resolve as resolve_job
 
-    raise typer.Exit(runs.run("resolve", noop({"limit": limit}), trigger=_trigger()))
+    raise typer.Exit(runs.run("resolve", resolve_job(limit=limit), trigger=_trigger()))
 
 
 @app.command()
