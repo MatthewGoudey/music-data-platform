@@ -35,6 +35,8 @@ Read first: `docs/REDESIGN_PLAN.md` (sections "What this is for", "Data model", 
 - GitHub: `MatthewGoudey/music-data-platform` (public), environments `dev` and `prod`.
 - Both Fly apps are `shared-cpu-1x`, 256 MB, and scale to zero (ADR 0002 amendment).
 - `API_TOKEN` and `QUEUE_PAGE_TOKEN` per environment live in `.env.dev` / `.env.prod`.
+- `POST /query` runs as the read-only role `musicdata_ro` (`DATABASE_URL_READONLY` in
+  `.env.<env>` and `fly secrets`); `scripts/readonly_role.py <env>` creates it or rotates its password.
 - Failure alerts: GitHub email plus an ntfy push to the topic in `NTFY_TOPIC` (`daily-sync`, `backfill`, `full-load`).
 - Laptop tools: uv, `gh` (`C:\Program Files\GitHub CLI\gh.exe`), flyctl (`%USERPROFILE%\.fly\bin\flyctl.exe`).
   No Docker: integration tests run against Neon dev with `--env dev` or `DATABASE_URL` set (ADR 0005).
@@ -52,8 +54,6 @@ step resumes, so a re-run is safe. `ingest --rekey` re-applies identity rules to
 listens after an identity fix (it repaired 3,484 comma-joined listens in dev).
 
 Open items that need Matt:
-- Approve creating a read-only Postgres role (`musicdata_ro`, `pg_read_all_data`) for
-  `/query`; until then `/query` relies on a READ ONLY transaction, a 10 s timeout and a row cap.
 - Paste `docs/claude-project-instructions.md` into the claude.ai Project (gate step 19).
 - Phase 0: disable the old Task Scheduler task, rotate the old Neon password and Render
   `API_SECRET`, export the seed CSVs (`seeds/manual_tracklists.csv` feeds resolve).
