@@ -64,6 +64,9 @@ def ingest(
         None, help="ISO timestamp to start from (overrides the watermark)."
     ),
     full: bool = typer.Option(False, "--full", help="Page back through the whole history."),
+    rekey: bool = typer.Option(
+        False, "--rekey", help="Re-apply identity rules to stored listens (whole history)."
+    ),
 ) -> None:
     """Pull new listens from ListenBrainz and assign identity on the way in."""
     from datetime import UTC, datetime
@@ -74,7 +77,9 @@ def ingest(
     start = datetime.fromisoformat(since) if since else None
     if start is not None and start.tzinfo is None:
         start = start.replace(tzinfo=UTC)
-    raise typer.Exit(runs.run("ingest", ingest_job(full=full, since=start), trigger=_trigger()))
+    raise typer.Exit(
+        runs.run("ingest", ingest_job(full=full, since=start, rekey=rekey), trigger=_trigger())
+    )
 
 
 @app.command()

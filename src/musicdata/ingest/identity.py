@@ -55,6 +55,7 @@ class _Keys[K]:
 @dataclass
 class PageResult:
     listens_inserted: int = 0
+    listens_rekeyed: int = 0
     artists_created: int = 0
     artists_promoted: int = 0
     release_groups_created: int = 0
@@ -79,15 +80,68 @@ class IdentityIndex:
             )
         return idx
 
-    async def write_page(self, conn: asyncpg.Connection, page: list[ParsedListen]) -> PageResult:
-        """Assign identity to every listen in the page and insert the listens. One transaction."""
+    async def write_page(
+        self, conn: asyncpg.Connection, page: list[ParsedListen], *, rekey: bool = False
+    ) -> PageResult:
+        """Assign identity to every listen in the page and insert the listens. One transaction.
+
+        With `rekey`, stored listens of the page whose identity rules now give another
+        artist or release group are moved onto it first (after an identity rule fix).
+        """
         result = PageResult()
         async with conn.transaction():
             artist_ids = await self._artists(conn, page, result)
             rg_ids = await self._release_groups(conn, page, artist_ids, result)
             await self._aliases(conn, page, artist_ids, rg_ids)
+            if rekey:
+                result.listens_rekeyed = await self._rekey(conn, page, artist_ids, rg_ids)
             result.listens_inserted = await self._listens(conn, page, artist_ids, rg_ids)
         return result
+
+    @staticmethod
+    async def _rekey(
+        conn: asyncpg.Connection,
+        page: list[ParsedListen],
+        artist_ids: list[int],
+        rg_ids: list[int | None],
+    ) -> int:
+        """Move stored listens (same time, raw artist and title) onto their new identity.
+
+        A stored listen whose new natural key already exists is a duplicate and goes.
+        """
+        args = (
+            [p.listened_at for p in page],
+            [p.artist_name for p in page],
+            [p.norm_title for p in page],
+            artist_ids,
+            rg_ids,
+        )
+        moves = """
+            SELECT l.listen_id, u.artist_id, u.release_group_id
+              FROM unnest($1::timestamptz[], $2::text[], $3::text[], $4::int[], $5::int[])
+                   AS u(listened_at, artist_name, norm_title, artist_id, release_group_id)
+              JOIN listen l ON l.listened_at = u.listened_at AND l.artist_name = u.artist_name
+                           AND l.norm_title = u.norm_title
+             WHERE l.artist_id <> u.artist_id
+                OR l.release_group_id IS DISTINCT FROM u.release_group_id
+        """
+        await conn.execute(
+            f"""DELETE FROM listen d USING ({moves}) m
+                 WHERE d.listen_id = m.listen_id
+                   AND EXISTS (SELECT 1 FROM listen x
+                                WHERE x.listened_at = d.listened_at
+                                  AND x.artist_id = m.artist_id
+                                  AND x.norm_title = d.norm_title
+                                  AND x.listen_id <> d.listen_id)""",
+            *args,
+        )
+        status = await conn.execute(
+            f"""UPDATE listen l SET artist_id = m.artist_id, release_group_id = m.release_group_id
+                  FROM ({moves}) m
+                 WHERE l.listen_id = m.listen_id""",
+            *args,
+        )
+        return int(status.split()[-1])
 
     async def _artists(
         self, conn: asyncpg.Connection, page: list[ParsedListen], result: PageResult

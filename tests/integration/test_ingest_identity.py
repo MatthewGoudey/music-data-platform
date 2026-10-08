@@ -125,6 +125,31 @@ async def test_unmapped_spelling_lands_on_the_single_mapped_artist(conn) -> None
     assert n == 2
 
 
+async def test_rekey_moves_a_listen_off_a_comma_joined_artist(conn) -> None:
+    index = await IdentityIndex.load(conn)
+    raw = {
+        "listened_at": 946684810,
+        "track_metadata": {
+            "artist_name": "Zz Rekey Lead, Zz Rekey Guest",
+            "release_name": "Zz Rekey Album",
+            "track_name": "Zz Song",
+            "additional_info": {"release_artist_name": "Zz Rekey Lead"},
+        },
+    }
+    old_rules = copy.deepcopy(raw)  # without the album artist, the old rule kept the whole name
+    del old_rules["track_metadata"]["additional_info"]
+    await index.write_page(conn, [parse_listen(old_rules)])
+    assert await _artist_rows(conn, "zz rekey lead zz rekey guest")
+
+    result = await index.write_page(conn, [parse_listen(raw)], rekey=True)
+    assert (result.listens_rekeyed, result.listens_inserted) == (1, 0)
+    moved = await conn.fetchval(
+        """SELECT a.norm_key FROM listen l JOIN artist a USING (artist_id)
+            WHERE l.listened_at = to_timestamp(946684810)"""
+    )
+    assert moved == "zz rekey lead"
+
+
 async def test_edition_variants_share_one_release_group(conn) -> None:
     index = await IdentityIndex.load(conn)
     await index.write_page(

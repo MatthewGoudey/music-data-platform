@@ -25,7 +25,21 @@ log = get_logger(__name__)
 OVERLAP = timedelta(days=3)
 
 
-def ingest(*, full: bool = False, since: datetime | None = None) -> JobFn:
+ORPHANS = """
+    DELETE FROM release_group rg
+     WHERE rg.mbid IS NULL
+       AND NOT EXISTS (SELECT 1 FROM listen l WHERE l.release_group_id = rg.release_group_id);
+    DELETE FROM artist a
+     WHERE a.mbid IS NULL
+       AND NOT EXISTS (SELECT 1 FROM listen l WHERE l.artist_id = a.artist_id)
+       AND NOT EXISTS (SELECT 1 FROM release_group rg WHERE rg.artist_id = a.artist_id);
+"""
+
+
+def ingest(*, full: bool = False, since: datetime | None = None, rekey: bool = False) -> JobFn:
+    """`rekey` pages the whole history from now, moves stored listens onto the identity
+    today's rules give them, then drops the unmapped artists and groups left empty."""
+
     async def _run(ctx: RunContext) -> None:
         settings = get_settings()
         async with connection(ctx.pool) as conn:
@@ -35,7 +49,9 @@ def ingest(*, full: bool = False, since: datetime | None = None) -> JobFn:
             index = await IdentityIndex.load(conn)
 
         start_before = None
-        if since is not None:
+        if rekey:
+            stop_before = since
+        elif since is not None:
             stop_before = since
         elif full or watermark is None:
             stop_before = None
@@ -43,7 +59,7 @@ def ingest(*, full: bool = False, since: datetime | None = None) -> JobFn:
         else:
             stop_before = watermark - OVERLAP
         ctx.notes.update(
-            mode="full" if stop_before is None else "incremental",
+            mode="rekey" if rekey else "full" if stop_before is None else "incremental",
             watermark=watermark,
             start_before=start_before,
             stop_before=stop_before,
@@ -63,7 +79,7 @@ def ingest(*, full: bool = False, since: datetime | None = None) -> JobFn:
                 parsed += len(page)
                 if page:
                     async with connection(ctx.pool) as conn:
-                        result = await index.write_page(conn, page)
+                        result = await index.write_page(conn, page, rekey=rekey)
                     for k, v in asdict(result).items():
                         setattr(totals, k, getattr(totals, k) + v)
                 if pages % 25 == 0:
@@ -71,6 +87,9 @@ def ingest(*, full: bool = False, since: datetime | None = None) -> JobFn:
             lb_count = await lb.listen_count()
 
         async with connection(ctx.pool) as conn:
+            if rekey:
+                async with conn.transaction():
+                    await conn.execute(ORPHANS)
             db_count = await conn.fetchval("SELECT count(*) FROM listen")
         ctx.rows = totals.listens_inserted
         ctx.notes.update(
