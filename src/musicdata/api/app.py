@@ -12,16 +12,16 @@ from datetime import UTC, datetime
 from typing import Annotated
 
 import asyncpg
-from fastapi import Depends, FastAPI, HTTPException, Request, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi import Depends, FastAPI, Request
 
 from musicdata import __version__
+from musicdata.api.deps import get_pool, require_token
+from musicdata.api.routers import albums, artists, listens, query, queue, sessions
 from musicdata.config import Settings, get_settings
 from musicdata.db import connection, create_pool
 from musicdata.log import configure_logging, get_logger
 
 log = get_logger(__name__)
-bearer = HTTPBearer(auto_error=False)
 
 
 @asynccontextmanager
@@ -30,13 +30,19 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     configure_logging(json_lines=settings.log_json)
     app.state.settings = settings
     app.state.pool = None
+    app.state.readonly_pool = None
     try:
         app.state.pool = await create_pool(min_size=1, max_size=5)
+        if settings.database_url_readonly is not None:
+            app.state.readonly_pool = await create_pool(
+                settings.database_url_readonly.get_secret_value(), min_size=1, max_size=2
+            )
     except Exception as exc:  # the API still answers /health without a database
         log.error("database unavailable at startup", extra={"error": str(exc)})
     yield
-    if app.state.pool is not None:
-        await app.state.pool.close()
+    for pool in (app.state.pool, app.state.readonly_pool):
+        if pool is not None:
+            await pool.close()
 
 
 app = FastAPI(
@@ -45,25 +51,8 @@ app = FastAPI(
     description="Personal listening tracker: ListenBrainz in, a queue out.",
     lifespan=lifespan,
 )
-
-
-def require_token(
-    request: Request,
-    creds: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)],
-) -> None:
-    settings: Settings = request.app.state.settings
-    expected = settings.api_token.get_secret_value()
-    if creds is None or creds.credentials != expected:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="bad or missing token")
-
-
-def get_pool(request: Request) -> asyncpg.Pool:
-    pool = request.app.state.pool
-    if pool is None:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="database unavailable"
-        )
-    return pool
+for module in (listens, artists, albums, sessions, query, queue):
+    app.include_router(module.router)
 
 
 @app.get("/health", tags=["ops"])
