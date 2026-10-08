@@ -19,8 +19,9 @@ pytestmark = pytest.mark.integration
 FIXTURES = json.loads(
     (Path(__file__).parents[1] / "unit" / "fixtures" / "listens.json").read_text("utf-8")
 )
-NIRVANA_US = "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
-NIRVANA_UK = "9282c8b4-ca0b-4c6b-b7e3-4f7762dfc4d6"
+# Made-up MBIDs: real ones collide with listening data already loaded in dev.
+NIRVANA_US = "00000000-0000-4000-8000-000000000011"
+NIRVANA_UK = "00000000-0000-4000-8000-000000000012"
 
 
 @pytest.fixture

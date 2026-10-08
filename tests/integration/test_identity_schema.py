@@ -14,9 +14,10 @@ import pytest
 
 pytestmark = pytest.mark.integration
 
-MBID_A = "f6f2326f-6b25-4170-b89d-e235b25508e8"
-MBID_B = "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
-MBID_C = "9c691c15-dba1-42c8-a99b-0aead1ec0bd4"
+# Made-up MBIDs: real ones collide with listening data already loaded in dev.
+MBID_A = "00000000-0000-4000-8000-000000000001"
+MBID_B = "00000000-0000-4000-8000-000000000002"
+MBID_C = "00000000-0000-4000-8000-000000000003"
 
 
 @pytest.fixture

@@ -112,7 +112,7 @@ class IdentityIndex:
             await conn.execute(
                 """UPDATE artist a SET mbid = u.mbid, name = u.name
                      FROM unnest($1::int[], $2::uuid[], $3::text[]) AS u(artist_id, mbid, name)
-                    WHERE a.artist_id = u.artist_id""",
+                    WHERE a.artist_id = u.artist_id AND a.mbid IS NULL""",
                 [x[0] for x in promote],
                 [x[1] for x in promote],
                 [x[2] for x in promote],
@@ -189,7 +189,7 @@ class IdentityIndex:
             await conn.execute(
                 """UPDATE release_group r SET mbid = u.mbid, updated_at = now()
                      FROM unnest($1::int[], $2::uuid[]) AS u(release_group_id, mbid)
-                    WHERE r.release_group_id = u.release_group_id""",
+                    WHERE r.release_group_id = u.release_group_id AND r.mbid IS NULL""",
                 [x[0] for x in promote],
                 [x[1] for x in promote],
             )
