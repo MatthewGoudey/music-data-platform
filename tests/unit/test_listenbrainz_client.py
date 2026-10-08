@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import httpx
+import pytest
 
 from musicdata.clients.listenbrainz import BASE_URL, ListenBrainzClient
 
@@ -34,9 +35,13 @@ def _fake(timestamps: list[int], page_size: int, slow_above: int | None = None):
     return handler, calls
 
 
+async def _no_wait(seconds: float) -> None:
+    return None
+
+
 def _client(handler) -> ListenBrainzClient:
     http = httpx.AsyncClient(base_url=BASE_URL, transport=httpx.MockTransport(handler))
-    return ListenBrainzClient("someone", user_agent="test", client=http)
+    return ListenBrainzClient("someone", user_agent="test", client=http, sleep=_no_wait)
 
 
 async def _collect(
@@ -90,3 +95,33 @@ async def test_a_full_load_resumes_below_the_oldest_stored_listen() -> None:
     seen = await _collect(_client(handler), None, datetime.fromtimestamp(1050, tz=UTC))
     assert calls[0] == 1051
     assert max(seen) == 1050 and min(seen) == 1000
+
+
+async def test_an_outage_is_waited_out(monkeypatch) -> None:
+    import musicdata.clients.listenbrainz as lb
+
+    monkeypatch.setattr(lb.asyncio, "sleep", _no_wait)  # the client's own retry backoff
+    timestamps = list(range(1000, 1020))
+    serve, _ = _fake(timestamps, page_size=1000)
+    failures = {"left": 12}  # more than the shrinking alone absorbs
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/listens") and failures["left"] > 0:
+            failures["left"] -= 1
+            return httpx.Response(502)
+        return serve(request)
+
+    seen = await _collect(_client(handler), None)
+    assert set(seen) == set(timestamps)
+
+
+async def test_a_long_outage_still_fails(monkeypatch) -> None:
+    import musicdata.clients.listenbrainz as lb
+
+    monkeypatch.setattr(lb.asyncio, "sleep", _no_wait)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(502)
+
+    with pytest.raises(httpx.HTTPStatusError):
+        await _collect(_client(handler), None)

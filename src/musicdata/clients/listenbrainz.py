@@ -5,7 +5,9 @@ ListenBrainz sends on every response and retries 429, 5xx and network errors wit
 
 Deep in a long history a 1,000-listen page can take ListenBrainz ~40 s, where its server
 drops the connection; a 500-listen page from the same point takes a few seconds. So paging
-starts at 1,000 and halves the page size on each timeout, down to 100.
+starts at 1,000 and halves the page size on each timeout, down to 100. When even
+100-listen pages fail, ListenBrainz itself is down (it returns 502s for a while), so the
+client waits with growing pauses (about 25 minutes in all) before giving up.
 """
 
 from __future__ import annotations
@@ -23,15 +25,22 @@ log = get_logger(__name__)
 BASE_URL = "https://api.listenbrainz.org/1"
 PAGE_SIZE = 1000  # the API maximum
 MIN_PAGE_SIZE = 100
+OUTAGE_WAITS = (30, 60, 120, 240, 300, 300, 300)  # seconds
 
 
 class ListenBrainzClient:
     def __init__(
-        self, user: str, *, user_agent: str, client: httpx.AsyncClient | None = None
+        self,
+        user: str,
+        *,
+        user_agent: str,
+        client: httpx.AsyncClient | None = None,
+        sleep=asyncio.sleep,
     ) -> None:
         if not user:
             raise ValueError("LISTENBRAINZ_USER is not set")
         self.user = user
+        self._sleep = sleep
         self._http = client or httpx.AsyncClient(
             base_url=BASE_URL, headers={"User-Agent": user_agent}, timeout=60
         )
@@ -103,18 +112,27 @@ class ListenBrainzClient:
         stop_ts = int(stop_before.timestamp()) if stop_before else None
         max_ts: int | None = int(start_before.timestamp()) + 1 if start_before else None
         size = PAGE_SIZE
+        outage_waits = 0
         while True:
             try:
                 page = await self.listens_page(max_ts, size, attempts=2)
             except (httpx.TransportError, httpx.HTTPStatusError) as exc:
                 # A slow page surfaces as our timeout, a dropped connection, or a 5xx.
-                if size <= MIN_PAGE_SIZE or (
-                    isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code < 500
-                ):
+                if isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code < 500:
                     raise
-                size = max(size // 2, MIN_PAGE_SIZE)
-                log.warning("listenbrainz page timed out; shrinking", extra={"page_size": size})
+                if size > MIN_PAGE_SIZE:
+                    size = max(size // 2, MIN_PAGE_SIZE)
+                    log.warning("listenbrainz page failed; shrinking", extra={"page_size": size})
+                    continue
+                # Small pages failing too means ListenBrainz itself is down (502s): wait it out.
+                if outage_waits == len(OUTAGE_WAITS):
+                    raise
+                wait = OUTAGE_WAITS[outage_waits]
+                outage_waits += 1
+                log.warning("listenbrainz unavailable; waiting", extra={"seconds": wait})
+                await self._sleep(wait)
                 continue
+            outage_waits = 0
             if not page:
                 return
             yield page
