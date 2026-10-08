@@ -62,3 +62,15 @@ def test_comma_joined_artists_belong_to_the_album_artist() -> None:
     assert p.artist.name == "Kendrick Lamar" and p.artist.key == "kendrick lamar"
     assert p.artist_name == "Kendrick Lamar, U2"
     assert p.norm_title == "xxx"
+
+
+def test_an_unmapped_album_belongs_to_its_album_artist() -> None:
+    p = parse_listen(FIXTURES["unmapped_soundtrack"])
+    assert p is not None
+    assert p.artist.name == "DJ Khalil, Denzel Curry"  # no list, no matching album-artist prefix
+    assert p.album_artist.name == "Various Artists" and p.album_artist.key == "various artists"
+
+
+def test_the_album_artist_defaults_to_the_listen_artist() -> None:
+    p = parse_listen(FIXTURES["unmapped_comma"])
+    assert p is not None and p.album_artist == p.artist

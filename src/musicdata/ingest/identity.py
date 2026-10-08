@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 
 import asyncpg
 
-from musicdata.ingest.parse import ParsedListen
+from musicdata.ingest.parse import Credit, ParsedListen
 
 UNTITLED = "untitled"
 
@@ -90,9 +90,10 @@ class IdentityIndex:
         """
         result = PageResult()
         async with conn.transaction():
-            artist_ids = await self._artists(conn, page, result)
-            rg_ids = await self._release_groups(conn, page, artist_ids, result)
-            await self._aliases(conn, page, artist_ids, rg_ids)
+            artist_ids = await self._credits(conn, [p.artist for p in page], result)
+            album_artist_ids = await self._credits(conn, [p.album_artist for p in page], result)
+            rg_ids = await self._release_groups(conn, page, album_artist_ids, result)
+            await self._aliases(conn, page, artist_ids, album_artist_ids, rg_ids)
             if rekey:
                 result.listens_rekeyed = await self._rekey(conn, page, artist_ids, rg_ids)
             result.listens_inserted = await self._listens(conn, page, artist_ids, rg_ids)
@@ -143,13 +144,13 @@ class IdentityIndex:
         )
         return int(status.split()[-1])
 
-    async def _artists(
-        self, conn: asyncpg.Connection, page: list[ParsedListen], result: PageResult
+    async def _credits(
+        self, conn: asyncpg.Connection, credits: list[Credit], result: PageResult
     ) -> list[int]:
+        """An artist_id for every credit, creating or promoting artists as ADR 0015 says."""
         # Mapped credits first, so an unmapped spelling in the same page can land on them.
         missing_mapped: dict[str, tuple[str, str]] = {}
-        for p in page:
-            a = p.artist
+        for a in credits:
             if a.mbid and self.artists.find(a.mbid, a.key) is None:
                 missing_mapped.setdefault(a.mbid, (a.name, a.key))
 
@@ -177,8 +178,7 @@ class IdentityIndex:
             await self._insert_artists(conn, create, result)
 
         unmapped_new: dict[str, str] = {}
-        for p in page:
-            a = p.artist
+        for a in credits:
             if a.mbid is None and self.artists.find(None, a.key) is None:
                 unmapped_new.setdefault(a.key, a.name)
         if unmapped_new:
@@ -187,10 +187,10 @@ class IdentityIndex:
             )
 
         ids: list[int] = []
-        for p in page:
-            found = self.artists.find(p.artist.mbid, p.artist.key)
+        for a in credits:
+            found = self.artists.find(a.mbid, a.key)
             if found is None:
-                raise RuntimeError(f"artist not resolved after write: {p.artist}")
+                raise RuntimeError(f"artist not resolved after write: {a}")
             ids.append(found)
         return ids
 
@@ -298,10 +298,14 @@ class IdentityIndex:
         conn: asyncpg.Connection,
         page: list[ParsedListen],
         artist_ids: list[int],
+        album_artist_ids: list[int],
         rg_ids: list[int | None],
     ) -> None:
         artist_aliases = {(p.artist_name, aid) for p, aid in zip(page, artist_ids, strict=True)}
         artist_aliases |= {(p.artist.name, aid) for p, aid in zip(page, artist_ids, strict=True)}
+        artist_aliases |= {
+            (p.album_artist.name, aid) for p, aid in zip(page, album_artist_ids, strict=True)
+        }
         await conn.execute(
             """INSERT INTO artist_alias (raw_name, artist_id, source)
                SELECT raw_name, artist_id, 'listenbrainz'
@@ -312,7 +316,7 @@ class IdentityIndex:
         )
         rg_aliases = {
             (aid, p.release_name, rg)
-            for p, aid, rg in zip(page, artist_ids, rg_ids, strict=True)
+            for p, aid, rg in zip(page, album_artist_ids, rg_ids, strict=True)
             if rg is not None and p.release_name
         }
         if rg_aliases:

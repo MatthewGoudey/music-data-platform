@@ -60,6 +60,15 @@
       "track_name": "XXX. (feat. U2)"
     }
   },
+  "unmapped_soundtrack": {
+    "listened_at": 1791000000,
+    "track_metadata": {
+      "additional_info": {"release_artist_name": "Various Artists"},
+      "artist_name": "DJ Khalil, Denzel Curry",
+      "release_name": "Spider-Man: Into the Spider-Verse",
+      "track_name": "Scared of the Dark"
+    }
+  },
   "no_release": {
     "listened_at": 1791200000,
     "track_metadata": {"artist_name": "Wilco", "track_name": "Jesus, Etc."}

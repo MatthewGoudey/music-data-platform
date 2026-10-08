@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from musicdata.identity import album_key, norm_key, primary_artist, title_key
+from musicdata.identity import album_key, norm_key, primary_artist, split_featured, title_key
 
 
 @dataclass(frozen=True)
@@ -30,7 +30,7 @@ class ParsedListen:
     artist: Credit
     release_name: str | None
     release_key: str
-    release_artist_name: str | None
+    album_artist: Credit  # the release's artist, or the listen's when none was submitted
     release_group_mbid: str | None
     release_mbid: str | None
     recording_mbid: str | None
@@ -86,6 +86,15 @@ def parse_listen(raw: dict) -> ParsedListen | None:
             return None
         artist = Credit(name=primary, mbid=None, key=norm_key(primary))
 
+    # An unmapped album belongs to its album artist, so every track of a soundtrack or a
+    # collaboration lands in one group however each track is credited.
+    album_artist = artist
+    release_artist = _str(info.get("release_artist_name"))
+    if release_artist:
+        name = split_featured(release_artist)[0]
+        if norm_key(name) and norm_key(name) != artist.key:
+            album_artist = Credit(name=name, mbid=None, key=norm_key(name))
+
     release_name = _str(meta.get("release_name"))
     return ParsedListen(
         listened_at=_ts(raw["listened_at"]),  # type: ignore[arg-type]
@@ -95,7 +104,7 @@ def parse_listen(raw: dict) -> ParsedListen | None:
         artist=artist,
         release_name=release_name,
         release_key=album_key(release_name) if release_name else "",
-        release_artist_name=_str(info.get("release_artist_name")),
+        album_artist=album_artist,
         release_group_mbid=_str(mapping.get("release_group_mbid")),
         release_mbid=_str(mapping.get("release_mbid")),
         recording_mbid=_str(mapping.get("recording_mbid")),
