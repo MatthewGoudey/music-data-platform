@@ -15,3 +15,9 @@ def test_trigger_follows_the_github_event(monkeypatch, event: str | None, expect
     else:
         monkeypatch.setenv("GITHUB_EVENT_NAME", event)
     assert _trigger() == expected
+
+
+def test_ingest_factory_returns_a_job() -> None:
+    from musicdata.ingest.job import ingest
+
+    assert callable(ingest(full=True))

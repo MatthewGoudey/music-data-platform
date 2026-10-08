@@ -30,5 +30,6 @@ index) plus mapped and unmapped rows sharing a key, which go to review.
 
 ListenBrainz credits a track to a list of artists ("Kendrick Lamar feat. SZA" is two).
 `listen.artist_id` is the first credited artist, which is the primary artist in MusicBrainz
-credit order. Featured credits are kept as `artist_alias` rows only; a `listen_artist`
-table for per-credit stats is deferred until a question needs it.
+credit order; for an unmapped listen it is the name before any "feat." marker. Featured
+artists stay visible in the raw `artist_name`. A `listen_artist` table for per-credit stats
+is deferred until a question needs it.

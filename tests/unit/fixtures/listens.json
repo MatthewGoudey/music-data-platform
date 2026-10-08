@@ -1,0 +1,62 @@
+{
+  "_comment": "ListenBrainz listen payloads. 'mapped' is a real listen from 2026-10-08, trimmed; the others are variants of the shapes the API returns.",
+  "mapped": {
+    "inserted_at": 1791417732,
+    "listened_at": 1791409637,
+    "recording_msid": "d06fd173-72b0-46d0-b091-f4624785d9bf",
+    "track_metadata": {
+      "additional_info": {
+        "duration_ms": 406573,
+        "music_service": "spotify.com",
+        "release_artist_name": "Sigur Rós",
+        "submission_client": "listenbrainz"
+      },
+      "artist_name": "Sigur Rós",
+      "mbid_mapping": {
+        "artist_mbids": ["f6f2326f-6b25-4170-b89d-e235b25508e8"],
+        "artists": [
+          {"artist_credit_name": "Sigur Rós", "artist_mbid": "f6f2326f-6b25-4170-b89d-e235b25508e8", "join_phrase": ""}
+        ],
+        "recording_mbid": "9c691c15-dba1-42c8-a99b-0aead1ec0bd4",
+        "recording_name": "Starálfur",
+        "release_group_mbid": "62b427b8-1c52-34e7-b250-da2aa3e44860",
+        "release_mbid": "743f2ede-a911-4fc9-9d78-c88c2c2fb429"
+      },
+      "release_name": "Ágætis byrjun",
+      "track_name": "Starálfur"
+    },
+    "user_name": "MatthewG606"
+  },
+  "mapped_featured": {
+    "listened_at": 1791400000,
+    "track_metadata": {
+      "artist_name": "Kendrick Lamar, SZA",
+      "mbid_mapping": {
+        "artists": [
+          {"artist_credit_name": "Kendrick Lamar", "artist_mbid": "381086ea-f511-4aba-bdf9-71c753dc5077", "join_phrase": " & "},
+          {"artist_credit_name": "SZA", "artist_mbid": "272989c8-5535-492d-a25c-9f58803e027f", "join_phrase": ""}
+        ],
+        "release_group_mbid": "e2d43bdd-e25a-4e0c-a8c3-b3e2e3d3c6f0"
+      },
+      "release_name": "Black Panther: The Album",
+      "track_name": "All the Stars"
+    }
+  },
+  "unmapped_featured": {
+    "listened_at": 1791300000,
+    "track_metadata": {
+      "additional_info": {"duration": 201.5, "media_player": "foobar2000"},
+      "artist_name": "Ryan Davis & the Roadhouse Band feat. Califone",
+      "release_name": "New Threats from the Soul (Deluxe Edition)",
+      "track_name": "Mister Bluebird - 2025 Remaster"
+    }
+  },
+  "no_release": {
+    "listened_at": 1791200000,
+    "track_metadata": {"artist_name": "Wilco", "track_name": "Jesus, Etc."}
+  },
+  "no_artist": {
+    "listened_at": 1791100000,
+    "track_metadata": {"artist_name": "  ", "track_name": "Untitled"}
+  }
+}

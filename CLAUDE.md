@@ -73,6 +73,9 @@ for listening questions.
 10. `resolve/`: release-group metadata (type, secondary types, first year), the canonical
     release by the edition rule, and its tracklist into `release_group_tracklist` / `release_group_track`.
 11. Unmapped tail: MusicBrainz search; Last.fm only once `LASTFM_API_KEY` exists. Manual overrides from seeds.
+    Merge an unmapped release group into a mapped one of the same artist and key: the one whose
+    tracklist overlaps the listened titles most wins; ties go to review. (Ingest leaves these
+    apart on purpose, e.g. The Fall's "Live at the Witch Trials" under two MBIDs plus one unmapped.)
 12. Resumable by `--limit`; the first full pass runs as `backfill` chunks.
 
 ### Block D — derive

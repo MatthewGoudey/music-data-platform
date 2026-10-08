@@ -6,8 +6,8 @@
     musicdata shows      # Ticketmaster + do312 → shows          (Phase 3)
     musicdata dq         # acceptance checks → dq_result         (Phase 2)
 
-Phase 1 ships these as no-ops that still record a pipeline_run row, so the
-scheduling, secrets, logging and alerting can be proven before any data moves.
+A job whose phase has not landed yet is a no-op that still records a pipeline_run
+row. `musicdata ingest --full` loads the whole ListenBrainz history.
 `musicdata dq --fail` forces a failure to test the alert path.
 """
 
@@ -63,12 +63,18 @@ def ingest(
     since: str | None = typer.Option(
         None, help="ISO timestamp to start from (overrides the watermark)."
     ),
+    full: bool = typer.Option(False, "--full", help="Page back through the whole history."),
 ) -> None:
-    """Pull new listens from ListenBrainz (Phase 2). Currently a no-op that records a run."""
-    from musicdata.jobs import runs
-    from musicdata.jobs.stubs import noop
+    """Pull new listens from ListenBrainz and assign identity on the way in."""
+    from datetime import UTC, datetime
 
-    raise typer.Exit(runs.run("ingest", noop({"since": since}), trigger=_trigger()))
+    from musicdata.ingest.job import ingest as ingest_job
+    from musicdata.jobs import runs
+
+    start = datetime.fromisoformat(since) if since else None
+    if start is not None and start.tzinfo is None:
+        start = start.replace(tzinfo=UTC)
+    raise typer.Exit(runs.run("ingest", ingest_job(full=full, since=start), trigger=_trigger()))
 
 
 @app.command()
