@@ -1,0 +1,40 @@
+name: backfill
+
+# Manual, resumable chunks for long jobs (MusicBrainz is 1 req/s; a full pass is hours).
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        description: "dev or prod"
+        required: true
+        default: "dev"
+      job:
+        description: "ingest | resolve | derive | shows | dq"
+        required: true
+        default: "resolve"
+      args:
+        description: "extra CLI args, e.g. --limit 3000"
+        required: false
+        default: ""
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    environment: ${{ github.event.inputs.env }}
+    env:
+      MUSICDATA_ENV: ${{ github.event.inputs.env }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      LISTENBRAINZ_USER: ${{ vars.LISTENBRAINZ_USER }}
+      LISTENBRAINZ_TOKEN: ${{ secrets.LISTENBRAINZ_TOKEN }}
+      MUSICBRAINZ_USER_AGENT: ${{ vars.MUSICBRAINZ_USER_AGENT }}
+      LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
+      TICKETMASTER_API_KEY: ${{ secrets.TICKETMASTER_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - run: uv sync --frozen --no-dev
+      - run: uv run alembic upgrade head
+      - run: uv run musicdata ${{ github.event.inputs.job }} ${{ github.event.inputs.args }}

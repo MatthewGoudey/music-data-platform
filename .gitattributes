@@ -1,0 +1,4 @@
+# Keep LF line endings everywhere; Windows git will not rewrite them.
+* text=auto eol=lf
+*.png binary
+*.zip binary

@@ -1,0 +1,23 @@
+name: spike-scrapers
+
+# Week-1 spike: can a GitHub-hosted runner (datacenter IP) reach do312 and Ticketmaster?
+# Run it from the Actions tab and read the status codes. Decides the Phase 3 source.
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: do312 (Cloudflare) with a browser User-Agent
+        run: |
+          curl -s -o /tmp/do312.html -w "do312 status=%{http_code} bytes=%{size_download}\n" \
+            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Safari/537.36" \
+            "https://do312.com/events/live-music"
+          grep -c 'itemprop="startDate"' /tmp/do312.html || echo "no schema.org events found (challenge page?)"
+      - name: Ticketmaster discovery API
+        env:
+          TM: ${{ secrets.TICKETMASTER_API_KEY }}
+        run: |
+          curl -s -o /tmp/tm.json -w "ticketmaster status=%{http_code} bytes=%{size_download}\n" \
+            "https://app.ticketmaster.com/discovery/v2/events.json?city=Chicago&classificationName=music&size=5&apikey=$TM"

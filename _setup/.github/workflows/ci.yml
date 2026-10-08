@@ -1,0 +1,44 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: musicdata
+          POSTGRES_PASSWORD: musicdata
+          POSTGRES_DB: musicdata
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U musicdata"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      MUSICDATA_ENV: test
+      DATABASE_URL: postgresql://musicdata:musicdata@localhost:5432/musicdata
+      API_TOKEN: ci-token
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: lint
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+      - name: migrate
+        run: uv run alembic upgrade head
+      - name: test
+        run: uv run pytest -q
+      - name: smoke the CLI against the test database
+        run: |
+          uv run musicdata version
+          uv run musicdata ingest
+          uv run musicdata dq

@@ -1,0 +1,30 @@
+# Fly.io: dev API. Scales to zero when idle (cold start is fine in dev).
+#   fly launch --no-deploy --config fly.dev.toml   (first time; creates the app)
+#   fly deploy --config fly.dev.toml
+app = "musicdata-dev"
+primary_region = "ord"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  MUSICDATA_ENV = "dev"
+  PORT = "8000"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[http_service.checks]]
+  interval = "30s"
+  timeout = "5s"
+  grace_period = "10s"
+  method = "GET"
+  path = "/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

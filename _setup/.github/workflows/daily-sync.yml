@@ -1,0 +1,83 @@
+name: daily-sync
+
+# 08:17 UTC = 03:17 Chicago (CDT) / 02:17 (CST). Off the top of the hour on purpose:
+# GitHub delays scheduled runs that pile up at :00.
+on:
+  schedule:
+    - cron: "17 8 * * *"
+  workflow_dispatch:
+    inputs:
+      env:
+        description: "Environment to run (dev or prod); blank runs both"
+        required: false
+        default: ""
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        env: ${{ fromJSON(github.event.inputs.env != '' && format('["{0}"]', github.event.inputs.env) || '["dev","prod"]') }}
+    environment: ${{ matrix.env }}
+    env:
+      MUSICDATA_ENV: ${{ matrix.env }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      LISTENBRAINZ_USER: ${{ vars.LISTENBRAINZ_USER }}
+      LISTENBRAINZ_TOKEN: ${{ secrets.LISTENBRAINZ_TOKEN }}
+      MUSICBRAINZ_USER_AGENT: ${{ vars.MUSICBRAINZ_USER_AGENT }}
+      LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
+      TICKETMASTER_API_KEY: ${{ secrets.TICKETMASTER_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: prod runs the latest v* tag; dev runs main
+        if: matrix.env == 'prod'
+        run: |
+          tag="$(git tag -l 'v*' --sort=-v:refname | head -n 1)"
+          if [ -z "$tag" ]; then echo "no v* tag yet: prod has nothing to run"; exit 1; fi
+          echo "checking out $tag"
+          git checkout --quiet "$tag"
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - run: uv sync --frozen --no-dev
+      - name: migrate
+        run: uv run alembic upgrade head
+
+      # Each step runs even if an earlier one failed: one broken source never
+      # blocks the others (the old daily-sync died at step 2 for three months).
+      - name: ingest
+        id: ingest
+        run: uv run musicdata ingest
+      - name: resolve
+        id: resolve
+        if: always()
+        run: uv run musicdata resolve
+      - name: derive
+        id: derive
+        if: always()
+        run: uv run musicdata derive
+      - name: shows
+        id: shows
+        if: always()
+        run: uv run musicdata shows
+      - name: dq
+        id: dq
+        if: always()
+        run: uv run musicdata dq
+
+      - name: notify on failure
+        if: failure()
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          if [ -n "$NTFY_TOPIC" ]; then
+            curl -fsS -H "Title: musicdata ${{ matrix.env }} sync failed" \
+                 -H "Priority: high" \
+                 -d "ingest=${{ steps.ingest.outcome }} resolve=${{ steps.resolve.outcome }} derive=${{ steps.derive.outcome }} shows=${{ steps.shows.outcome }} dq=${{ steps.dq.outcome }}
+          ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+                 "https://ntfy.sh/$NTFY_TOPIC" || true
+          fi
