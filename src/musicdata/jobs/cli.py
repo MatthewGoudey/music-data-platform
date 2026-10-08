@@ -120,11 +120,12 @@ def shows() -> None:
 def dq(
     fail: bool = typer.Option(False, "--fail", help="Force a failure to test alerting."),
 ) -> None:
-    """Run the acceptance checks and store results (Phase 2). No-op for now."""
+    """Run the acceptance checks, store each result, and exit 1 when any fails."""
     from musicdata.jobs import runs
-    from musicdata.jobs.stubs import forced_failure, noop
+    from musicdata.jobs.dq import dq as dq_job
+    from musicdata.jobs.stubs import forced_failure
 
-    fn = forced_failure() if fail else noop({})
+    fn = forced_failure() if fail else dq_job()
     raise typer.Exit(runs.run("dq", fn, trigger=_trigger()))
 
 
