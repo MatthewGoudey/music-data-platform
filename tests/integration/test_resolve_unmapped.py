@@ -103,7 +103,7 @@ async def test_an_unmapped_group_merges_into_the_namesake_it_overlaps(conn) -> N
     counts = await resolve_unmapped(
         _OnePool(conn), _NoMusicBrainz(), limit=10, min_listens=3, release_group_ids=[unmapped]
     )
-    assert counts["merged"] >= 1
+    assert counts["merged_locally"] == 1  # the free local pass, before any search
     assert (
         await conn.fetchval(
             "SELECT count(*) FROM release_group WHERE release_group_id = $1", unmapped

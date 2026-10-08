@@ -159,6 +159,53 @@ async def _titles(conn: asyncpg.Connection, sql: str, *args: object) -> set[str]
     return {r[0] for r in await conn.fetch(sql, *args)}
 
 
+LOCAL_NAMESAKES = """
+    SELECT u.release_group_id AS src, m.release_group_id AS dst
+      FROM release_group u
+      JOIN release_group m ON m.artist_id = u.artist_id AND m.norm_key = u.norm_key
+                          AND m.mbid IS NOT NULL
+      JOIN release_group_tracklist mt ON mt.release_group_id = m.release_group_id
+                                     AND mt.source = 'musicbrainz'
+     WHERE u.mbid IS NULL
+       AND ($1::int[] IS NULL OR u.release_group_id = ANY($1::int[]))
+       AND NOT EXISTS (SELECT 1 FROM release_group_tracklist ut
+                        WHERE ut.release_group_id = u.release_group_id
+                          AND ut.source <> 'unresolved')
+"""
+
+
+async def merge_local_namesakes(
+    pool: asyncpg.Pool, release_group_ids: list[int] | None = None
+) -> int:
+    """Fold every unmapped group into its mapped namesake by tracklist overlap, whatever
+    its listen count: no MusicBrainz request is needed, so no listen minimum applies."""
+    async with connection(pool) as conn:
+        pairs = await conn.fetch(LOCAL_NAMESAKES, release_group_ids)
+    by_src: dict[int, list[int]] = {}
+    for p in pairs:
+        by_src.setdefault(p["src"], []).append(p["dst"])
+    merged = 0
+    for src, dsts in by_src.items():
+        async with connection(pool) as conn:
+            listened = await _titles(
+                conn, "SELECT DISTINCT norm_title FROM listen WHERE release_group_id = $1", src
+            )
+            candidates = {
+                dst: await _titles(
+                    conn,
+                    "SELECT norm_title FROM release_group_track WHERE release_group_id = $1",
+                    dst,
+                )
+                for dst in dsts
+            }
+            winner, _ = pick_by_overlap(listened, candidates)
+            if winner is not None:
+                async with conn.transaction():
+                    await merge_release_group(conn, src, winner)
+                merged += 1
+    return merged
+
+
 async def resolve_unmapped(
     pool: asyncpg.Pool,
     mb: MusicBrainzClient,
@@ -169,6 +216,7 @@ async def resolve_unmapped(
     retry_unresolved: bool = False,
 ) -> dict[str, int]:
     counts = {"merged": 0, "mapped": 0, "unresolved": 0, "waiting": 0}
+    counts["merged_locally"] = await merge_local_namesakes(pool, release_group_ids)
     async with connection(pool) as conn:
         todo = await conn.fetch(
             f"""SELECT rg.release_group_id, rg.title, rg.norm_key, rg.artist_id,
