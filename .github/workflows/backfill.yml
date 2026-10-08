@@ -38,3 +38,15 @@ jobs:
       - run: uv sync --frozen --no-dev
       - run: uv run alembic upgrade head
       - run: uv run musicdata ${{ github.event.inputs.job }} ${{ github.event.inputs.args }}
+
+      - name: notify on failure
+        if: failure()
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          if [ -n "$NTFY_TOPIC" ]; then
+            curl -fsS -H "Title: musicdata ${{ github.event.inputs.env }} backfill ${{ github.event.inputs.job }} failed" \
+                 -H "Priority: high" \
+                 -d "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+                 "https://ntfy.sh/$NTFY_TOPIC" || true
+          fi
