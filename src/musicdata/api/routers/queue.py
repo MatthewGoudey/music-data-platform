@@ -1,6 +1,7 @@
 """The /queue page (Phase 2 version) and verdicts.
 
-Phase 2's page lists recent album sessions that have no verdict yet, each with the
+The page asks for a verdict on the albums most recently played through (full sessions,
+newest first, at most VERDICT_CARDS), each with the
 two-tap form: again / later / never and an optional one-line note. Below them, the
 upcoming Chicago shows that best match the listening, with interested / going. The page carries
 QUEUE_PAGE_TOKEN in its URL (?t=...) so it opens from a phone bookmark without a header.
@@ -28,6 +29,7 @@ router = APIRouter(tags=["queue"])
 
 Verdict = Literal["again", "later", "never"]
 RECENT_DAYS = 30
+VERDICT_CARDS = 10  # the plan asks for a verdict after a full session, newest first
 
 
 def _check_page_token(request: Request, t: str) -> None:
@@ -99,7 +101,7 @@ PAGE = """<!doctype html>
                      border-radius: 8px; border: 1px solid var(--line);
                      background: var(--bg); color: var(--fg); }}
 </style></head><body>
-<h1>Recent albums: what next?</h1>
+<h1>Just finished: again, later, or never?</h1>
 {cards}
 <h1>Upcoming shows for you</h1>
 {shows}
@@ -178,6 +180,7 @@ async def queue_page(request: Request, pool: Pool, t: Annotated[str, Query()] = 
                   JOIN artist a ON a.artist_id = rg.artist_id
                   LEFT JOIN release_group_stat st USING (release_group_id)
                  WHERE s.started_at > now() - interval '{RECENT_DAYS} days'
+                   AND s.session_type = 'full'
                    AND NOT EXISTS (SELECT 1 FROM verdict v
                                     WHERE v.release_group_id = s.release_group_id
                                       AND v.created_at > s.started_at)
@@ -212,7 +215,7 @@ async def queue_page(request: Request, pool: Pool, t: Annotated[str, Query()] = 
         )
         for r in shows
     )
-    rows = sorted(rows, key=lambda r: r["started_at"], reverse=True)
+    rows = sorted(rows, key=lambda r: r["started_at"], reverse=True)[:VERDICT_CARDS]
     cards = "\n".join(
         CARD.format(
             token=escape(t, quote=True),
@@ -234,7 +237,7 @@ async def queue_page(request: Request, pool: Pool, t: Annotated[str, Query()] = 
     )
     return HTMLResponse(
         PAGE.format(
-            cards=cards or "<p>Nothing waiting for a verdict.</p>",
+            cards=cards or "<p>No finished albums waiting for a verdict.</p>",
             shows=show_cards or "<p>No upcoming shows by artists you listen to.</p>",
         )
     )
