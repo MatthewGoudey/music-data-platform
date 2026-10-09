@@ -59,6 +59,13 @@ to the page (spec v7–v8), same-night show twins merged in `/shows`, and venue 
 by CTA and on foot (migration 0016, `musicdata venues travel`, ADR 0008 amendment); dev and
 prod venues are timed, and the nightly sync times new ones.
 
+Later on 2026-10-09 (v0.3.3–v0.3.7, all in prod, checks green): "Not on sale yet" section
+(announced shows whose public sale is ahead; Ticketmaster read 365 days ahead), Shuffle
+re-draws every card but pins (spec v9–v11), the edition rule skips parts of split sets
+(Blonde on Blonde; `musicdata recheck-tracklists`), a group given an MBID after being marked
+unresolved resolves at once (Modern Sounds), and derive folds listens off groups that can
+never get a tracklist into their mapped namesake (`derive/fold.py`; RAM: 98 listens, 5 full).
+
 Identity change (ADR 0015 amendment 2026-10-09, migration 0015): listens go home to the
 album the player reported (`listen.reported_key`, `derive/reported.py`), and sessions match
 tracks loosely (`loose_title_keys`).
