@@ -311,3 +311,61 @@ def test_queue_trial_sections_recent_and_shows(client) -> None:
     assert shows.status_code == 200 and isinstance(shows.json()["items"], list)
     for s in shows.json()["items"]:
         assert {"show_id", "show_date", "venue", "matched_artist", "lineup"} <= set(s)
+
+
+async def _twin_shows() -> list[int]:
+    """One night, two listings: Ticketmaster at the old venue name with an on-sale time,
+    Oh My Rockness at the new one. Made-up names, a far-off date."""
+    conn = await asyncpg.connect(os.environ["DATABASE_URL"])
+    try:
+        ids = []
+        for name, source in (("Zz Twin Outdoors", "ticketmaster"), ("Zz Twin Indoors", "omr")):
+            venue = await conn.fetchval(
+                "INSERT INTO venue (name, norm_key) VALUES ($1, $2) RETURNING venue_id",
+                name,
+                name.lower(),
+            )
+            show = await conn.fetchval(
+                """INSERT INTO show (venue_id, starts_at, show_date, headliner_key, title)
+                   VALUES ($1, now() + interval '200 days', (now() + interval '200 days')::date,
+                           'zz twin band', 'Zz Twin Band') RETURNING show_id""",
+                venue,
+            )
+            await conn.execute(
+                """INSERT INTO show_source (source, source_id, show_id, url, on_sale_at)
+                   VALUES ($1, $2, $3, 'https://example.com', $4)""",
+                source,
+                f"zz-twin-{source}",
+                show,
+                None if source == "omr" else datetime_in(5),
+            )
+            ids.append(show)
+        return ids
+    finally:
+        await conn.close()
+
+
+def datetime_in(days: int):
+    from datetime import UTC, datetime, timedelta
+
+    return datetime.now(UTC) + timedelta(days=days)
+
+
+async def _drop_twins(ids: list[int]) -> None:
+    conn = await asyncpg.connect(os.environ["DATABASE_URL"])
+    try:
+        await conn.execute("DELETE FROM show WHERE show_id = ANY($1)", ids)
+        await conn.execute("DELETE FROM venue WHERE name LIKE 'Zz Twin %'")
+    finally:
+        await conn.close()
+
+
+def test_twin_listings_are_one_show_with_pooled_sale_times(client) -> None:
+    ids = asyncio.run(_twin_shows())
+    try:
+        rows = client.get("/shows?days=365&venue=Zz%20Twin&format=json", headers=AUTH).json()
+        assert [r["venue"] for r in rows] == ["Zz Twin Indoors"]
+        assert rows[0]["on_sale"] is not None
+        assert client.get("/queue/sales?t=page-token").status_code == 200
+    finally:
+        asyncio.run(_drop_twins(ids))

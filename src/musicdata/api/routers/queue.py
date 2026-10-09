@@ -255,6 +255,61 @@ async def queue_shows(pool: Pool):
     return render_object({"items": items})
 
 
+SALE_DAYS = 30  # a presale or on-sale opening within this many days counts as upcoming
+SALE_SHOW_DAYS = 365  # far-out arena dates included
+SALE_CARDS = 25
+
+
+@router.get("/queue/sales", dependencies=[Depends(page_or_bearer)])
+async def queue_sales(pool: Pool):
+    """Presales and public on-sales for shows up to a year out by artists Matt listens to:
+    the 25 best matches with a sale still ahead, soonest sale first.
+
+    A presale counts only before the public on-sale: windows still open after tickets went
+    on public sale ("VIP Packages", "Preferred Seating", cardmember perks running to show
+    night) are perks, not presales."""
+    import json
+
+    from musicdata.api.deps import Format
+    from musicdata.api.routers.shows import shows as shows_route
+    from musicdata.shows.travel import travel_line
+
+    response = await shows_route(
+        pool=pool,
+        days=SALE_SHOW_DAYS,
+        match=True,
+        venue=None,
+        just_announced_days=None,
+        include_cancelled=False,
+        presales=True,
+        sale_days=SALE_DAYS,
+        sort="score",
+        limit=SALE_CARDS * 8,
+        format=Format.json,
+    )
+    items = []
+    for s in json.loads(response.body):  # best match first
+        if s.get("on_sale_passed"):
+            s["presale_now"] = s["presale_now_ends"] = None
+            if not s.get("on_sale"):
+                s["next_presale"] = s["presale_name"] = None
+        if s.get("next_presale") and s.get("on_sale") and s["next_presale"] > s["on_sale"]:
+            s["next_presale"] = s["presale_name"] = None  # a "presale" after the public sale
+        if not (s.get("presale_now") or s.get("next_presale") or s.get("on_sale")):
+            continue
+        s["travel"] = travel_line(s.get("transit_min"), s.get("walk_min"))
+        s["sale_at"] = (
+            min(x for x in (s.get("next_presale"), s.get("on_sale")) if x)
+            if (s.get("next_presale") or s.get("on_sale"))
+            else None
+        )
+        items.append(s)
+        if len(items) == SALE_CARDS:
+            break
+    items.sort(key=lambda s: (s.get("presale_now") is None, s["sale_at"] or "9999"))
+    return render_object({"items": items})
+
+
 @router.get("/queue/data", dependencies=[Depends(page_or_bearer)])
 async def queue_data(
     pool: Pool,

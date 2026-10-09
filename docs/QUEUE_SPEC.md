@@ -434,3 +434,8 @@ priority Essential. Matt has played other Ratboys records but no session of this
   you might like" (the 25 best-matched shows of the next 90 days by the `GET /shows?match=true`
   ranking, listed by date; `GET /queue/shows`).
   They load after the queue and never slow it. Prod gets them only if Matt keeps them.
+- 2026-10-09 v8: Matt kept the v7 sections and added one: "Presales & on-sales" (`GET /queue/sales`),
+  the 25 best-matched shows up to a year out with a presale or public on-sale in the next 30
+  days, soonest sale first; a window still open after the public on-sale is a perk, not a
+  presale. Shows by one headliner on one night are one show (Oh My Rockness's venue wins:
+  shows moved indoors from the Salt Shed's fairgrounds). All three sections go to prod.

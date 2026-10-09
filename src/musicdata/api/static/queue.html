@@ -93,6 +93,10 @@ h2 { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercas
     <h2>Recently finished</h2>
     <div id="recent"></div>
   </section>
+  <section class="extra" id="sales-wrap" hidden aria-label="Presales and on-sales">
+    <h2>Presales &amp; on-sales</h2>
+    <div id="sales"></div>
+  </section>
   <section class="extra" id="shows-wrap" hidden aria-label="Shows">
     <h2>Shows you might like</h2>
     <div id="shows"></div>
@@ -212,6 +216,21 @@ function travel(s) {
   return s.travel ? `<strong>${esc(s.travel)}</strong> · ` : "";
 }
 
+const SALE = new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+const saleTime = t => SALE.format(new Date(t.replace(" ", "T")));  // already Chicago time
+
+function saleLine(s) {
+  if (s.presale_now) {
+    return `<strong>Presale open now</strong>: ${esc(s.presale_now)}${s.presale_now_ends ? ` until ${saleTime(s.presale_now_ends)}` : ""}`;
+  }
+  const parts = [];
+  if (s.next_presale && (!s.on_sale || s.next_presale < s.on_sale)) {
+    parts.push(`<strong>${esc(s.presale_name || "Presale")}</strong> ${saleTime(s.next_presale)}`);
+  }
+  if (s.on_sale) parts.push(`${parts.length ? "on sale" : "<strong>On sale</strong>"} ${saleTime(s.on_sale)}`);
+  return parts.join(" · ");
+}
+
 async function loadExtras() {
   try {
     const r = await fetch(url("/queue/recent"));
@@ -223,6 +242,18 @@ async function loadExtras() {
         <div class="detail">${esc(i.history)}${i.manual ? " · marked played" : ""}</div></div>`).join("")
         || `<p class="meta">Nothing played through in the last 30 days.</p>`;
       $("recent-wrap").hidden = false;
+    }
+  } catch (e) {}
+  try {
+    const r = await fetch(url("/queue/sales"));
+    if (r.ok) {
+      const items = (await r.json()).items;
+      $("sales").innerHTML = items.map(s => `<div class="mini">
+        <div class="what">${esc(s.matched_artist)} <span>· ${esc(s.venue)}</span></div>
+        <div class="when">${DAY.format(new Date(s.show_date + "T12:00:00"))}</div>
+        <div class="detail">${saleLine(s)}${s.travel ? ` · ${esc(s.travel)}` : ""}${s.tickets ? ` · <a href="${esc(s.tickets)}" target="_blank" rel="noopener">Tickets</a>` : ""}</div></div>`).join("")
+        || `<p class="meta">No presales or on-sales coming up for artists you listen to.</p>`;
+      $("sales-wrap").hidden = false;
     }
   } catch (e) {}
   try {
