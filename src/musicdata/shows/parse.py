@@ -51,6 +51,7 @@ class Show:
     price: str | None = None
     local_date: date | None = None  # when starts_at is not in the venue's own offset
     cancelled: bool = False
+    presales: list[dict[str, str]] = field(default_factory=list)  # {"name", "start", "end"}
 
     @property
     def show_date(self) -> date:
@@ -69,11 +70,12 @@ def _time(value: str | None) -> datetime | None:
     """ISO times as both sites write them: "2026-10-30T19:00:00.000-05:00", "…-0500"."""
     if not value:
         return None
-    v = re.sub(r"([+-]\d{2})(\d{2})$", r"\1:\2", value.strip())
+    v = re.sub(r"([+-]\d{2})(\d{2})$", r"\1:\2", value.strip()).replace("Z", "+00:00")
     try:
-        return datetime.fromisoformat(v)
+        t = datetime.fromisoformat(v)
     except ValueError:
         return None
+    return t if t.year >= 2000 else None  # Ticketmaster writes 1900-01-01 for "unknown"
 
 
 def _text(value: str | None) -> str:
@@ -178,6 +180,22 @@ def _tm_price(event: dict) -> str | None:
     return f"${low:.0f}" if low == high else f"${low:.0f}–${high:.0f}"
 
 
+def _tm_presales(event: dict) -> list[dict[str, str]]:
+    """Every presale window, earliest first, as ISO strings (stored as JSON)."""
+    out = []
+    for p in ((event.get("sales") or {}).get("presales")) or []:
+        start, end = _time(p.get("startDateTime")), _time(p.get("endDateTime"))
+        if start is not None:
+            out.append(
+                {
+                    "name": _text(p.get("name")) or "Presale",
+                    "start": start.isoformat(),
+                    "end": end.isoformat() if end else "",
+                }
+            )
+    return sorted(out, key=lambda p: p["start"])
+
+
 def parse_tm_events(body: dict) -> list[Show]:
     """Events from one Discovery API page. Attractions are the lineup when present; a title
     without them is split later like any listing title."""
@@ -234,6 +252,7 @@ def parse_tm_events(body: dict) -> list[Show]:
                 price=_tm_price(e),
                 local_date=date.fromisoformat(local) if local else None,
                 cancelled=((e.get("dates") or {}).get("status") or {}).get("code") == "cancelled",
+                presales=_tm_presales(e),
             )
         )
     return shows

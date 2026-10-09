@@ -10,6 +10,7 @@ splits only when the whole name resolves to nobody and each part does.
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 
 import asyncpg
@@ -169,12 +170,12 @@ async def upsert_show(conn: asyncpg.Connection, show: Show) -> int:
         )
         await conn.execute(
             """INSERT INTO show_source (source, source_id, show_id, url, tickets_url,
-                                        on_sale_at, price, seen_at)
-               VALUES ($1, $2, $3, $4, $5, $6, $7, now())
+                                        on_sale_at, price, presales, seen_at)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, now())
                ON CONFLICT (source, source_id) DO UPDATE
                   SET show_id = EXCLUDED.show_id, url = EXCLUDED.url,
                       tickets_url = EXCLUDED.tickets_url, on_sale_at = EXCLUDED.on_sale_at,
-                      price = EXCLUDED.price, seen_at = now()""",
+                      price = EXCLUDED.price, presales = EXCLUDED.presales, seen_at = now()""",
             show.source,
             show.source_id,
             show_id,
@@ -182,6 +183,7 @@ async def upsert_show(conn: asyncpg.Connection, show: Show) -> int:
             show.tickets_url,
             show.on_sale_at,
             show.price,
+            json.dumps(show.presales),
         )
         await conn.execute("DELETE FROM show_artist WHERE show_id = $1", show_id)
         await conn.executemany(
@@ -313,10 +315,20 @@ def shows(*, sweep: bool = False, venue_limit: int | None = None) -> JobFn:
                 known = {
                     r["source_id"]
                     for r in await conn.fetch(
-                        """UPDATE show_source SET seen_at = now()
-                            WHERE source = 'ticketmaster' AND source_id = ANY($1::text[])
-                            RETURNING source_id""",
+                        # Every listing comes back each night, so sale details stay current.
+                        """UPDATE show_source ss
+                              SET seen_at = now(), on_sale_at = u.on_sale_at, price = u.price,
+                                  tickets_url = u.tickets_url, presales = u.presales::jsonb
+                             FROM unnest($1::text[], $2::timestamptz[], $3::text[], $4::text[],
+                                         $5::text[])
+                                  AS u(source_id, on_sale_at, price, tickets_url, presales)
+                            WHERE ss.source = 'ticketmaster' AND ss.source_id = u.source_id
+                            RETURNING ss.source_id""",
                         [s.source_id for s in listed],
+                        [s.on_sale_at for s in listed],
+                        [s.price for s in listed],
+                        [s.tickets_url for s in listed],
+                        [json.dumps(s.presales) for s in listed],
                     )
                 }
                 cancelled = [s.source_id for s in listed if s.cancelled and s.source_id in known]

@@ -86,3 +86,24 @@ def test_ticketmaster_events_carry_lineups_local_dates_and_cancellations() -> No
     titled = [x for x in shows if not x.structured]
     assert titled and all(not x.performers for x in titled)  # split later, from the title
     assert all(x.structured == bool(x.performers) for x in shows)
+
+
+def test_ticketmaster_presales_are_kept_in_order() -> None:
+    import json
+
+    from musicdata.shows.parse import parse_tm_events
+
+    shows = parse_tm_events(json.loads(_page("tm_events.json")))
+    with_presales = [s for s in shows if s.presales]
+    assert with_presales
+    for s in with_presales:
+        starts = [p["start"] for p in s.presales]
+        assert starts == sorted(starts) and all(p["name"] for p in s.presales)
+
+
+def test_placeholder_dates_read_as_unknown() -> None:
+    from musicdata.shows.parse import _time
+
+    assert _time("1900-01-01T06:00:00Z") is None
+    assert _time("2026-10-30T19:00:00.000-05:00").isoformat() == "2026-10-30T19:00:00-05:00"
+    assert _time("2026-05-13T15:00:00Z").utcoffset().total_seconds() == 0
