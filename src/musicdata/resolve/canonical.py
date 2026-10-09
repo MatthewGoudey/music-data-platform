@@ -2,19 +2,23 @@
 
 The edition rule (plan, "Edge rules"): the canonical release is official, dated within
 12 months of the group's first release, carries no edition marker, and has the fewest
-tracks; ties go to the earliest date. Each filter is skipped when it would leave nothing,
+tracks; ties go to the earliest date. A release with under PART_SHARE of the usual track
+count is a part of a split set and never counts: the Netherlands sold Blonde on Blonde as
+two single LPs, 6 and 8 tracks, against 14 everywhere else. Each filter is skipped when it would leave nothing,
 so a group of bootlegs or undated releases still gets a tracklist. Video media (a DVD in
 a CD+DVD edition) never count as tracks.
 """
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 
 from musicdata.identity import album_key, has_edition_marker, title_key
 
 VIDEO_FORMATS = {"DVD", "DVD-Video", "Blu-ray", "VHS", "HD-DVD", "VCD", "SVCD", "UMD"}
 BOX_SET_TRACKS = 30
+PART_SHARE = 0.6  # below this share of the usual track count, a release is one part of a set
 
 
 @dataclass(frozen=True)
@@ -86,6 +90,9 @@ def choose_release(releases: list[dict], first_release_date: str | None) -> dict
             candidates,
             lambda r: (m := _months(r.get("date"))) is not None and m - first <= 12,
         )
+    counts = Counter(_track_count(r) for r in candidates)
+    usual = max(counts, key=lambda c: (counts[c], c))  # the most common count
+    candidates = _narrow(candidates, lambda r: _track_count(r) >= PART_SHARE * usual)
     return min(
         candidates,
         key=lambda r: (_track_count(r), _months(r.get("date")) or 10**9, r["id"]),

@@ -47,6 +47,26 @@ def test_fewest_tracks_wins_within_the_window() -> None:
     assert choose_release(releases, "1999-06")["id"] == "uk"
 
 
+def test_the_common_track_count_beats_a_double_album_sold_in_parts() -> None:
+    releases = [
+        _release("nl-lp1", 8, date="1967"),
+        _release("nl-lp2", 6, date="1967"),
+        _release("us", 14, date="1966-05"),
+        _release("gb", 14, date="1966-08"),
+        _release("it", 14, date="1966-09"),
+    ]
+    assert choose_release(releases, "1966-06")["id"] == "us"
+
+
+def test_bonus_editions_sharing_a_count_still_lose_to_the_standard() -> None:
+    releases = [
+        _release("jp-bonus", 12, date="1999-07"),
+        _release("au-bonus", 12, date="1999-08"),
+        _release("standard", 10, date="1999-06"),
+    ]
+    assert choose_release(releases, "1999-06")["id"] == "standard"
+
+
 def test_filters_that_would_empty_the_set_are_skipped() -> None:
     releases = [_release("boot", 8, status="Bootleg", date="")]
     assert choose_release(releases, "1999-06")["id"] == "boot"

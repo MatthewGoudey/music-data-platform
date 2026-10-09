@@ -109,6 +109,19 @@ def resolve(
     )
 
 
+@app.command("recheck-tracklists")
+def recheck_tracklists_cmd(
+    limit: int = typer.Option(500, help="Max albums to ask MusicBrainz about again."),
+) -> None:
+    """Re-resolve albums whose tracklist looks cut short (many played titles match no track)."""
+    from musicdata.jobs import runs
+    from musicdata.resolve.recheck import recheck_tracklists
+
+    raise typer.Exit(
+        runs.run("recheck_tracklists", recheck_tracklists(limit=limit), trigger=_trigger())
+    )
+
+
 @app.command()
 def derive(
     full: bool = typer.Option(False, "--full", help="Rebuild every release group's sessions."),
