@@ -431,5 +431,6 @@ priority Essential. Matt has played other Ratboys records but no session of this
   other canon lists keep 90%.
 - 2026-10-09 v7 (trial, dev only): Matt asked to try two sections below Up next again:
   "Recently finished" (full sessions in the last 30 days, `GET /queue/recent`) and "Shows
-  you might like" (the `GET /shows?match=true` ranking, next 60 days, `GET /queue/shows`).
+  you might like" (the 25 best-matched shows of the next 90 days by the `GET /shows?match=true`
+  ranking, listed by date; `GET /queue/shows`).
   They load after the queue and never slow it. Prod gets them only if Matt keeps them.

@@ -233,7 +233,7 @@ async function loadExtras() {
         <div class="what">${esc(s.matched_artist)} <span>· ${esc(s.venue)}</span></div>
         <div class="when">${DAY.format(new Date(s.show_date + "T12:00:00"))}${s.time ? " " + esc(s.time) : ""}</div>
         <div class="detail">${travel(s)}${esc(s.lineup)}${s.next_presale ? ` · presale ${esc(s.next_presale)}` : ""}${s.tickets ? ` · <a href="${esc(s.tickets)}" target="_blank" rel="noopener">Tickets</a>` : ""}</div></div>`).join("")
-        || `<p class="meta">No shows in the next 60 days by artists you listen to.</p>`;
+        || `<p class="meta">No shows in the next 90 days by artists you listen to.</p>`;
       $("shows-wrap").hidden = false;
     }
   } catch (e) {}

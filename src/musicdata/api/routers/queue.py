@@ -172,8 +172,8 @@ async def check_listens_status(pool: Pool):
 
 RECENT_DAYS = 30
 RECENT_CARDS = 8
-SHOW_DAYS = 60
-SHOW_CARDS = 8
+SHOW_DAYS = 90
+SHOW_CARDS = 25
 
 
 @router.get("/queue/recent", dependencies=[Depends(page_or_bearer)])
@@ -219,8 +219,8 @@ async def queue_recent(pool: Pool):
 
 @router.get("/queue/shows", dependencies=[Depends(page_or_bearer)])
 async def queue_shows(pool: Pool):
-    """Trial section (spec v7): upcoming Chicago shows by artists Matt listens to, best
-    match first, from the same ranking as `GET /shows?match=true`."""
+    """Trial section (spec v7): the best-matched upcoming Chicago shows (the ranking of
+    `GET /shows?match=true`), soonest first."""
     import json
 
     from musicdata.api.deps import Format
@@ -241,7 +241,7 @@ async def queue_shows(pool: Pool):
     )
     from musicdata.shows.travel import travel_line
 
-    items = json.loads(response.body)
+    items = sorted(json.loads(response.body), key=lambda s: (s["show_date"], s.get("time") or ""))
     for s in items:
         s["travel"] = travel_line(s.get("transit_min"), s.get("walk_min"))
     return render_object({"items": items})
