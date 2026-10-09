@@ -93,3 +93,38 @@ async def test_a_new_group_is_created_and_a_merge_carries_its_entries(conn) -> N
         await conn.fetchval("SELECT release_group_id FROM list_entry WHERE entry_id = $1", entry)
         == rg_id
     )
+
+
+async def test_entries_resolved_to_a_compilation_are_rejected(conn) -> None:
+    from musicdata.lists.compilations import REJECT
+
+    artist = await conn.fetchval(
+        "INSERT INTO artist (name, norm_key) VALUES ('Zz Hits Band', 'zz hits band') "
+        "RETURNING artist_id"
+    )
+    comp = await _group(conn, artist, "Zz Collected", "zz collected", 2001)
+    await conn.execute(
+        "UPDATE release_group SET secondary_types = '{Compilation}' WHERE release_group_id = $1",
+        comp,
+    )
+    studio = await _group(conn, artist, "Zz Studio", "zz studio", 1999)
+    list_id = await conn.fetchval(
+        "INSERT INTO list (slug, name, goal) VALUES ('zz_pop', 'Zz', 'breadth') RETURNING list_id"
+    )
+    for album, rg in (("Zz Collected", comp), ("Zz Studio", studio)):
+        await conn.execute(
+            """INSERT INTO list_entry (list_id, raw_artist, raw_album, artist_key, album_key,
+                                       release_group_id, resolve_status)
+               VALUES ($1, 'Zz Hits Band', $2, 'zz hits band', lower($2), $3, 'resolved')""",
+            list_id,
+            album,
+            rg,
+        )
+    rows = await conn.fetch(REJECT, "zz_pop")
+    assert [r["raw_album"] for r in rows] == ["Zz Collected"]
+    statuses = dict(
+        await conn.fetch(
+            "SELECT raw_album, review_status FROM list_entry WHERE list_id = $1", list_id
+        )
+    )
+    assert statuses == {"Zz Collected": "rejected", "Zz Studio": "accepted"}

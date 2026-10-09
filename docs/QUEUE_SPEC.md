@@ -449,3 +449,10 @@ priority Essential. Matt has played other Ratboys records but no session of this
 - 2026-10-09 v11: Matt asked that Shuffle re-draw every card but the pins: revisits come from the
   due pools in random order and the wildcard is drawn again, and `exclude` (every card shown
   since Top picks) keeps revisits and wildcards from repeating too.
+- 2026-10-09 v12: Matt added the Billboard 200 to widen toward popular music people his age
+  would know. `scripts/convert_billboard.py` turns the weekly charts (1963-2026) into
+  `billboard_200`: the top 2,500 albums by weeks charted since 2005 + 0.3 x earlier weeks + 2 x
+  top-10 weeks, greatest hits and compilations left out (and any entry MusicBrainz knows as a
+  compilation rejected after resolving, `lists reject-compilations`). Goal `breadth`, weight 0.8,
+  ranked; Essential to #250, Recommended to #1,000. A `popular` profile (migration 0017) draws
+  from it alone; `default` counts it too.

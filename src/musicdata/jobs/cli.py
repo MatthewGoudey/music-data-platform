@@ -211,6 +211,17 @@ def lists_copy_resolutions(
     raise typer.Exit(runs.run("lists_copy", lists_copy(url), trigger=_trigger()))
 
 
+@lists_app.command("reject-compilations")
+def lists_reject_compilations(
+    list_: str = typer.Option(..., "--list", help="List slug, e.g. billboard_200."),
+) -> None:
+    """Set aside a list's entries that resolved to a compilation (never heard as an album)."""
+    from musicdata.jobs import runs
+    from musicdata.lists.compilations import reject_compilations
+
+    raise typer.Exit(runs.run("lists_reject", reject_compilations(list_), trigger=_trigger()))
+
+
 @lists_app.command("resolve")
 def lists_resolve(
     limit: int = typer.Option(300, help="Max MusicBrainz searches this run (1 req/s each)."),

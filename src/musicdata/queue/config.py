@@ -36,4 +36,5 @@ LIST_LABELS = {
     "acclaimed_music_3000": "Acclaimed Music",
     "claude_canon": "Claude canon",
     "besteveralbums_overall": "BestEverAlbums",
+    "billboard_200": "Billboard 200",
 }
