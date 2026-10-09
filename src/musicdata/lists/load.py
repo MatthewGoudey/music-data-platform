@@ -10,6 +10,7 @@ not on GitHub (`musicdata --env <env> lists load`).
 from __future__ import annotations
 
 import json
+from decimal import Decimal
 from pathlib import Path
 
 import asyncpg
@@ -63,7 +64,7 @@ async def load_list(conn: asyncpg.Connection, lf: ListFile) -> dict[str, int]:
             s.slug,
             s.name,
             s.goal,
-            s.weight,
+            Decimal(str(s.weight)),  # 0.8, not 0.8000…0444
             s.ranked,
             s.default_priority,
             s.source,

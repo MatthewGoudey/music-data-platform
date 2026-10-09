@@ -48,8 +48,9 @@ boost. Always ask Matt before changing a rule in that spec, and log the change a
   No Docker: integration tests run against Neon dev with `--env dev` or `DATABASE_URL` set (ADR 0005).
 - Run any job against an environment from the laptop: `uv run musicdata --env dev --plain-logs <job>`.
 
-## Current state (2026-10-09, Phase 2 gate in progress, Phase 3 started)
-`v0.2.2` is deployed to dev and prod. Dev passes all acceptance checks on the full history
+## Current state (2026-10-09, Phase 4 Block A done, waiting for Matt)
+`v0.2.3` is deployed to prod (shows on a scheduled Fly machine, albums-only `/queue`); `main`
+adds Phase 4 Block A (lists and atlas), deployed to dev. Earlier: `v0.2.2` on dev and prod. Dev passes all acceptance checks on the full history
 (listen count equal to ListenBrainz, 97% of listens on an album with a tracklist, 7,196
 album sessions). v0.2.2 added one-album-one-group rules (album-artist keys, local merges,
 stray-track redirects; ADR 0015 amendment) and started Phase 3: shows from Oh My Rockness
@@ -69,8 +70,11 @@ Open items that need Matt:
 - Done: `docs/claude-project-instructions.md` pasted into the claude.ai Project (gate step 19).
 - Keep the old pipeline and its Task Scheduler task running until Matt says otherwise.
 - Rotating the old Neon password and Render `API_SECRET` waits for Matt.
-- The old-database exports (Claude canon, venues, manual tracklists) are Claude Code's job in
-  Phase 4 Block A (read-only SELECT; ask Matt once before connecting).
+- The old-database exports (Claude canon, venues, manual tracklists): analysed read-only in
+  Block A; what to export waits for Matt's answer to the Block A report.
+- Three Acclaimed Music rows collapse onto another entry's keys (Weezer *Blue*/*Green*,
+  Crystal Castles *I*/*II*, Elvis 1956 vs the '68 NBC-TV Special); the fix touches the key
+  rule, so it waits for Matt.
 
 Notes for the next session:
 - Never migrate a shared database (dev, prod) ahead of `main`: a cloud job running the
@@ -100,12 +104,14 @@ registers five lists — `v_atlas` (2,942, `seeds/atlas/albums.csv` + `album_not
 public: commit `seeds/lists/` only the way Matt chooses in Step 0. The `/queue` page carries albums only: Step 0 takes the shows
 section and the verdict cards off it, and Block E puts "Up next" there. Verdicts are dormant.
 
-- [ ] Step 0 — shows section and verdict cards off `/queue` (read-only recent sessions until
-      Block E); ask Matt whether v0.2.3 goes to prod; ask Matt how to keep `seeds/lists/`
-      unpublished (private repo, or gitignored and loaded from the laptop).
-- [ ] Block A — commit `seeds/atlas/`, and `seeds/lists/` as Matt chose; migration 0011 (lists, entries, atlas lanes
-      and paths); `musicdata lists load`; check L1; export the Claude canon, venues and manual
-      tracklists from the old database; register `claude_canon`.
+- [x] Step 0 — shows section and verdict cards off `/queue` (read-only recent sessions until
+      Block E); v0.2.3 in prod; `seeds/lists/` gitignored and loaded from the laptop
+      (`musicdata --env <env> lists load`).
+- [x] Block A — `seeds/atlas/` committed; migration 0011 (adds `list.file_rows` so L1 runs in
+      the cloud); `musicdata lists load` (idempotent); L1 green in dev with all five lists
+      loaded (prod loads at the gate). Old-database analysis done (read-only); exporting the
+      Claude canon, venues and manual tracklists and registering `claude_canon` wait for
+      Matt's decision on the Block A report.
 - [ ] Block B — `musicdata lists resolve` (known release groups first, then MusicBrainz search);
       backfill passes in dev; checks L2–L3; report resolved / ambiguous / unresolved per list.
 - [ ] Block C — `list_entry_status`, `GET /lists`, `GET /gaps`; checks L4–L5; report atlas coverage.
