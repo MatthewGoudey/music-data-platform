@@ -239,7 +239,12 @@ async def queue_shows(pool: Pool):
         limit=SHOW_CARDS,
         format=Format.json,
     )
-    return render_object({"items": json.loads(response.body)})
+    from musicdata.shows.travel import travel_line
+
+    items = json.loads(response.body)
+    for s in items:
+        s["travel"] = travel_line(s.get("transit_min"), s.get("walk_min"))
+    return render_object({"items": items})
 
 
 @router.get("/queue/data", dependencies=[Depends(page_or_bearer)])

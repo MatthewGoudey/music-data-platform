@@ -147,6 +147,24 @@ def dq(
     raise typer.Exit(runs.run("dq", fn, trigger=_trigger()))
 
 
+venues_app = typer.Typer(no_args_is_help=True, help="Venues (shows).")
+app.add_typer(venues_app, name="venues")
+
+
+@venues_app.command("travel")
+def venues_travel_cmd(
+    limit: int = typer.Option(1000, help="Max venues this run."),
+    refresh: bool = typer.Option(False, "--refresh", help="Re-time venues that have times."),
+) -> None:
+    """Minutes by CTA and on foot from HOME_ADDRESS to venues without times (Google Routes)."""
+    from musicdata.jobs import runs
+    from musicdata.shows.travel import venues_travel
+
+    raise typer.Exit(
+        runs.run("venues_travel", venues_travel(limit=limit, refresh=refresh), trigger=_trigger())
+    )
+
+
 lists_app = typer.Typer(no_args_is_help=True, help="Lists and the atlas (docs/QUEUE_SPEC.md).")
 app.add_typer(lists_app, name="lists")
 

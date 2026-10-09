@@ -56,7 +56,7 @@ async def shows(
     async with connection(pool) as conn:
         rows = await conn.fetch(
             f"""SELECT s.show_id, s.show_date, to_char(s.starts_at AT TIME ZONE 'America/Chicago', 'HH24:MI') AS time,
-                       v.name AS venue, best.clean_name AS matched_artist,
+                       v.name AS venue, v.transit_min, v.walk_min, best.clean_name AS matched_artist,
                        round(best.score::numeric, 2) AS score,
                        (SELECT string_agg(sa.clean_name, ', ' ORDER BY sa.position)
                           FROM show_artist sa WHERE sa.show_id = s.show_id) AS lineup,

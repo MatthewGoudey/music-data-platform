@@ -49,6 +49,12 @@ class Settings(BaseSettings):
     )
     lastfm_api_key: SecretStr | None = Field(default=None)
     ticketmaster_api_key: SecretStr | None = Field(default=None)
+    google_routes_api_key: SecretStr | None = Field(
+        default=None, description="Google Routes API key for venue travel times (ADR 0008)."
+    )
+    home_address: SecretStr | None = Field(
+        default=None, description="Where travel times start from; kept out of the public repo."
+    )
 
     ntfy_topic: str | None = Field(default=None, description="ntfy.sh topic for failure pushes.")
     log_json: bool = Field(default=True)
