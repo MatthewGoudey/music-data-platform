@@ -221,8 +221,11 @@ def clean_performer(name: str) -> tuple[str, str | None]:
 
 
 def non_artist_event(title: str) -> bool:
-    """Tributes, film-in-concert screenings and the like: no performer is the artist named."""
-    return bool(_NON_ARTIST.search(title or ""))
+    """Tributes, film-in-concert screenings and the like: no performer is the artist named.
+    Two or more quoted titles mark an album night ('Alice In Chains "Dirt", Pearl Jam "VS"');
+    one quoted phrase is usually a tour name ('Don Omar "The Last King World Tour"')."""
+    t = title or ""
+    return bool(_NON_ARTIST.search(t)) or len(_QUOTED.findall(t)) >= 2
 
 
 def _head(title: str) -> str:

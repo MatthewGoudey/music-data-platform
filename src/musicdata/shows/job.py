@@ -224,6 +224,22 @@ async def _crawl_list(conn: asyncpg.Connection, sweep: bool) -> list[tuple[int, 
     return [(r["venue_id"], r["omr_slug"]) for r in rows]
 
 
+async def reflag(conn: asyncpg.Connection) -> int:
+    """Re-apply non_artist_event to upcoming shows: stored shows are not re-read nightly,
+    so a sharper tribute rule would otherwise reach only new listings."""
+    rows = await conn.fetch(
+        "SELECT show_id, title, non_artist FROM show WHERE starts_at > now() - interval '1 day'"
+    )
+    changed = [
+        (r["show_id"], not r["non_artist"])
+        for r in rows
+        if non_artist_event(r["title"]) != r["non_artist"]
+    ]
+    if changed:
+        await conn.executemany("UPDATE show SET non_artist = $2 WHERE show_id = $1", changed)
+    return len(changed)
+
+
 async def reresolve(conn: asyncpg.Connection) -> int:
     """Upcoming performers without an artist get another lookup (listening grows)."""
     rows = await conn.fetch(
@@ -335,6 +351,7 @@ def shows(*, sweep: bool = False, venue_limit: int | None = None) -> JobFn:
                 started,
                 [v for v, _ in crawl],
             )
+            reflagged = await reflag(conn)
             resolved_later = await reresolve(conn)
             upcoming = await conn.fetchrow(
                 """SELECT count(*) AS shows,
@@ -355,6 +372,7 @@ def shows(*, sweep: bool = False, venue_limit: int | None = None) -> JobFn:
             requests=requests,
             missed=int(missed.split()[-1]),
             resolved_later=resolved_later,
+            reflagged=reflagged,
             upcoming_shows=upcoming["shows"],
             upcoming_with_known_headliner=upcoming["with_known_headliner"],
         )

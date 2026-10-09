@@ -35,6 +35,9 @@
     ["The Making of “How Lucky Can One Man Get?”", true],
     ["A Tribute to Tom Petty", true],
     ["The Music of Radiohead", true],
+    ["Alice In Chains \"Dirt\", Pearl Jam \"VS\"", true],
+    ["Don Omar \"The Last King World Tour\"", false],
+    ["Lang Lang Plays Beethoven Piano Concertos 1 & 4", false],
     ["Gorillaz - The Mountain Tour", false],
     ["Wilco", false]
   ]
