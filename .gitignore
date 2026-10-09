@@ -15,3 +15,6 @@ Thumbs.db
 # local data that never belongs in git
 data/
 *.zip
+# third-party lists stay out of the public repo; load them from the laptop with
+# `musicdata --env <env> lists load` (QUEUE_SPEC.md section 0, step 4)
+seeds/lists/
