@@ -1,7 +1,7 @@
 """Acceptance checks: one query and one threshold each, results stored in dq_result.
 
-The table is the plan's "Acceptance checks" section, restricted to what exists in
-Phase 2 (show and list checks arrive with their phases). A check returns
+The table is the plan's "Acceptance checks" section, restricted to what exists so far
+(listening, then shows; list checks arrive with Phase 4). A check returns
 (observed, passed, details); `musicdata dq` stores every result and exits 1 when any
 check fails, which turns the Actions run red and pushes to ntfy.
 """
@@ -144,6 +144,49 @@ async def _split_runs(conn: asyncpg.Connection) -> Result:
     return float(flips), True, {"switches": flips, "group_pairs": pairs}
 
 
+UPCOMING_HEADLINERS = """
+    FROM show_artist sa JOIN show s USING (show_id)
+   WHERE sa.role = 'headliner' AND s.starts_at > now() AND NOT s.cancelled AND NOT s.non_artist
+"""
+
+
+async def _headliner_residue(conn: asyncpg.Connection) -> Result:
+    """Audit E1: listing debris left in a headliner's name."""
+    n = await conn.fetchval(
+        rf"""SELECT count(*) {UPCOMING_HEADLINERS}
+               AND sa.clean_name ~* '["“”]|\sw/\s|\s/\s|\mpresents\M|\svs\.?\s|\mtribute\M'"""
+    )
+    return float(n), n == 0, {}
+
+
+async def _support_unsplit(conn: asyncpg.Connection) -> Result:
+    """Audit E3: a support act that is really two acts: " / " always splits, and " & "
+    should have split when both halves are artists in the listening history."""
+    n = await conn.fetchval(
+        r"""SELECT count(*) FROM show_artist sa JOIN show s USING (show_id)
+             WHERE sa.role = 'support' AND s.starts_at > now()
+               AND (sa.clean_name LIKE '% / %'
+                    OR (sa.clean_name LIKE '% & %'
+                        AND EXISTS (SELECT 1 FROM artist_alias x
+                                     WHERE x.raw_name = split_part(sa.clean_name, ' & ', 1))
+                        AND EXISTS (SELECT 1 FROM artist_alias x
+                                     WHERE x.raw_name = split_part(sa.clean_name, ' & ', 2))))"""
+    )
+    return float(n), n == 0, {}
+
+
+async def _headliners_resolved(conn: asyncpg.Connection) -> Result:
+    """Audit E2: upcoming headliners spelled like an artist you listen to resolve to one."""
+    total, resolved = await conn.fetchrow(
+        f"""SELECT count(*), count(*) FILTER (WHERE sa.artist_id IS NOT NULL)
+              {UPCOMING_HEADLINERS}
+              AND EXISTS (SELECT 1 FROM artist_alias x JOIN artist_stat st USING (artist_id)
+                           WHERE x.raw_name = sa.clean_name)"""
+    )
+    share = resolved / total if total else 1.0
+    return round(share * 100, 2), share >= 0.95, {"known": total, "resolved": resolved}
+
+
 async def _overshoot(conn: asyncpg.Connection) -> Result:
     resolved, over = await conn.fetchrow(
         """SELECT count(*), count(*) FILTER (WHERE distinct_tracks > 1.5 * track_count)
@@ -186,6 +229,9 @@ CHECKS = (
     Check("completion_overshoot_pct", "<= 2", _overshoot),
     Check("artist_stat_matches_listens", "exact", _artist_count),
     Check("daily_sync_minutes", "< 15", _sync_wall_time),
+    Check("show_headliner_residue", "= 0", _headliner_residue),
+    Check("show_support_unsplit", "= 0", _support_unsplit),
+    Check("upcoming_headliners_resolved_pct", ">= 95", _headliners_resolved),
 )
 
 
