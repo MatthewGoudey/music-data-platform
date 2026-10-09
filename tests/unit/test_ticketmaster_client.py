@@ -5,7 +5,7 @@ from __future__ import annotations
 import httpx
 import pytest
 
-from musicdata.clients.ticketmaster import BASE_URL, Ticketmaster
+from musicdata.clients.ticketmaster import BASE_URL, HORIZON_DAYS, WINDOW_DAYS, Ticketmaster
 from musicdata.clients.web import PoliteFetcher
 
 
@@ -35,4 +35,5 @@ async def test_windows_cover_the_horizon_and_pages_are_followed() -> None:
     http = httpx.AsyncClient(base_url=BASE_URL, transport=httpx.MockTransport(handler))
     tm = Ticketmaster("k", PoliteFetcher(BASE_URL, client=http, sleep=_no_wait))
     assert await tm.upcoming() == []
-    assert len(calls) == 12  # six 30-day windows, two pages each
+    windows = -(-HORIZON_DAYS // WINDOW_DAYS)  # a year in 30-day windows: 13
+    assert len(calls) == windows * 2  # two pages each
