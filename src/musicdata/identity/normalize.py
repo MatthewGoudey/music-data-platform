@@ -205,7 +205,8 @@ _TRAILING_NOTE = re.compile(r"\s*\(([^()]*)\)\s*$")
 _PARENTHESES = re.compile(r"\s*\([^()]*\)")
 _NON_ARTIST = re.compile(
     r"\btribute\b|\bin concert\b|\bmusic of\b|\byears of\b|\bcelebrat\w*|\bsalute to\b"
-    r"|\bthe making of\b|\blive to film\b|\bfilm with live\b|\bscreening\b",
+    r"|\bthe making of\b|\blive to film\b|\bfilm with live\b|\bscreening\b"
+    r"|\b(?:a|the)\s+[^,/()]{2,40}?\s+show\b",  # "A Pink Floyd Show": a tribute act's billing
     re.IGNORECASE,
 )
 
@@ -214,6 +215,7 @@ def clean_performer(name: str) -> tuple[str, str | None]:
     """A performer as listed, without a trailing performance note: ("DIIV (DJ set)") →
     ("DIIV", "DJ set"). The note is kept for display; the name is what gets resolved."""
     s = " ".join(str(name or "").split())
+    s = _PRESENTS.sub("", s) or s  # "Roger Waters Presents LEGACY" → "LEGACY"
     m = _TRAILING_NOTE.search(s)
     if m and m.start() > 0:
         return s[: m.start()].strip(), m.group(1).strip() or None

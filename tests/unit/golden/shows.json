@@ -27,6 +27,7 @@
     ["Quintron (with Michael Zerang on drums)", ["Quintron", "with Michael Zerang on drums"]],
     ["Wilco", ["Wilco", null]],
     ["(Sandy) Alex G", ["(Sandy) Alex G", null]],
+    ["Roger Waters Presents LEGACY - A Pink Floyd Show", ["LEGACY - A Pink Floyd Show", null]],
     ["  Big   Thief  ", ["Big Thief", null]]
   ],
   "non_artist_event": [
@@ -38,6 +39,9 @@
     ["Alice In Chains \"Dirt\", Pearl Jam \"VS\"", true],
     ["Don Omar \"The Last King World Tour\"", false],
     ["Lang Lang Plays Beethoven Piano Concertos 1 & 4", false],
+    ["Roger Waters Presents LEGACY - A Pink Floyd Show", true],
+    ["The Australian Pink Floyd Show", true],
+    ["The Showdown", false],
     ["Gorillaz - The Mountain Tour", false],
     ["Wilco", false]
   ]
