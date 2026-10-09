@@ -176,6 +176,47 @@ def graph_seed_cmd(
     raise typer.Exit(runs.run("graph_seed", graph_seed(Path(root)), trigger=_trigger()))
 
 
+@graph_app.command("import")
+def graph_import_cmd(
+    slice_: str = typer.Option(
+        "crazy_horse", "--slice", help="crazy_horse, v_atlas or album:<id>."
+    ),
+    limit: int | None = typer.Option(None, help="Max albums this run."),
+    refresh: bool = typer.Option(False, "--refresh", help="Baseline albums already done again."),
+) -> None:
+    """The free baseline (MusicBrainz, Wikidata, Discogs) for a slice's albums. Resumable."""
+    from musicdata.graph.importer import graph_import
+    from musicdata.jobs import runs
+
+    raise typer.Exit(
+        runs.run(
+            "graph_import",
+            graph_import(slice_name=slice_, limit=limit, refresh=refresh),
+            trigger=_trigger(),
+        )
+    )
+
+
+@graph_app.command("link")
+def graph_link_cmd() -> None:
+    """Point album and artist entities at release_group and artist rows by MBID."""
+    from musicdata.graph.importer import graph_link
+    from musicdata.jobs import runs
+
+    raise typer.Exit(runs.run("graph_link", graph_link(), trigger=_trigger()))
+
+
+@graph_app.command("report")
+def graph_report_cmd(
+    slice_: str = typer.Option("crazy_horse", "--slice", help="The slice to report on."),
+) -> None:
+    """Coverage per facet, claims by predicate and source, gaps and no-match albums."""
+    from musicdata.graph.report import graph_report
+    from musicdata.jobs import runs
+
+    raise typer.Exit(runs.run("graph_report", graph_report(slice_name=slice_), trigger=_trigger()))
+
+
 venues_app = typer.Typer(no_args_is_help=True, help="Venues (shows).")
 app.add_typer(venues_app, name="venues")
 

@@ -115,6 +115,23 @@ class MusicBrainzClient:
         body = await self._get("/release-group", {"query": query, "limit": limit})
         return body.get("release-groups", [])
 
+    async def release_group(self, mbid: str) -> dict:
+        """A release group with its URL relations and artist credit (graph baseline)."""
+        return await self._get(f"/release-group/{mbid}", {"inc": "url-rels+artist-credits"})
+
+    async def release(self, mbid: str) -> dict:
+        """A release with labels, recordings, and the relations the graph turns into claims:
+        credits, places and works at release and recording level."""
+        inc = (
+            "labels+recordings+artist-rels+place-rels+recording-level-rels"
+            "+work-rels+work-level-rels+artist-credits"
+        )
+        return await self._get(f"/release/{mbid}", {"inc": inc})
+
+    async def artist(self, mbid: str) -> dict:
+        """An artist with type, areas, life span, artist and URL relations."""
+        return await self._get(f"/artist/{mbid}", {"inc": "artist-rels+url-rels"})
+
     async def releases_of_group(self, release_group_mbid: str) -> list[dict]:
         """Every release in the group with media, tracks, artist credit and group metadata."""
         releases: list[dict] = []
