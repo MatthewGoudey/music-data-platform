@@ -37,14 +37,24 @@ Every listening endpoint takes the same window: `start_date` and `end_date`
 | Record a vinyl play or a show | `POST /sessions` with `{"release_group_id": 123, "listened_at": "2026-10-01T20:00:00Z", "completion": 1.0}` |
 | Record a verdict | `POST /verdicts` with `{"release_group_id": 123, "verdict": "again", "note": "..."}` (again, later, never) |
 | Pull the newest listens now | `POST /ingest/catch-up` (at most every five minutes) |
+| Chicago shows Matt would like | `GET /shows?match=true&days=90` (ranked by his listening) |
+| Shows at a venue, or all upcoming | `GET /shows?venue=empty%20bottle&days=60` or `GET /shows?days=14` |
+| Just announced | `GET /shows?match=true&just_announced_days=7` |
+| Presales and on-sales coming up | `GET /shows?presales=true&match=true` (next presale, its name, public on-sale) |
+| Mark a show | `PUT /shows/{show_id}/interest` with `{"status": "interested"}` or `"going"`; `DELETE` clears it |
 | Anything else | `POST /query` with `{"sql": "SELECT ..."}` |
 
 `/query` runs one read-only SELECT with a 10-second limit and returns up to 1,000 rows.
 The main tables: `listen` (one row per play: `listened_at`, `artist_id`,
 `release_group_id`, `track_name`, `norm_title`), `artist`, `release_group` (an album:
 `title`, `primary_type`, `first_release_year`), `release_group_track` (the standard
-tracklist), `album_session`, `release_group_stat`, `artist_stat`, `verdict`.
-`GET /openapi.json` describes every endpoint.
+tracklist), `album_session`, `release_group_stat`, `artist_stat`, `verdict`, and for shows
+`show`, `show_artist` (lineup, `artist_id` when the performer is in the listening history),
+`show_source`, `venue`, `show_interest`. `GET /openapi.json` describes every endpoint.
+
+Shows come from Oh My Rockness and Ticketmaster, nightly. A show's `score` is its
+best-matching performer's: more listens, more distinct tracks and more recent listening
+score higher. Tribute nights never match. Times are Chicago time.
 
 When `/artists/batch` returns `match: candidate`, treat those rows as suggestions and
 confirm the right one with Matt. Use the artist and album IDs the API returns for
