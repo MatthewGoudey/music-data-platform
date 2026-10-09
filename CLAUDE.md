@@ -48,18 +48,20 @@ boost. Always ask Matt before changing a rule in that spec, and log the change a
   No Docker: integration tests run against Neon dev with `--env dev` or `DATABASE_URL` set (ADR 0005).
 - Run any job against an environment from the laptop: `uv run musicdata --env dev --plain-logs <job>`.
 
-## Current state (2026-10-09, Phase 4 Blocks A–F built in dev)
-`v0.2.3` is in prod (shows on a scheduled Fly machine; prod's first full Oh My Rockness
-sweep and dq passed 2026-10-09). `main` carries Phase 4 Blocks A–F, deployed to dev: lists
-and the atlas, `lists resolve`, `list_entry_status`, `/lists`, `/gaps`, the queue engine and
-`/next`, the Up next page with its actions and Undo, and tags. Spec changes v3–v5 are logged
-at the bottom of `docs/QUEUE_SPEC.md`.
+## Current state (2026-10-09, Phase 4 live in prod; Matt's week on the page has begun)
+`v0.3.1` is in prod: lists and the atlas, `/next`, the Up next page with Shuffle, Undo,
+tags and Check listens. Prod lists were settled by `lists copy-resolutions --source dev`
+(22,156 matched), prod ran `full-load -f mode=repair` with the reported-album rule (At
+Folsom Prison: 12 full sessions), and every prod check passes, L1–L5 included.
+
+On `main`, dev only (spec v7 trial, waiting for Matt): "Recently finished" and "Shows you
+might like" sections on the page, and venue travel times by CTA and on foot (migration
+0016, `musicdata venues travel`, ADR 0008 amendment; dev venues timed). Prod gets them as
+v0.3.2 only if Matt keeps the sections.
 
 Identity change (ADR 0015 amendment 2026-10-09, migration 0015): listens go home to the
 album the player reported (`listen.reported_key`, `derive/reported.py`), and sessions match
-tracks loosely (`loose_title_keys`). Found because At Folsom Prison, played front to back
-16 times, sat on 13 groups. Dev was rekeyed and fully re-derived to apply it; prod gets it
-at the gate with `full-load -f mode=repair`.
+tracks loosely (`loose_title_keys`).
 
 Load or reload an environment with `gh workflow run full-load -f env=<dev|prod>`
 (`-f mode=repair` re-applies identity rules: rekey, retry unresolved, full derive).
@@ -117,9 +119,9 @@ section and the verdict cards off it, and Block E puts "Up next" there. Verdicts
       loaded (prod loads at the gate). Old-database analysis done (read-only); exporting the
       Claude canon, venues and manual tracklists and registering `claude_canon` wait for
       Matt's decision on the Block A report.
-- [ ] Block B — `musicdata lists resolve` (known release groups first, then MusicBrainz search);
+- [x] Block B — `musicdata lists resolve` (known release groups first, then MusicBrainz search);
       backfill passes in dev; checks L2–L3; report resolved / ambiguous / unresolved per list.
-      Built 2026-10-09; the report waits for the dev backfill and a `--retry` pass. Built with `claude_canon` (weight 0.5), `besteveralbums_overall` (10,000),
+      Done 2026-10-09 (L3 bar for claude_canon 80%, spec v6). Built with `claude_canon` (weight 0.5), `besteveralbums_overall` (10,000),
       year-marked keys and `seeds/manual_tracklists.csv` (spec v3). Dev backfill: chained
       `gh workflow run backfill -f env=dev -f job=lists -f args="resolve --limit 5000"`.
 - [x] Block C — `list_entry_status` (migration 0014, after 0012–0013 because it reads
@@ -130,8 +132,9 @@ section and the verdict cards off it, and Block E puts "Up next" there. Verdicts
       `POST /queue/{id}/{action}`), Undo on played / hide / snooze (spec v5), progress strip.
 - [x] Block F — Tag control, `GET /tags`, `POST /tags/{name}/apply` and `/remove`,
       `POST /tag-now-playing`.
-- [ ] Block G — the gate; add `/next`, `/gaps`, `/lists` to `docs/claude-project-instructions.md`
-      and remove its "Record a verdict" row.
+- [ ] Block G — the gate. Done: v0.3.1 tagged and live in prod, lists loaded and resolved,
+      prod checks green, `docs/claude-project-instructions.md` updated (Matt pastes it into
+      the Project). Left: Matt uses the `/queue` page for a week (from 2026-10-09).
 
 ## Phase 3 checklist — Chicago shows
 Gate (plan): E1 and E3 at 0, E2 ≥ 95%, shows endpoints in prod.
