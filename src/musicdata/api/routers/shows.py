@@ -36,17 +36,23 @@ async def shows(
     venue: Annotated[str | None, Query(description="Venue name contains.")] = None,
     just_announced_days: Annotated[int | None, Query(ge=1, le=60)] = None,
     include_cancelled: bool = False,
-    sort: Literal["date", "score"] | None = None,
+    presales: Annotated[
+        bool, Query(description="Only shows with a presale or public sale opening soon.")
+    ] = False,
+    sale_days: Annotated[int, Query(ge=1, le=90, description="'Soon' for presales=true.")] = 14,
+    sort: Literal["date", "score", "sale"] | None = None,
     limit: Annotated[int, Query(ge=1, le=1000)] = 100,
     format: FormatParam = Format.compact,
 ):
-    """Upcoming shows with the lineup, the best-matching performer and its score.
-    `match=true` sorts by score unless `sort=date`."""
-    order = (
-        "score DESC NULLS LAST, s.starts_at"
-        if (sort or ("score" if match else "date")) == "score"
-        else "s.starts_at"
-    )
+    """Upcoming shows with the lineup, the best-matching performer and its score, and the
+    next presale and public on-sale times. `match=true` sorts by score and
+    `presales=true` by the next sale, unless `sort` says otherwise."""
+    chosen = sort or ("sale" if presales else "score" if match else "date")
+    order = {
+        "score": "score DESC NULLS LAST, s.starts_at",
+        "sale": "least(sale.next_presale, sale.on_sale) NULLS LAST, s.starts_at",
+        "date": "s.starts_at",
+    }[chosen]
     async with connection(pool) as conn:
         rows = await conn.fetch(
             f"""SELECT s.show_id, s.show_date, to_char(s.starts_at AT TIME ZONE 'America/Chicago', 'HH24:MI') AS time,
@@ -57,12 +63,29 @@ async def shows(
                        (SELECT ss.tickets_url FROM show_source ss
                          WHERE ss.show_id = s.show_id AND ss.tickets_url IS NOT NULL
                          ORDER BY ss.source = 'omr' DESC LIMIT 1) AS tickets,
+                       to_char(sale.next_presale AT TIME ZONE 'America/Chicago',
+                               'YYYY-MM-DD HH24:MI') AS next_presale,
+                       sale.presale_name,
+                       to_char(sale.on_sale AT TIME ZONE 'America/Chicago',
+                               'YYYY-MM-DD HH24:MI') AS on_sale,
                        i.status AS interest, s.cancelled
                   FROM show s
                   JOIN venue v USING (venue_id)
                   LEFT JOIN LATERAL ({SCORED} WHERE sa.show_id = s.show_id
                                        AND NOT s.non_artist  -- tributes never match
                                      ORDER BY score DESC LIMIT 1) best ON true
+                  LEFT JOIN LATERAL (
+                      SELECT (SELECT min(ss.on_sale_at) FROM show_source ss
+                               WHERE ss.show_id = s.show_id AND ss.on_sale_at > now()) AS on_sale,
+                             p.start AS next_presale, p.name AS presale_name
+                        FROM (SELECT NULL) one
+                        LEFT JOIN LATERAL (
+                            SELECT (x ->> 'start')::timestamptz AS start, x ->> 'name' AS name
+                              FROM show_source ss, jsonb_array_elements(ss.presales) x
+                             WHERE ss.show_id = s.show_id
+                               AND (x ->> 'start')::timestamptz > now()
+                             ORDER BY 1 LIMIT 1) p ON true
+                  ) sale ON true
                   LEFT JOIN show_interest i ON i.show_id = s.show_id
                  WHERE s.starts_at >= now() - interval '6 hours'
                    AND s.starts_at < now() + make_interval(days => $1)
@@ -70,6 +93,9 @@ async def shows(
                    AND ($3::text IS NULL OR v.name ILIKE '%' || $3 || '%')
                    AND ($4::int IS NULL OR s.first_seen_at > now() - make_interval(days => $4))
                    AND ($5::bool OR NOT s.cancelled)
+                   AND ($7::bool = false
+                        OR least(sale.next_presale, sale.on_sale)
+                           < now() + make_interval(days => $8))
                  ORDER BY {order}
                  LIMIT $6""",
             days,
@@ -78,6 +104,8 @@ async def shows(
             just_announced_days,
             include_cancelled,
             limit,
+            presales,
+            sale_days,
         )
     return render(rows, format)
 
