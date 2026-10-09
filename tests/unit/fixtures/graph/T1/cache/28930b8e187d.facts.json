@@ -1,0 +1,83 @@
+{
+ "album_title": "Boat Songs",
+ "release_date": "2022-04-29",
+ "producers": [
+  "MJ Lenderman"
+ ],
+ "engineers_and_mixers": [
+  {
+   "name": "Alex Farrar",
+   "role": "recording, mixing, production"
+  },
+  {
+   "name": "Colin Miller",
+   "role": "production, mastering"
+  },
+  {
+   "name": "MJ Lenderman",
+   "role": "production"
+  }
+ ],
+ "recording_locations": [
+  {
+   "studio_or_place": "Drop of Sun",
+   "city": "Asheville, North Carolina"
+  }
+ ],
+ "recording_dates": "",
+ "musicians": [
+  {
+   "name": "MJ Lenderman",
+   "roles": [
+    "production",
+    "all other instruments",
+    "writing"
+   ]
+  },
+  {
+   "name": "Xandy Chelmis",
+   "roles": [
+    "pedal steel"
+   ]
+  },
+  {
+   "name": "Alex Farrar",
+   "roles": [
+    "guitar on \"You Are Every Girl to Me\"",
+    "recording",
+    "mixing",
+    "production"
+   ]
+  },
+  {
+   "name": "Colin Miller",
+   "roles": [
+    "production",
+    "mastering",
+    "bass",
+    "keys",
+    "trumpet"
+   ]
+  },
+  {
+   "name": "Lewis Dahm",
+   "roles": [
+    "guitar on \"You Are Every Girl to Me\""
+   ]
+  },
+  {
+   "name": "Andrew James",
+   "roles": [
+    "writing on \"Toontown\"",
+    "album art"
+   ]
+  },
+  {
+   "name": "Jon Samuels",
+   "roles": [
+    "layout"
+   ]
+  }
+ ],
+ "songs_by_other_writers": []
+}

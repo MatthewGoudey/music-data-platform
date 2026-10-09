@@ -1,0 +1,47 @@
+[
+  {
+    "case": "a link with a title",
+    "in": "[MJ Lenderman](https://en.wikipedia.org/wiki/MJ_Lenderman \"MJ Lenderman\")",
+    "out": "mj lenderman"
+  },
+  {
+    "case": "a citation link",
+    "in": "by Dear Life Records.[\\[3\\]](https://en.wikipedia.org/wiki/Boat_Songs#cite_note-Bandcamp-3) The album",
+    "out": "by dear life records. the album"
+  },
+  {
+    "case": "a link target with nested parentheses",
+    "in": "[Crazy Horse](https://en.wikipedia.org/wiki/Crazy_Horse_(band) \"Crazy Horse (band)\"), released in 1971",
+    "out": "crazy horse, released in 1971"
+  },
+  {
+    "case": "emphasis and underscores",
+    "in": "_**Crazy Horse**_ is the debut album",
+    "out": "crazy horse is the debut album"
+  },
+  {
+    "case": "a bare citation marker",
+    "in": "released in 1971[12] by Reprise",
+    "out": "released in 1971 by reprise"
+  },
+  {
+    "case": "curly quotes",
+    "in": "“Hangover Game,” I Don’t Want to Talk About It",
+    "out": "\"hangover game,\" i don't want to talk about it"
+  },
+  {
+    "case": "a link-title remnant",
+    "in": "Whitten \"Danny Whitten\") sang",
+    "out": "whitten sang"
+  },
+  {
+    "case": "whitespace and case",
+    "in": "  Comparing the   Album\n to  Jason Molina ",
+    "out": "comparing the album to jason molina"
+  },
+  {
+    "case": "nothing",
+    "in": "",
+    "out": ""
+  }
+]

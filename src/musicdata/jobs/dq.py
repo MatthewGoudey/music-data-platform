@@ -16,6 +16,7 @@ from decimal import Decimal
 import asyncpg
 
 from musicdata.db import connection
+from musicdata.graph import checks as graph
 from musicdata.jobs.runs import JobFn, RunContext
 
 Result = tuple[float | None, bool, dict[str, object]]
@@ -318,6 +319,14 @@ CHECKS = (
     Check("L3_canon_lists_resolved_min_pct", ">= 90 (claude_canon >= 80)", _canon_resolved),
     Check("L4_heard_matches_sessions", "exact", _heard_matches_sessions),
     Check("L5_atlas_heard_pct", "5 to 40", _atlas_heard_share),
+    Check("G1_claim_types_fit", "= 0", graph.g1_types),
+    Check("G2_accepted_evidence_on_page", "= 0", graph.g2_evidence),
+    Check("G3_lineage_object_not_newer", "= 0", graph.g3_direction),
+    Check("G4_accepted_claude_claims_read", "= 0", graph.g4_reader),
+    Check("G5_verified_batches_settled", "= 0", graph.g5_batches_settled),
+    Check("G6_no_firecrawl_keys_stored", "= 0", graph.g6_no_keys),
+    Check("G7_database_mb", "< 800", graph.g7_database_size),
+    Check("G8_month_firecrawl_credits", "<= GRAPH_MONTHLY_CREDITS", graph.g8_credits),
 )
 
 

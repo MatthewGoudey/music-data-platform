@@ -1,0 +1,96 @@
+{
+ "album_title": "Crazy Horse",
+ "release_date": "February 1971",
+ "producers": [
+  "Jack Nitzsche",
+  "Bruce Botnick"
+ ],
+ "engineers_and_mixers": [
+  {
+   "name": "Jack Nitzsche",
+   "role": "producer"
+  },
+  {
+   "name": "Bruce Botnick",
+   "role": "producer"
+  }
+ ],
+ "recording_locations": [
+  {
+   "studio_or_place": "Wally Heider",
+   "city": "San Francisco"
+  },
+  {
+   "studio_or_place": "Sunset Sound",
+   "city": "Los Angeles"
+  },
+  {
+   "studio_or_place": "A&M",
+   "city": "Hollywood"
+  }
+ ],
+ "recording_dates": "1970",
+ "musicians": [
+  {
+   "name": "Danny Whitten",
+   "roles": [
+    "guitars",
+    "backing vocals",
+    "lead vocals"
+   ]
+  },
+  {
+   "name": "Nils Lofgren",
+   "roles": [
+    "guitars",
+    "backing vocals",
+    "lead vocals on 'Beggars Day'"
+   ]
+  },
+  {
+   "name": "Jack Nitzsche",
+   "roles": [
+    "piano",
+    "backing vocals",
+    "lead vocals on 'Crow Jane Lady'"
+   ]
+  },
+  {
+   "name": "Billy Talbot",
+   "roles": [
+    "bass",
+    "backing vocals"
+   ]
+  },
+  {
+   "name": "Ralph Molina",
+   "roles": [
+    "drums",
+    "backing vocals",
+    "lead vocals on 'Dance, Dance, Dance'"
+   ]
+  }
+ ],
+ "songs_by_other_writers": [
+  {
+   "track": "Dance, Dance, Dance",
+   "writer_or_original_artist": "Neil Young",
+   "evidence_sentence": "Young's \"Dance Dance Dance\" was covered by The New Seekers in 1972."
+  },
+  {
+   "track": "Beggars Day",
+   "writer_or_original_artist": "Nils Lofgren",
+   "evidence_sentence": "Everything but the Girl covered Lofgren's song on their 1988 album Idlewild."
+  },
+  {
+   "track": "I Don't Want to Talk About It",
+   "writer_or_original_artist": "Danny Whitten",
+   "evidence_sentence": "Whitten's ballad has been covered by several artists, including Rod Stewart."
+  },
+  {
+   "track": "Gone Dead Train",
+   "writer_or_original_artist": "Russ Titelman, Jack Nitzsche",
+   "evidence_sentence": "Nitzsche's work on the soundtrack for 'Performance' includes this song."
+  }
+ ]
+}

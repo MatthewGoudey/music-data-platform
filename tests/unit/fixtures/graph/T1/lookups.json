@@ -1,0 +1,1136 @@
+{
+ "album_years": {
+  "A0001": 2014,
+  "A0015": 2022,
+  "A2184": 1971
+ },
+ "works": [
+  {
+   "work": "5dc2f987-6094-30f8-93ce-7b7994baccd0",
+   "title": "I Don’t Want to Talk About It",
+   "writers": [
+    "Danny Whitten"
+   ],
+   "recordings": 41,
+   "sample": [
+    {
+     "recording": "3835ff2f-02b8-4f12-b429-5c97bfbd22a1",
+     "title": "I Don’t Want to Talk About It",
+     "artist": "Crazy Horse",
+     "first_release": "1971-02",
+     "cover": false,
+     "live": false
+    },
+    {
+     "recording": "6b33b1a5-506a-4052-85f4-ae030c90b660",
+     "title": "I Don’t Want to Talk About It",
+     "artist": "Rod Stewart",
+     "first_release": "1975",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "0259080a-c07c-4785-8c18-4e2e0332cb34",
+     "title": "Sailing",
+     "artist": "Tracy Hwang",
+     "first_release": "1976",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "50202dd9-4eb9-4d69-9a45-3026fe8c548a",
+     "title": "I Don't Want To Talk About It",
+     "artist": "Rita Coolidge",
+     "first_release": "1976-10-21",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "8b3185c3-8477-444e-8542-dacd3c5b3cb2",
+     "title": "I Don’t Want to Talk About It",
+     "artist": "Tracy Huang",
+     "first_release": "1977",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "3fb2f214-f427-4ce9-81fd-5eb5da162f96",
+     "title": "I Don't Want to Talk About It",
+     "artist": "Piet Veerman and The New Cats",
+     "first_release": "1980",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "affa200b-e681-4c21-9c6a-49472b3b7fd3",
+     "title": "I Don’t Want to Talk About It",
+     "artist": "Everything but the Girl",
+     "first_release": "1988",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "22e60c76-8ad4-4dc8-a10c-dbb0984fd048",
+     "title": "I Don’t Want to Talk About It",
+     "artist": "[unknown]",
+     "first_release": "1989",
+     "cover": false,
+     "live": false
+    },
+    {
+     "recording": "8105fa7a-7258-437a-bec6-89e46606abdf",
+     "title": "I Don’t Want to Talk About It",
+     "artist": "Freddie Starr",
+     "first_release": "1989-11-18",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "00ae9b00-9cdc-43d7-bfb8-bdebf7139283",
+     "title": "I Don’t Want to Talk About It",
+     "artist": "王傑",
+     "first_release": "1990",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "2538e1fe-dad3-4077-a23a-878bbe7c1ef3",
+     "title": "I Don’t Wanna Talk About It",
+     "artist": "Indigo Girls",
+     "first_release": "1993-12",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "db0f5eab-3b45-462c-88d9-79ff40383ffd",
+     "title": "I Don't Want to Talk About It",
+     "artist": "Sanne",
+     "first_release": "1994",
+     "cover": true,
+     "live": true
+    },
+    {
+     "recording": "36320023-56f5-436c-b082-c51a802ca004",
+     "title": "I Don't Wanna Talk About It",
+     "artist": "Lawnsmell",
+     "first_release": "1996",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "557be2a9-41ee-42c1-b0a2-44b53537eac9",
+     "title": "I Don't Want to Talk About It",
+     "artist": "Billie Jo Spears",
+     "first_release": "1996",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "f4c833f5-dc1f-46ad-8b7a-465f4eae892d",
+     "title": "I Don’t Want to Talk About It",
+     "artist": "Dina Carroll",
+     "first_release": "1996",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "7205ea12-4edc-4e3d-9e30-ef3b8331d114",
+     "title": "I Don’t Wanna Talk About It",
+     "artist": "Smokie",
+     "first_release": "2000",
+     "cover": false,
+     "live": false
+    },
+    {
+     "recording": "3acda0f1-0bc9-4b27-a52c-961d66154be3",
+     "title": "Don’t Want to Talk About It",
+     "artist": "Classic Dream Orchestra",
+     "first_release": "2001-11-05",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "4e141a54-2b63-473e-add1-eedfb8f55938",
+     "title": "I Don't Wanna Talk About It",
+     "artist": "Emmerson Nogueira",
+     "first_release": "2002",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "0a432672-025f-44fe-809a-a1b113ae2706",
+     "title": "I Don’t Want to Talk About It",
+     "artist": "Alex Parks",
+     "first_release": "2003",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "b54c4948-17a3-49cb-83fe-78a8b46b5f49",
+     "title": "I Don't Wanna Talk About It",
+     "artist": "Julienne Taylor",
+     "first_release": "2003",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "e558a535-e53e-45d7-9419-cd229f602325",
+     "title": "I Don’t Want to Talk About It",
+     "artist": "Piet Veerman",
+     "first_release": "2003",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "4b8c637e-7d75-4033-9d5d-2d545363afc6",
+     "title": "I Don't Want to Talk About It",
+     "artist": "Jón Sigurðsson",
+     "first_release": "2004",
+     "cover": false,
+     "live": false
+    },
+    {
+     "recording": "b98f8c63-5694-4f4a-b757-b4a918644e2f",
+     "title": "I Don’t Want to Talk About",
+     "artist": "Rod Stewart duet with Amy Belle",
+     "first_release": "2004-12-07",
+     "cover": true,
+     "live": true
+    },
+    {
+     "recording": "11fa5769-0ade-431d-9e8e-a7e08d811aba",
+     "title": "I Don't Wanna Talk About It",
+     "artist": "Kerry Norton",
+     "first_release": "2005",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "64fdef19-83f4-4fa1-bfb9-7ea05a42df00",
+     "title": "I Don’t Want to Talk About It",
+     "artist": "Inger Marie Gundersen",
+     "first_release": "2006",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "0b035ea2-beb9-410f-ae23-6f35733ab7b9",
+     "title": "I Don’t Want to Talk About It",
+     "artist": "John Spendelow",
+     "first_release": "2007",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "3750cf0f-0bc8-40ec-baff-c843a7d042e2",
+     "title": "I Don’t Want to Talk About It",
+     "artist": "IDF",
+     "first_release": "2008-05-02",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "8ddf66b2-b624-48d7-8b70-44355cc11673",
+     "title": "I Don’t Want to Talk About It",
+     "artist": "The Soldiers",
+     "first_release": "2010-01-31",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "e5787d21-a405-47ae-aa87-5c1f7414d147",
+     "title": "I Don’t Want to Talk About It (live)",
+     "artist": "Ben Forster",
+     "first_release": "2012-07-02",
+     "cover": true,
+     "live": true
+    },
+    {
+     "recording": "531ca533-2fa2-43da-897d-d83f1991cb68",
+     "title": "I Don't Want to Talk About It",
+     "artist": "Joe McElderry",
+     "first_release": "2012-09-07",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "18894b1a-7a22-42f3-85f1-131582dd20e0",
+     "title": "I Don’t Want to Talk About It",
+     "artist": "The Delta Pilots",
+     "first_release": "2013",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "dbf047c1-ac7b-4942-ab14-caa38f09d8cd",
+     "title": "I Don’t Want to Talk About It",
+     "artist": "Woman",
+     "first_release": "2013",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "20a464a0-74a5-4e5c-937b-db4cf0e96e73",
+     "title": "I Don't Want to Talk About It",
+     "artist": "Scott Matthew",
+     "first_release": "2013-06-28",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "fc743394-51bb-4d6c-92cc-1d6b99f9abd6",
+     "title": "I Don’t Want To Talk About It —",
+     "artist": "Stringybark",
+     "first_release": "2014-07-01",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "548a5607-b3c2-4840-bd9f-0be696f4cdf1",
+     "title": "I Don't Want to Talk About It",
+     "artist": "Waterloo",
+     "first_release": "2014-11-21",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "2e7a583d-0f2c-4ead-a88a-2ba74277e73d",
+     "title": "I Don’t Want to Talk About It",
+     "artist": "Blue",
+     "first_release": "2015-03-06",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "b240bb15-a79f-4fe7-96ff-afbac14273f2",
+     "title": "I Don’t Want to Talk About It",
+     "artist": "Meg Birch",
+     "first_release": "2019-05-12",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "051cc781-1e43-4dc2-8c9f-10ecc58930f1",
+     "title": "I Don’t Want to Talk About It",
+     "artist": "Rod Stewart with the Royal Philharmonic Orchestra",
+     "first_release": "2019-11-22",
+     "cover": false,
+     "live": false
+    },
+    {
+     "recording": "54e2fb2f-3625-475e-9541-e12509dd04c8",
+     "title": "I Don’t Want to Talk About It",
+     "artist": "The Distance",
+     "first_release": "2021-05-07",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "7ff1c09c-2fae-4b17-a79f-cfdef5a76798",
+     "title": "I Don’t Want to Talk About It",
+     "artist": "Neil Young & The Trans Band",
+     "first_release": null,
+     "cover": false,
+     "live": true
+    }
+   ]
+  },
+  {
+   "work": "ea8ed570-d50f-3782-9fc6-2f838a0c4f60",
+   "title": "Dance, Dance, Dance",
+   "writers": [
+    "Neil Young"
+   ],
+   "recordings": 14,
+   "sample": [
+    {
+     "recording": "3ab4dc55-96b7-4cbb-ac75-5ff064df0db3",
+     "title": "Dance, Dance, Dance",
+     "artist": "Crazy Horse",
+     "first_release": "1971-02",
+     "cover": false,
+     "live": false
+    },
+    {
+     "recording": "2d26f677-57c3-4126-894b-4a621cd736f2",
+     "title": "Dance Dance Dance",
+     "artist": "Neil Young",
+     "first_release": "1971-02-01",
+     "cover": false,
+     "live": true
+    },
+    {
+     "recording": "15fbdb32-1963-4955-a398-5f3323e553a5",
+     "title": "Dance Dance Dance",
+     "artist": "Fluff",
+     "first_release": "1972",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "ad11d150-457f-42f4-8140-70809979ad05",
+     "title": "Dance, Dance, Dance",
+     "artist": "Dave Edmunds",
+     "first_release": "1972-06",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "45c473ae-ccb9-4f85-bd10-453c66888db3",
+     "title": "Dance Dance",
+     "artist": "The Cats",
+     "first_release": "1998",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "432d8699-ad10-466e-972b-54b47180c5fb",
+     "title": "Dance, Dance, Dance",
+     "artist": "Irish Stew",
+     "first_release": "2004",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "32d9cab9-1148-4dea-a560-c46613f91ff5",
+     "title": "Dance Dance Dance",
+     "artist": "Neil Young & Crazy Horse",
+     "first_release": "2009-05-29",
+     "cover": false,
+     "live": false
+    },
+    {
+     "recording": "30587bfe-5391-4ba2-bbff-7b6b1d75e75d",
+     "title": "Everybody Knows This Is Nowhere / Dance, Dance, Dance (Medley)",
+     "artist": "Rusty",
+     "first_release": "2022-06-10",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "dc7e5f31-215f-4a9e-8f0f-434a6cf0ccad",
+     "title": "Dance Dance Dance/Love is a Rose (previously unreleased version)",
+     "artist": "Neil Young & Nicolette Larson with The Gone With the Wind Orchestra",
+     "first_release": "2024-09-06",
+     "cover": false,
+     "live": false
+    },
+    {
+     "recording": "0f6bff37-6f1d-450b-8488-782fea053b1c",
+     "title": "Dance, Dance, Dance",
+     "artist": "Mr. Young",
+     "first_release": null,
+     "cover": false,
+     "live": true
+    },
+    {
+     "recording": "2dbf6bdd-0929-43cd-9f00-7bb7c01a0073",
+     "title": "Dance Dance Dance / Love Is a Rose",
+     "artist": "Neil Young & The Gone With the Wind Orchestra",
+     "first_release": null,
+     "cover": false,
+     "live": true
+    },
+    {
+     "recording": "60f5cc71-c94d-4023-8a16-0261cc7d16d2",
+     "title": "Dance Dance Dance",
+     "artist": "Neil Young with Friends and Relatives",
+     "first_release": null,
+     "cover": false,
+     "live": true
+    },
+    {
+     "recording": "8359645f-77de-437f-afc8-b9bdb29829bb",
+     "title": "Dance, Dance, Dance",
+     "artist": "Neil Young & The Shocking Pinks",
+     "first_release": null,
+     "cover": false,
+     "live": true
+    },
+    {
+     "recording": "ac58945b-4026-4710-a730-3f65e96c9e32",
+     "title": "Dance Dance Dance",
+     "artist": "Neil Young & The Stray Gators",
+     "first_release": null,
+     "cover": false,
+     "live": true
+    }
+   ]
+  },
+  {
+   "work": "595b1a6c-8a6c-48d7-8e34-a5256f3bb6e4",
+   "title": "Gone Dead Train",
+   "writers": [
+    "Jack Nitzsche",
+    "Russ Titelman"
+   ],
+   "recordings": 5,
+   "sample": [
+    {
+     "recording": "d4c1e69a-76d3-4c09-b87e-f8fe9b264083",
+     "title": "Gone Dead Train",
+     "artist": "Randy Newman",
+     "first_release": "1970",
+     "cover": false,
+     "live": false
+    },
+    {
+     "recording": "5b1dcee8-9f46-4c0b-8178-6f9bd6ae141c",
+     "title": "Gone Dead Train",
+     "artist": "Crazy Horse",
+     "first_release": "1971-02",
+     "cover": false,
+     "live": false
+    },
+    {
+     "recording": "02c9011f-7f81-4f6c-b752-948835e13189",
+     "title": "Gone Dead Train",
+     "artist": "Bintangs",
+     "first_release": "1975",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "c240a3f0-3d4a-43f8-a306-ce5ae4d87403",
+     "title": "Gone Dead Train",
+     "artist": "Nazareth",
+     "first_release": "1977",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "e7fb5fe4-0fab-4cd1-a406-8441db953855",
+     "title": "Gone Dead Train",
+     "artist": "Izzy Stradlin",
+     "first_release": "2002-08-21",
+     "cover": true,
+     "live": false
+    }
+   ]
+  },
+  {
+   "work": "fa1ec47f-fa78-3163-907f-ba997037eb83",
+   "title": "Beggar’s Day (Eulogy to Danny Whitten)",
+   "writers": [
+    "Nils Lofgren"
+   ],
+   "recordings": 7,
+   "sample": [
+    {
+     "recording": "27c6130f-3703-4a65-9cd3-08783121aece",
+     "title": "Beggars Day",
+     "artist": "Crazy Horse",
+     "first_release": "1971-02",
+     "cover": false,
+     "live": false
+    },
+    {
+     "recording": "34a1825e-96b8-48a1-9cfc-07e36eee65b9",
+     "title": "Beggar’s Day (Eulogy to Danny Whitten)",
+     "artist": "Grin",
+     "first_release": "1973-11",
+     "cover": false,
+     "live": false
+    },
+    {
+     "recording": "0da9061e-9f6a-446a-86ed-1ccfba294d95",
+     "title": "Beggar’s Day",
+     "artist": "Nils Lofgren",
+     "first_release": "1975",
+     "cover": false,
+     "live": true
+    },
+    {
+     "recording": "3d71a190-e03d-42f2-90a6-a4636c8ddce5",
+     "title": "Beggar’s Day",
+     "artist": "Nazareth",
+     "first_release": "1975",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "0fa2fd1a-e6b1-4b8f-957e-a51c7fe1c2c2",
+     "title": "Beggars Day",
+     "artist": "Baltimoore",
+     "first_release": "2004-01-12",
+     "cover": true,
+     "live": false
+    },
+    {
+     "recording": "935beb2a-bc7b-40f8-ab24-84be8f4962af",
+     "title": "Beggars Day",
+     "artist": "Neil Young",
+     "first_release": "2016",
+     "cover": false,
+     "live": true
+    },
+    {
+     "recording": "00d54072-f021-419c-a98a-fe1274c23f83",
+     "title": "Beggar’s Day",
+     "artist": "Neil Young & The Trans Band",
+     "first_release": null,
+     "cover": false,
+     "live": true
+    }
+   ]
+  }
+ ],
+ "artists": [
+  {
+   "name": "Greg Leroy",
+   "relations": [
+    {
+     "type": "member of band",
+     "other": "Crazy Horse"
+    }
+   ]
+  },
+  {
+   "name": "Rick Curtis",
+   "relations": [
+    {
+     "type": "member of band",
+     "other": "Crazy Horse"
+    }
+   ]
+  },
+  {
+   "name": "Jack Nitzsche",
+   "relations": [
+    {
+     "type": "member of band",
+     "other": "The Stray Gators"
+    },
+    {
+     "type": "member of band",
+     "other": "The Phil Spector Wall of Sound Orchestra"
+    },
+    {
+     "type": "member of band",
+     "other": "Crazy Horse"
+    }
+   ]
+  },
+  {
+   "name": "Danny Whitten",
+   "relations": [
+    {
+     "type": "member of band",
+     "other": "The Stray Gators"
+    },
+    {
+     "type": "member of band",
+     "other": "Crazy Horse"
+    },
+    {
+     "type": "member of band",
+     "other": "The Rockets"
+    },
+    {
+     "type": "member of band",
+     "other": "Danny & the Memories"
+    },
+    {
+     "type": "member of band",
+     "other": "The Psyrcle"
+    }
+   ]
+  },
+  {
+   "name": "MJ Lenderman",
+   "relations": [
+    {
+     "type": "member of band",
+     "other": "Wednesday"
+    },
+    {
+     "type": "member of band",
+     "other": "Nash to Stoudemire"
+    },
+    {
+     "type": "member of band",
+     "other": "The Wind"
+    },
+    {
+     "type": "member of band",
+     "other": "Snocaps"
+    },
+    {
+     "type": "member of band",
+     "other": "Waxahatchee & MJ Lenderman"
+    }
+   ]
+  },
+  {
+   "name": "Matt Piucci",
+   "relations": [
+    {
+     "type": "member of band",
+     "other": "Rain Parade"
+    },
+    {
+     "type": "member of band",
+     "other": "Viva Saturn"
+    },
+    {
+     "type": "member of band",
+     "other": "Rainy Day"
+    },
+    {
+     "type": "member of band",
+     "other": "Crazy Horse"
+    }
+   ]
+  },
+  {
+   "name": "Crazy Horse",
+   "relations": [
+    {
+     "type": "member of band",
+     "other": "Nils Lofgren"
+    },
+    {
+     "type": "member of band",
+     "other": "Frank Sampedro"
+    },
+    {
+     "type": "member of band",
+     "other": "Danny Whitten"
+    },
+    {
+     "type": "member of band",
+     "other": "Michael Curtis"
+    },
+    {
+     "type": "member of band",
+     "other": "Rick Curtis"
+    },
+    {
+     "type": "member of band",
+     "other": "Greg Leroy"
+    },
+    {
+     "type": "member of band",
+     "other": "Ralph Molina"
+    },
+    {
+     "type": "member of band",
+     "other": "Matt Piucci"
+    },
+    {
+     "type": "member of band",
+     "other": "Billy Talbot"
+    },
+    {
+     "type": "member of band",
+     "other": "Neil Young"
+    },
+    {
+     "type": "member of band",
+     "other": "Neil Young"
+    },
+    {
+     "type": "member of band",
+     "other": "John Blanton"
+    },
+    {
+     "type": "member of band",
+     "other": "Jack Nitzsche"
+    },
+    {
+     "type": "member of band",
+     "other": "George Whitsell"
+    },
+    {
+     "type": "supporting musician",
+     "other": "Bruce Berry"
+    }
+   ]
+  },
+  {
+   "name": "Billy Talbot",
+   "relations": [
+    {
+     "type": "member of band",
+     "other": "Crazy Horse"
+    },
+    {
+     "type": "member of band",
+     "other": "The Rockets"
+    },
+    {
+     "type": "member of band",
+     "other": "Danny & the Memories"
+    },
+    {
+     "type": "member of band",
+     "other": "The Psyrcle"
+    },
+    {
+     "type": "member of band",
+     "other": "The Echos"
+    },
+    {
+     "type": "member of band",
+     "other": "Molina, Talbot, Lofgren & Young"
+    },
+    {
+     "type": "member of band",
+     "other": "The Santa Monica Flyers"
+    },
+    {
+     "type": "member of band",
+     "other": "Billy Talbot Band"
+    }
+   ]
+  },
+  {
+   "name": "Neil Young",
+   "relations": [
+    {
+     "type": "collaboration",
+     "other": "Northern Lights"
+    },
+    {
+     "type": "instrumental supporting musician",
+     "other": "Sheldon Kurland"
+    },
+    {
+     "type": "is person",
+     "other": "Joe Yankee"
+    },
+    {
+     "type": "member of band",
+     "other": "The Squires"
+    },
+    {
+     "type": "member of band",
+     "other": "The Mynah Birds"
+    },
+    {
+     "type": "member of band",
+     "other": "Buffalo Springfield"
+    },
+    {
+     "type": "member of band",
+     "other": "The Volume Dealers"
+    },
+    {
+     "type": "member of band",
+     "other": "Crosby, Stills, Nash & Young"
+    },
+    {
+     "type": "member of band",
+     "other": "The Stills–Young Band"
+    },
+    {
+     "type": "member of band",
+     "other": "Neil Young & His Electric Band"
+    },
+    {
+     "type": "member of band",
+     "other": "The Shocking Pinks"
+    },
+    {
+     "type": "member of band",
+     "other": "The Shocking Pinks"
+    },
+    {
+     "type": "member of band",
+     "other": "The Shocking Pinks"
+    },
+    {
+     "type": "member of band",
+     "other": "The Ducks"
+    },
+    {
+     "type": "member of band",
+     "other": "Crosby, Nash & Young"
+    },
+    {
+     "type": "member of band",
+     "other": "Molina, Talbot, Lofgren & Young"
+    },
+    {
+     "type": "member of band",
+     "other": "Crazy Horse"
+    },
+    {
+     "type": "member of band",
+     "other": "Crazy Horse"
+    }
+   ]
+  },
+  {
+   "name": "Ralph Molina",
+   "relations": [
+    {
+     "type": "member of band",
+     "other": "Crazy Horse"
+    },
+    {
+     "type": "member of band",
+     "other": "The Rockets"
+    },
+    {
+     "type": "member of band",
+     "other": "Danny & the Memories"
+    },
+    {
+     "type": "member of band",
+     "other": "The Psyrcle"
+    },
+    {
+     "type": "member of band",
+     "other": "The Echos"
+    },
+    {
+     "type": "member of band",
+     "other": "Molina, Talbot, Lofgren & Young"
+    },
+    {
+     "type": "member of band",
+     "other": "The Santa Monica Flyers"
+    }
+   ]
+  },
+  {
+   "name": "Nils Lofgren",
+   "relations": [
+    {
+     "type": "member of band",
+     "other": "Crazy Horse"
+    },
+    {
+     "type": "member of band",
+     "other": "The E Street Band"
+    },
+    {
+     "type": "member of band",
+     "other": "Grin"
+    },
+    {
+     "type": "member of band",
+     "other": "Buckshot LeFonque"
+    },
+    {
+     "type": "member of band",
+     "other": "Ringo Starr & His All Starr Band"
+    },
+    {
+     "type": "member of band",
+     "other": "Nils Lofgren Band"
+    },
+    {
+     "type": "member of band",
+     "other": "Molina, Talbot, Lofgren & Young"
+    },
+    {
+     "type": "member of band",
+     "other": "The Santa Monica Flyers"
+    },
+    {
+     "type": "member of band",
+     "other": "Jersey Artists for Mankind"
+    }
+   ]
+  },
+  {
+   "name": "Spencer Radcliffe",
+   "relations": [
+    {
+     "type": "is person",
+     "other": "Blithe Field"
+    },
+    {
+     "type": "member of band",
+     "other": "Spencer Radcliffe & Everyone Else"
+    }
+   ]
+  },
+  {
+   "name": "John Blanton",
+   "relations": [
+    {
+     "type": "member of band",
+     "other": "Crazy Horse"
+    }
+   ]
+  },
+  {
+   "name": "Frank Sampedro",
+   "relations": [
+    {
+     "type": "is person",
+     "other": "Poncho Villa"
+    },
+    {
+     "type": "member of band",
+     "other": "Crazy Horse"
+    },
+    {
+     "type": "member of band",
+     "other": "The Restless"
+    },
+    {
+     "type": "member of band",
+     "other": "The Lost Dogs"
+    },
+    {
+     "type": "member of band",
+     "other": "The Echos"
+    }
+   ]
+  },
+  {
+   "name": "George Whitsell",
+   "relations": [
+    {
+     "type": "member of band",
+     "other": "The Rockets"
+    },
+    {
+     "type": "member of band",
+     "other": "Crazy Horse"
+    }
+   ]
+  },
+  {
+   "name": "Michael Curtis",
+   "relations": []
+  }
+ ],
+ "foreign": {
+  "Neil Young – Everybody Knows This Is Nowhere": {
+   "status": "matched",
+   "musicbrainz": [
+    "Billy Talbot",
+    "Bobby Notkoff",
+    "Crazy Horse",
+    "Danny Whitten",
+    "David Briggs",
+    "Ed Thrasher",
+    "Frank Bez",
+    "Neil Young",
+    "Ralph Molina",
+    "Robin Lane"
+   ],
+   "discogs": [
+    "Billy Talbot",
+    "Bobby Notkoff",
+    "Danny Whitten",
+    "David Briggs",
+    "Ed Thrasher",
+    "Frank Bez",
+    "Neil Young",
+    "Ralph Molina",
+    "Robin Lane"
+   ]
+  },
+  "Neil Young – After the Gold Rush": {
+   "status": "matched",
+   "musicbrainz": [
+    "Bill Peterson",
+    "Billy Talbot",
+    "Danny Whitten",
+    "David Briggs",
+    "Gary Burden",
+    "Greg Reeves",
+    "Henry Saskowski",
+    "Joel Bernstein",
+    "Kendall Pacios",
+    "Neil Young",
+    "Nils Lofgren",
+    "Ralph Molina",
+    "Stephen Stills"
+   ],
+   "discogs": [
+    "Billy Talbot",
+    "Crazy Horse",
+    "Danny Whitten",
+    "David Briggs",
+    "Don Gibson",
+    "Elliot Roberts",
+    "Gary Burden",
+    "Greg Reeves",
+    "Joel Bernstein",
+    "Kendall Pacios",
+    "Lookout Management",
+    "Neil Young",
+    "Nils Lofgren",
+    "Ralph Molina",
+    "Stephen Stills",
+    "Susan Young"
+   ]
+  },
+  "Neil Young – Neil Young": {
+   "status": "matched",
+   "musicbrainz": [
+    "Brenda Holloway",
+    "David Briggs",
+    "Earl Palmer",
+    "George Grantham",
+    "Gloria Jones",
+    "Gracia Nitzsche",
+    "Henry Saskowski",
+    "Jack Nitzsche",
+    "Jim Messina",
+    "Merry Clayton",
+    "Neil Young",
+    "Patrice Holloway",
+    "Rik Pekkonen",
+    "Ry Cooder",
+    "Sherlie Matthews"
+   ],
+   "discogs": [
+    "Brenda Holloway",
+    "David Briggs",
+    "Gloria Jones",
+    "Gracia Nitzsche",
+    "Jack Nitzsche",
+    "Merry Clayton",
+    "Neil Young",
+    "Patrice Holloway",
+    "Ry Cooder",
+    "Sherlie Matthews"
+   ]
+  }
+ },
+ "years": [
+  [
+   "artist",
+   "Neil Young & Crazy Horse",
+   1945
+  ],
+  [
+   "artist",
+   "Jason Molina",
+   1973
+  ],
+  [
+   "artist",
+   "Uncle Tupelo",
+   1987
+  ],
+  [
+   "artist",
+   "Pinegrove",
+   2010
+  ],
+  [
+   "artist",
+   "John Prine",
+   1946
+  ],
+  [
+   "artist",
+   "Neil Young & Crazy Horse",
+   1945
+  ],
+  [
+   "person",
+   "Patterson Hood",
+   1964
+  ]
+ ]
+}

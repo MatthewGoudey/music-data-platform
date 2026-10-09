@@ -249,12 +249,87 @@ def graph_link_cmd() -> None:
 @graph_app.command("report")
 def graph_report_cmd(
     slice_: str = typer.Option("crazy_horse", "--slice", help="The slice to report on."),
+    batch: str | None = typer.Option(None, help="A batch label (P01…) instead of a slice."),
 ) -> None:
-    """Coverage per facet, claims by predicate and source, gaps and no-match albums."""
+    """Coverage per facet, statuses, reader rates, reading questions, gaps and credits."""
     from musicdata.graph.report import graph_report
     from musicdata.jobs import runs
 
-    raise typer.Exit(runs.run("graph_report", graph_report(slice_name=slice_), trigger=_trigger()))
+    job = graph_report(slice_name=None if batch else slice_, batch=batch)
+    raise typer.Exit(runs.run("graph_report", job, trigger=_trigger()))
+
+
+@graph_app.command("verify")
+def graph_verify_cmd(
+    batch: str | None = typer.Option(None, help="A batch label (P01…)."),
+    slice_: str | None = typer.Option(None, "--slice", help="Every album of a slice."),
+) -> None:
+    """The checks of GRAPH_SPEC section 8; writes each claim's status and confidence."""
+    from musicdata.graph.verify_job import graph_verify
+    from musicdata.jobs import runs
+
+    if (batch is None) == (slice_ is None):
+        raise typer.BadParameter("give --batch or --slice")
+    raise typer.Exit(
+        runs.run("graph_verify", graph_verify(batch=batch, slice_name=slice_), trigger=_trigger())
+    )
+
+
+batch_app = typer.Typer(no_args_is_help=True, help="Reading batches (GRAPH_SPEC 7.4).")
+graph_app.add_typer(batch_app, name="batch")
+
+
+@batch_app.command("export")
+def graph_batch_export_cmd(
+    slice_: str = typer.Option("crazy_horse", "--slice", help="The slice to take albums from."),
+    size: int = typer.Option(25, help="Albums in the batch."),
+    root: str = typer.Option(".", help="Folder holding data/graph/batches/."),
+) -> None:
+    """The next albums whose facts step has run, as data/graph/batches/<label>/."""
+    from musicdata.graph.batch import graph_batch_export
+    from musicdata.jobs import runs
+
+    job = graph_batch_export(slice_name=slice_, size=size, root=Path(root))
+    raise typer.Exit(runs.run("graph_batch_export", job, trigger=_trigger()))
+
+
+@batch_app.command("load-claims")
+def graph_batch_load_claims_cmd(
+    label: str = typer.Argument(..., help="The batch label (P01…)."),
+    files: list[str] = typer.Argument(..., help="Claim files (JSON lines)."),  # noqa: B008
+) -> None:
+    """Claude's claims with names resolved (MusicBrainz, free), status proposed."""
+    from musicdata.graph.batch import graph_batch_load_claims
+    from musicdata.jobs import runs
+
+    job = graph_batch_load_claims(label=label, files=[Path(f) for f in files])
+    raise typer.Exit(runs.run("graph_batch_load_claims", job, trigger=_trigger()))
+
+
+@batch_app.command("reader-input")
+def graph_batch_reader_input_cmd(
+    label: str = typer.Argument(..., help="The batch label (P01…)."),
+    root: str = typer.Option(".", help="Folder holding data/graph/batches/."),
+) -> None:
+    """reader_input.txt: each text claim that passed the checks, for the independent reader."""
+    from musicdata.graph.batch import graph_batch_reader_input
+    from musicdata.jobs import runs
+
+    job = graph_batch_reader_input(label=label, root=Path(root))
+    raise typer.Exit(runs.run("graph_batch_reader_input", job, trigger=_trigger()))
+
+
+@batch_app.command("load-reader")
+def graph_batch_load_reader_cmd(
+    label: str = typer.Argument(..., help="The batch label (P01…)."),
+    file: str = typer.Argument(..., help="The reader's verdicts (JSON lines)."),
+) -> None:
+    """The reader's verdicts by claim label; a claim's first verdict stays in reader_first."""
+    from musicdata.graph.batch import graph_batch_load_reader
+    from musicdata.jobs import runs
+
+    job = graph_batch_load_reader(label=label, file=Path(file))
+    raise typer.Exit(runs.run("graph_batch_load_reader", job, trigger=_trigger()))
 
 
 venues_app = typer.Typer(no_args_is_help=True, help="Venues (shows).")

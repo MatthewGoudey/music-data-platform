@@ -1,0 +1,7 @@
+{"album": "A0015", "text": "the deadpan-funny-sad lineage of Drag City songwriters", "reason": "object is a label's roster, not one artist or album"}
+{"album": "A0015", "text": "opened the door to Manning Fireworks", "reason": "discography order; MusicBrainz dates carry it"}
+{"album": "A2184", "text": "Members of this band had already released an album in 1968 as The Rockets", "reason": "vocabulary gap: no predicate for a renamed or predecessor band"}
+{"album": "A2184", "text": "A live version of \"Downtown\" ... would appear on Young's 1975 album Tonight's the Night", "reason": "same work on a later album, not a cover; derivable from MusicBrainz works"}
+{"album": "A2184", "text": "played on records by the Rolling Stones", "reason": "no specific album named"}
+{"album": "A0001", "text": "anticipate the twangier, more rock-oriented turn of his later solo work / feeds into Ohio Vision", "reason": "same artist's later work; discography order"}
+{"album": "A0001", "text": "Bandcamp tags: alternative, experimental, pop, psychedelic, rock, singer-songwriter", "reason": "artist-applied tags; map to has_tag only through the tag vocabulary"}

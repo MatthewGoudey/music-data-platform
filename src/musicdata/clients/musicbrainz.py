@@ -133,6 +133,29 @@ class MusicBrainzClient:
         """An artist with type, areas, life span, artist and URL relations."""
         return await self._get(f"/artist/{mbid}", {"inc": "artist-rels+url-rels"})
 
+    async def search_artists(self, name: str, *, limit: int = 5) -> list[dict]:
+        """Artists matching a name exactly as a phrase, with aliases and life span."""
+        body = await self._get("/artist", {"query": f'artist:"{_lucene(name)}"', "limit": limit})
+        return body.get("artists", [])
+
+    async def work(self, mbid: str) -> dict:
+        """A work with its recording relations (the `cover` and `live` attributes live there)."""
+        return await self._get(f"/work/{mbid}", {"inc": "recording-rels+artist-rels"})
+
+    async def recordings_of_work(self, mbid: str, *, max_recordings: int = 300) -> list[dict]:
+        """Every recording of a work with its artist credit and first release date."""
+        recordings: list[dict] = []
+        offset = 0
+        while True:
+            body = await self._get(
+                "/recording",
+                {"work": mbid, "inc": "artist-credits", "limit": BROWSE_LIMIT, "offset": offset},
+            )
+            recordings += body.get("recordings", [])
+            offset += BROWSE_LIMIT
+            if offset >= int(body.get("recording-count", 0)) or offset >= max_recordings:
+                return recordings
+
     async def releases_of_group(self, release_group_mbid: str) -> list[dict]:
         """Every release in the group with media, tracks, artist credit and group metadata."""
         releases: list[dict] = []
