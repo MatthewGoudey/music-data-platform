@@ -32,10 +32,14 @@ Every listening endpoint takes the same window: `start_date` and `end_date`
 | Everything about an artist | `GET /artists/{artist_id}` |
 | Look up many names at once | `POST /artists/batch` with `{"names": ["Wilco", "Big Thief"]}` |
 | Albums by completion | `GET /albums?min_completion=0.8&sort=recent` |
-| Everything about an album | `GET /albums/{release_group_id}` (tracklist with plays per track, sessions, Matt's verdicts and notes) |
+| Everything about an album | `GET /albums/{release_group_id}` (tracklist with plays per track, sessions) |
+| What Matt should hear next | `GET /next?profile=default` (also `home-genre`, `canon`; `shuffle=true` for a fresh draw); each album says why it is there |
+| Progress through the lists | `GET /gaps` (per list), `GET /gaps?by=lane` or `?by=zone` (the V Atlas) |
+| The lists, or one list's albums | `GET /lists`, `GET /lists/rolling_stone_500?status=unheard&limit=50` (status: heard, started, unheard, needs_matching) |
+| Pin, snooze or hide an album in the queue | `POST /queue/{release_group_id}/pin` (also `unpin`, `bump`, `snooze?days=30`, `hide`, `unhide`) |
+| Tag albums | `POST /tags/rainy/apply` with `{"release_group_ids": [123]}`; `GET /tags`; `POST /tag-now-playing?tag=study` |
 | Album sessions | `GET /sessions?days=30&session_type=full` |
 | Record a vinyl play or a show | `POST /sessions` with `{"release_group_id": 123, "listened_at": "2026-10-01T20:00:00Z", "completion": 1.0}` |
-| Record a verdict | `POST /verdicts` with `{"release_group_id": 123, "verdict": "again", "note": "..."}` (again, later, never) |
 | Pull the newest listens now | `POST /ingest/catch-up` (at most every five minutes) |
 | Chicago shows Matt would like | `GET /shows?match=true&days=90` (ranked by his listening) |
 | Shows at a venue, or all upcoming | `GET /shows?venue=empty%20bottle&days=60` or `GET /shows?days=14` |
@@ -48,7 +52,9 @@ Every listening endpoint takes the same window: `start_date` and `end_date`
 The main tables: `listen` (one row per play: `listened_at`, `artist_id`,
 `release_group_id`, `track_name`, `norm_title`), `artist`, `release_group` (an album:
 `title`, `primary_type`, `first_release_year`), `release_group_track` (the standard
-tracklist), `album_session`, `release_group_stat`, `artist_stat`, `verdict`, and for shows
+tracklist), `album_session`, `release_group_stat`, `artist_stat`; for the lists `list`,
+`list_entry` (`raw_artist`, `raw_album`, `release_group_id`), `list_entry_status` (heard /
+started / unheard per entry), `atlas_lane`, `queue_state`, `tag`, `release_group_tag`; and for shows
 `show`, `show_artist` (lineup, `artist_id` when the performer is in the listening history),
 `show_source`, `venue`, `show_interest`. `GET /openapi.json` describes every endpoint.
 
