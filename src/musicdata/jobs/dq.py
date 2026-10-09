@@ -42,6 +42,16 @@ async def _listen_count(conn: asyncpg.Connection) -> Result:
     return round(gap * 100, 3), gap <= 0.005, {"listenbrainz": lb, "database": db}
 
 
+async def _beyond_listenbrainz(conn: asyncpg.Connection) -> Result:
+    """More stored listens than ListenBrainz has means duplicates (or deletions upstream);
+    the 0.5% band above would hide a few dozen, so this one is exact."""
+    observed, _, details = await _listen_count(conn)
+    if observed is None:
+        return None, False, details
+    extra = int(details["database"]) - int(details["listenbrainz"])
+    return float(max(extra, 0)), extra <= 0, details
+
+
 async def _zero(conn: asyncpg.Connection, sql: str) -> Result:
     n = await conn.fetchval(sql)
     return float(n), n == 0, {}
@@ -166,6 +176,7 @@ async def _sync_wall_time(conn: asyncpg.Connection) -> Result:
 
 CHECKS = (
     Check("listen_count_vs_listenbrainz_pct", "<= 0.5", _listen_count),
+    Check("listens_beyond_listenbrainz", "= 0", _beyond_listenbrainz),
     Check("listens_without_artist", "= 0", _null_artist),
     Check("duplicate_unmapped_keys", "= 0", _duplicate_keys),
     Check("heavy_albums_without_tracklist_pct", "<= 5", _heavy_without_tracks),

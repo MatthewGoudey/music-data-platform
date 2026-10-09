@@ -150,6 +150,36 @@ async def test_rekey_moves_a_listen_off_a_comma_joined_artist(conn) -> None:
     assert moved == "zz rekey lead"
 
 
+async def test_rekey_follows_a_title_key_change_and_collapses_its_duplicate(conn) -> None:
+    index = await IdentityIndex.load(conn)
+    raw = {
+        "listened_at": 946684820,
+        "track_metadata": {
+            "artist_name": "Zz Swift",
+            "track_name": "Zz Song (Zz's Version)",
+            "release_name": "Zz Red (Zz's Version)",
+        },
+    }
+    p = parse_listen(raw)
+    await index.write_page(conn, [p])
+    listen = "SELECT listen_id FROM listen WHERE listened_at = to_timestamp(946684820)"
+    (stored,) = (r["listen_id"] for r in await conn.fetch(listen))
+    # What an older title rule stored, plus the duplicate a key-blind rekey then inserted.
+    await conn.execute("UPDATE listen SET norm_title = 'zz song' WHERE listen_id = $1", stored)
+    await conn.execute(
+        """INSERT INTO listen (listened_at, artist_id, release_group_id, track_name,
+                               norm_title, artist_name)
+           SELECT listened_at, artist_id, release_group_id, track_name, $2, artist_name
+             FROM listen WHERE listen_id = $1""",
+        stored,
+        p.norm_title,
+    )
+    result = await index.write_page(conn, [p], rekey=True)
+    rows = await conn.fetch(listen.replace("listen_id", "listen_id, norm_title"))
+    assert [(r["listen_id"], r["norm_title"]) for r in rows] == [(stored, p.norm_title)]
+    assert result.listens_inserted == 0
+
+
 async def test_edition_variants_share_one_release_group(conn) -> None:
     index = await IdentityIndex.load(conn)
     await index.write_page(

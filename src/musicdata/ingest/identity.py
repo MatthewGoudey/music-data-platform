@@ -106,40 +106,57 @@ class IdentityIndex:
         artist_ids: list[int],
         rg_ids: list[int | None],
     ) -> int:
-        """Move stored listens (same time, raw artist and title) onto their new identity.
+        """Give stored listens the identity today's rules derive: artist, group and title key.
 
-        A stored listen whose new natural key already exists is a duplicate and goes.
+        Stored listens are matched on what never changes (time, raw artist, raw title), so
+        a change to any key rule is caught. Exactly one row survives per new natural key:
+        a stored listen whose new key another row already holds is a duplicate and goes.
         """
         args = (
             [p.listened_at for p in page],
             [p.artist_name for p in page],
+            [p.track_name for p in page],
             [p.norm_title for p in page],
             artist_ids,
             rg_ids,
         )
-        moves = """
-            SELECT l.listen_id, u.artist_id, u.release_group_id
-              FROM unnest($1::timestamptz[], $2::text[], $3::text[], $4::int[], $5::int[])
-                   AS u(listened_at, artist_name, norm_title, artist_id, release_group_id)
-              JOIN listen l ON l.listened_at = u.listened_at AND l.artist_name = u.artist_name
-                           AND l.norm_title = u.norm_title
-             WHERE l.artist_id <> u.artist_id
-                OR l.release_group_id IS DISTINCT FROM u.release_group_id
+        targets = """
+            WITH u AS (
+                SELECT DISTINCT *
+                  FROM unnest($1::timestamptz[], $2::text[], $3::text[], $4::text[],
+                              $5::int[], $6::int[])
+                       AS u(listened_at, artist_name, track_name, norm_title, artist_id,
+                            release_group_id)
+            )
+            SELECT l.listen_id, l.listened_at, u.artist_id, u.release_group_id, u.norm_title,
+                   row_number() OVER (PARTITION BY l.listened_at, u.artist_id, u.norm_title
+                                      ORDER BY l.listen_id) AS rn
+              FROM u JOIN listen l ON l.listened_at = u.listened_at
+                                  AND l.artist_name = u.artist_name
+                                  AND l.track_name = u.track_name
         """
         await conn.execute(
-            f"""DELETE FROM listen d USING ({moves}) m
-                 WHERE d.listen_id = m.listen_id
-                   AND EXISTS (SELECT 1 FROM listen x
-                                WHERE x.listened_at = d.listened_at
-                                  AND x.artist_id = m.artist_id
-                                  AND x.norm_title = d.norm_title
-                                  AND x.listen_id <> d.listen_id)""",
+            f"""WITH t AS ({targets})
+                DELETE FROM listen d USING t
+                 WHERE d.listen_id = t.listen_id
+                   AND (t.rn > 1
+                        OR EXISTS (SELECT 1 FROM listen x
+                                    WHERE x.listened_at = t.listened_at
+                                      AND x.artist_id = t.artist_id
+                                      AND x.norm_title = t.norm_title
+                                      AND x.listen_id NOT IN (SELECT listen_id FROM t)))""",
             *args,
         )
         status = await conn.execute(
-            f"""UPDATE listen l SET artist_id = m.artist_id, release_group_id = m.release_group_id
-                  FROM ({moves}) m
-                 WHERE l.listen_id = m.listen_id""",
+            f"""WITH t AS ({targets})
+                UPDATE listen l
+                   SET artist_id = t.artist_id, release_group_id = t.release_group_id,
+                       norm_title = t.norm_title
+                  FROM t
+                 WHERE l.listen_id = t.listen_id AND t.rn = 1
+                   AND (l.artist_id <> t.artist_id
+                        OR l.release_group_id IS DISTINCT FROM t.release_group_id
+                        OR l.norm_title <> t.norm_title)""",
             *args,
         )
         return int(status.split()[-1])

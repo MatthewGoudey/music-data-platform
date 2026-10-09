@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 from musicdata.clients.listenbrainz import ListenBrainzClient
 from musicdata.config import get_settings
 from musicdata.db import connection
+from musicdata.identity import title_key
 from musicdata.ingest.identity import IdentityIndex, PageResult
 from musicdata.ingest.parse import parse_listen
 from musicdata.jobs.runs import JobFn, RunContext
@@ -23,6 +24,29 @@ from musicdata.log import get_logger
 log = get_logger(__name__)
 
 OVERLAP = timedelta(days=3)
+
+
+async def rekey_tracks(conn) -> int:
+    """Re-derive the title key of every stored tracklist track, so tracklists and listens
+    compare under the same rules after a title_key change."""
+    rows = await conn.fetch(
+        "SELECT release_group_id, position, title, norm_title FROM release_group_track"
+    )
+    changed = [
+        (r["release_group_id"], r["position"], title_key(r["title"]))
+        for r in rows
+        if title_key(r["title"]) != r["norm_title"]
+    ]
+    if changed:
+        await conn.execute(
+            """UPDATE release_group_track t SET norm_title = u.norm_title
+                 FROM unnest($1::int[], $2::int[], $3::text[]) AS u(rg, pos, norm_title)
+                WHERE t.release_group_id = u.rg AND t.position = u.pos""",
+            [c[0] for c in changed],
+            [c[1] for c in changed],
+            [c[2] for c in changed],
+        )
+    return len(changed)
 
 
 ORPHANS = """
@@ -90,6 +114,7 @@ def ingest(*, full: bool = False, since: datetime | None = None, rekey: bool = F
             if rekey:
                 async with conn.transaction():
                     await conn.execute(ORPHANS)
+                ctx.notes["tracks_retitled"] = await rekey_tracks(conn)
             db_count = await conn.fetchval("SELECT count(*) FROM listen")
         ctx.rows = totals.listens_inserted
         ctx.notes.update(
