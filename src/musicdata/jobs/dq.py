@@ -235,6 +235,33 @@ async def _canon_resolved(conn: asyncpg.Connection) -> Result:
     return low, low >= 90, shares
 
 
+async def _heard_matches_sessions(conn: asyncpg.Connection) -> Result:
+    """L4: the view's heard count equals a recount straight from album_session."""
+    view, recount = await conn.fetchrow(
+        """SELECT (SELECT count(*) FROM list_entry_status WHERE status = 'heard'),
+                  (SELECT count(*) FROM list_entry e
+                    WHERE e.review_status = 'accepted' AND e.resolve_status = 'resolved'
+                      AND EXISTS (SELECT 1 FROM album_session s
+                                   WHERE s.release_group_id = e.release_group_id
+                                     AND s.session_type = 'full'))"""
+    )
+    return float(abs(view - recount)), view == recount, {"view": view, "recount": recount}
+
+
+async def _atlas_heard_share(conn: asyncpg.Connection) -> Result:
+    """L5: the share of the atlas heard, a sanity band around the 9% name-match estimate."""
+    total, heard = await conn.fetchrow(
+        """SELECT count(*), count(*) FILTER (WHERE st.status = 'heard')
+             FROM list_entry e JOIN list l USING (list_id)
+             LEFT JOIN list_entry_status st USING (entry_id)
+            WHERE l.slug = 'v_atlas' AND e.review_status = 'accepted'"""
+    )
+    if not total:
+        return None, True, {"reason": "v_atlas not loaded"}
+    share = 100 * heard / total
+    return round(share, 2), 5 <= share <= 40, {"total": total, "heard": heard}
+
+
 async def _overshoot(conn: asyncpg.Connection) -> Result:
     resolved, over = await conn.fetchrow(
         """SELECT count(*), count(*) FILTER (WHERE distinct_tracks > 1.5 * track_count)
@@ -283,6 +310,8 @@ CHECKS = (
     Check("L1_list_entries_match_files", "= 0 mismatched", _lists_match_files),
     Check("L2_atlas_resolved_pct", ">= 95", _atlas_resolved),
     Check("L3_canon_lists_resolved_min_pct", ">= 90", _canon_resolved),
+    Check("L4_heard_matches_sessions", "exact", _heard_matches_sessions),
+    Check("L5_atlas_heard_pct", "5 to 40", _atlas_heard_share),
 )
 
 
