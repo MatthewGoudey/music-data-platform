@@ -105,18 +105,19 @@ async def test_namesakes_resolve_to_the_one_you_listen_to(conn) -> None:
 
 
 async def test_a_venue_named_differently_at_the_same_place_is_one_venue(conn) -> None:
+    # Coordinates far from Chicago: dev holds real venues, and location matching would find them.
     from musicdata.shows.job import upsert_venue
 
-    omr = Venue(source="omr", slug="zz-shed", name="Zz Shed", latitude=41.9064, longitude=-87.6594)
+    omr = Venue(source="omr", slug="zz-shed", name="Zz Shed", latitude=10.0, longitude=10.0)
     tm = Venue(
         source="ticketmaster",
         slug="ZZTM1",
         name="Zz Shed Indoors (Shed)",
-        latitude=41.9068,
-        longitude=-87.6590,
+        latitude=10.0004,
+        longitude=10.0004,
     )
     far = Venue(
-        source="ticketmaster", slug="ZZTM2", name="Zz Elsewhere", latitude=41.95, longitude=-87.7
+        source="ticketmaster", slug="ZZTM2", name="Zz Elsewhere", latitude=10.05, longitude=10.05
     )
     a, b, c = [await upsert_venue(conn, v) for v in (omr, tm, far)]
     assert a == b != c

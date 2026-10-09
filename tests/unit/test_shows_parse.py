@@ -68,3 +68,21 @@ def test_omr_venue_index_lists_every_venue() -> None:
     assert len(venues) > 500
     assert venues["thalia-hall"] == "Thalia Hall" and venues["abbey-pub"] == "Abbey Pub"
     assert "all" not in venues
+
+
+def test_ticketmaster_events_carry_lineups_local_dates_and_cancellations() -> None:
+    import json
+
+    from musicdata.shows.parse import parse_tm_events
+
+    body = json.loads(_page("tm_events.json"))
+    shows = parse_tm_events(body)
+    assert len(shows) == len(body["_embedded"]["events"])
+    s = shows[0]
+    assert s.source == "ticketmaster" and s.venue.source == "ticketmaster" and s.venue.slug
+    assert s.starts_at.utcoffset().total_seconds() == 0  # the API's UTC dateTime
+    assert s.show_date.isoformat() == body["_embedded"]["events"][0]["dates"]["start"]["localDate"]
+    assert any(x.cancelled for x in shows)
+    titled = [x for x in shows if not x.structured]
+    assert titled and all(not x.performers for x in titled)  # split later, from the title
+    assert all(x.structured == bool(x.performers) for x in shows)

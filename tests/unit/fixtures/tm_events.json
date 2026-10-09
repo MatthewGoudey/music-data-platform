@@ -1,0 +1,2452 @@
+{
+ "_embedded": {
+  "events": [
+   {
+    "name": "Hard Country Honky Tonk with The Hoyle Brothers",
+    "type": "event",
+    "id": "rZ7HnEZ1AfZEPf",
+    "test": false,
+    "url": "https://www.ticketweb.com/event/hard-country-honky-tonk-with-empty-bottle-tickets/14027954",
+    "locale": "en-us",
+    "sales": {
+     "public": {
+      "startDateTime": "2025-12-29T06:00:00Z",
+      "startTBD": false,
+      "startTBA": false,
+      "endDateTime": "2026-10-10T00:30:00Z"
+     }
+    },
+    "dates": {
+     "access": {
+      "startDateTime": "2026-10-09T22:00:00Z",
+      "startApproximate": false,
+      "endDateTime": "2026-10-10T00:30:00Z",
+      "endApproximate": false
+     },
+     "start": {
+      "localDate": "2026-10-09",
+      "localTime": "17:30:00",
+      "dateTime": "2026-10-09T22:30:00Z",
+      "dateTBD": false,
+      "dateTBA": false,
+      "timeTBA": false,
+      "noSpecificTime": false
+     },
+     "end": {
+      "localDate": "2026-10-09",
+      "localTime": "19:30:00",
+      "dateTime": "2026-10-10T00:30:00Z",
+      "approximate": false,
+      "noSpecificTime": false
+     },
+     "timezone": "America/Chicago",
+     "status": {
+      "code": "onsale"
+     },
+     "spanMultipleDays": false
+    },
+    "classifications": [
+     {
+      "primary": true,
+      "segment": {
+       "id": "KZFzniwnSyZfZ7v7nJ",
+       "name": "Music"
+      },
+      "genre": {
+       "id": "KnvZfZ7vAv6",
+       "name": "Country"
+      },
+      "subGenre": {
+       "id": "KZazBEonSMnZfZ7vAFa",
+       "name": "Country"
+      },
+      "type": {
+       "id": "KZAyXgnZfZ7v7nI",
+       "name": "Undefined"
+      },
+      "subType": {
+       "id": "KZFzBErXgnZfZ7v7lJ",
+       "name": "Undefined"
+      },
+      "family": false
+     }
+    ],
+    "info": "FREE // 21+",
+    "pleaseNote": "This event is 21 and over. Any ticket holder unable to present valid identification indicating that they are at least 21 years of age will not be admitted to this event, and will not be eligible for a refund. Make sure to bring a valid ID",
+    "priceRanges": [
+     {
+      "type": "standard",
+      "currency": "USD",
+      "min": 0.0,
+      "max": 0.0
+     }
+    ],
+    "nameOrigin": "custom",
+    "_embedded": {
+     "venues": [
+      {
+       "name": "Empty Bottle",
+       "type": "venue",
+       "id": "rZ7HnEZaeqM",
+       "test": false,
+       "url": "https://www.ticketweb.com/venue/empty-bottle-chicago-il/10103",
+       "locale": "en-us",
+       "postalCode": "60622",
+       "timezone": "America/Chicago",
+       "city": {
+        "name": "Chicago"
+       },
+       "state": {
+        "name": "Illinois",
+        "stateCode": "IL"
+       },
+       "country": {
+        "name": "United States Of America",
+        "countryCode": "US"
+       },
+       "address": {
+        "line1": "1035 N. Western Ave."
+       },
+       "location": {
+        "longitude": "-74.00594130000002",
+        "latitude": "41.900476"
+       }
+      }
+     ],
+     "attractions": [
+      {
+       "name": "The Hoyle Brothers",
+       "type": "attraction",
+       "id": "K8vZ917uzkV",
+       "test": false,
+       "url": "https://www.ticketmaster.com/the-hoyle-brothers-tickets/artist/1544613",
+       "locale": "en-us"
+      }
+     ]
+    }
+   },
+   {
+    "name": "Toronzo Cannon Blues Band/Nora Jean Wallace Blues Band",
+    "type": "event",
+    "id": "rZ7HnEZ1Afv8Gf",
+    "test": false,
+    "url": "https://www.ticketweb.com/event/toronzo-cannon-blues-bandnora-jean-kingston-mines-chicago-tickets/14050314",
+    "locale": "en-us",
+    "sales": {
+     "public": {
+      "startDateTime": "2026-01-03T15:50:00Z",
+      "startTBD": false,
+      "startTBA": false,
+      "endDateTime": "2026-10-09T23:30:00Z"
+     }
+    },
+    "dates": {
+     "access": {
+      "startDateTime": "2026-10-10T00:00:00Z",
+      "startApproximate": false,
+      "endDateTime": "2026-10-10T09:00:00Z",
+      "endApproximate": false
+     },
+     "start": {
+      "localDate": "2026-10-09",
+      "localTime": "19:00:00",
+      "dateTime": "2026-10-10T00:00:00Z",
+      "dateTBD": false,
+      "dateTBA": false,
+      "timeTBA": false,
+      "noSpecificTime": false
+     },
+     "end": {
+      "localDate": "2026-10-10",
+      "localTime": "04:00:00",
+      "dateTime": "2026-10-10T09:00:00Z",
+      "approximate": false,
+      "noSpecificTime": false
+     },
+     "timezone": "America/Chicago",
+     "status": {
+      "code": "onsale"
+     },
+     "spanMultipleDays": false
+    },
+    "classifications": [
+     {
+      "primary": true,
+      "segment": {
+       "id": "KZFzniwnSyZfZ7v7nJ",
+       "name": "Music"
+      },
+      "genre": {
+       "id": "KnvZfZ7vAvd",
+       "name": "Blues"
+      },
+      "subGenre": {
+       "id": "KZazBEonSMnZfZ7vAAd",
+       "name": "Blues"
+      },
+      "type": {
+       "id": "KZAyXgnZfZ7v7nI",
+       "name": "Undefined"
+      },
+      "subType": {
+       "id": "KZFzBErXgnZfZ7v7lJ",
+       "name": "Undefined"
+      },
+      "family": false
+     },
+     {
+      "primary": false,
+      "segment": {
+       "id": "KZFzniwnSyZfZ7v7nJ",
+       "name": "Music"
+      },
+      "genre": {
+       "id": "KnvZfZ7vAvd",
+       "name": "Blues"
+      },
+      "subGenre": {
+       "id": "KZazBEonSMnZfZ7vAAd",
+       "name": "Blues"
+      },
+      "type": {
+       "id": "KZAyXgnZfZ7v7nI",
+       "name": "Undefined"
+      },
+      "subType": {
+       "id": "KZFzBErXgnZfZ7v7lJ",
+       "name": "Undefined"
+      },
+      "family": false
+     },
+     {
+      "primary": false,
+      "segment": {
+       "id": "KZFzniwnSyZfZ7v7nJ",
+       "name": "Music"
+      },
+      "genre": {
+       "id": "KnvZfZ7vAvd",
+       "name": "Blues"
+      },
+      "subGenre": {
+       "id": "KZazBEonSMnZfZ7vAA7",
+       "name": "Acoustic Blues"
+      },
+      "type": {
+       "id": "KZAyXgnZfZ7v7nI",
+       "name": "Undefined"
+      },
+      "subType": {
+       "id": "KZFzBErXgnZfZ7v7lJ",
+       "name": "Undefined"
+      },
+      "family": false
+     }
+    ],
+    "info": "World famous Kingston Mines features the best Blues music from 2 bands on 2 stages. Doc's Kitchen offers great Catfish, Wings, Burgers, Beignets, and more! Kingston Mines has returned to general seating - no reservations. The doors & kitchen open at 7:00pm on Friday. Tickets can be purchased at the club after 7:00 PM, if not purchased online. Must be 21 to enter. Friday: 7pm -- 4am Acoustic Set: 7:30pm to 9pm North Stage Sets: 9:00pm, 11:30pm, 1:30am Main Stage Sets: 10:30pm, 12:30am, 2:30am \"Hear Blues, Drink Booze, Talk Loud, You're Among Friends\" ...Doc",
+    "pleaseNote": "This event is 21 and over. Any ticket holder unable to present valid identification indicating that they are at least 21 years of age will not be admitted to this event, and will not be eligible for a refund. 21 years and over",
+    "priceRanges": [
+     {
+      "type": "standard",
+      "currency": "USD",
+      "min": 23.0,
+      "max": 23.0
+     }
+    ],
+    "nameOrigin": "custom",
+    "_embedded": {
+     "venues": [
+      {
+       "name": "Kingston Mines - Chicago Blues Center",
+       "type": "venue",
+       "id": "rZ7HnEZa7JQ",
+       "test": false,
+       "url": "https://www.ticketweb.com/venue/kingston-mines--chicago-blues-center-chicago-il/18842",
+       "locale": "en-us",
+       "postalCode": "60614",
+       "timezone": "America/Chicago",
+       "city": {
+        "name": "Chicago"
+       },
+       "state": {
+        "name": "Illinois",
+        "stateCode": "IL"
+       },
+       "country": {
+        "name": "United States Of America",
+        "countryCode": "US"
+       },
+       "address": {
+        "line1": "2548 North Halsted"
+       },
+       "location": {
+        "longitude": "-87.648951",
+        "latitude": "41.929086"
+       }
+      }
+     ]
+    }
+   },
+   {
+    "name": "MUNA: Gets So Hot Tour",
+    "type": "event",
+    "id": "vvG18Z_19RLdUP",
+    "test": false,
+    "url": "https://www.ticketmaster.com/muna-gets-so-hot-tour-chicago-illinois-10-09-2026/event/040064A5EF7C3DA5",
+    "locale": "en-us",
+    "sales": {
+     "public": {
+      "startDateTime": "2026-05-14T15:00:00Z",
+      "startTBD": false,
+      "startTBA": false,
+      "endDateTime": "2026-10-10T03:00:00Z"
+     },
+     "presales": [
+      {
+       "startDateTime": "2026-05-13T15:00:00Z",
+       "endDateTime": "2026-05-14T03:00:00Z",
+       "name": "Salt Shed Online Presale",
+       "shortDescription": "Salt Shed Online Presale"
+      },
+      {
+       "startDateTime": "2026-05-12T15:00:00Z",
+       "endDateTime": "2026-05-14T04:59:00Z",
+       "name": "Artist Presale",
+       "shortDescription": "Artist Presale"
+      },
+      {
+       "startDateTime": "2026-05-13T15:00:00Z",
+       "endDateTime": "2026-05-14T03:00:00Z",
+       "name": "Spotify Presale",
+       "shortDescription": "Spotify Presale"
+      },
+      {
+       "startDateTime": "2026-05-13T15:00:00Z",
+       "endDateTime": "2026-05-14T03:00:00Z",
+       "name": "AEG Presale",
+       "shortDescription": "AEG Presale"
+      },
+      {
+       "startDateTime": "2026-05-13T15:00:00Z",
+       "endDateTime": "2026-05-14T03:00:00Z",
+       "name": "Radio Presale",
+       "shortDescription": "Radio Presale"
+      },
+      {
+       "startDateTime": "2026-05-13T15:00:00Z",
+       "endDateTime": "2026-05-14T04:59:00Z",
+       "name": "Ticketmaster Presale",
+       "shortDescription": "Ticketmaster Presale"
+      }
+     ]
+    },
+    "dates": {
+     "start": {
+      "localDate": "2026-10-09",
+      "localTime": "19:00:00",
+      "dateTime": "2026-10-10T00:00:00Z",
+      "dateTBD": false,
+      "dateTBA": false,
+      "timeTBA": false,
+      "noSpecificTime": false
+     },
+     "timezone": "America/Chicago",
+     "status": {
+      "code": "onsale"
+     },
+     "spanMultipleDays": false
+    },
+    "classifications": [
+     {
+      "primary": true,
+      "segment": {
+       "id": "KZFzniwnSyZfZ7v7nJ",
+       "name": "Music"
+      },
+      "genre": {
+       "id": "KnvZfZ7vAev",
+       "name": "Pop"
+      },
+      "subGenre": {
+       "id": "KZazBEonSMnZfZ7vaEl",
+       "name": "Electro Pop"
+      },
+      "type": {
+       "id": "KZAyXgnZfZ7v7nI",
+       "name": "Undefined"
+      },
+      "subType": {
+       "id": "KZFzBErXgnZfZ7v7lJ",
+       "name": "Undefined"
+      },
+      "family": false
+     }
+    ],
+    "info": "MUNA?s journey has always been about bringing to light the complex, messy, ecstatic realities of life, and with their fourth album, Dancing On The Wall, they?ve never been sharper, darker, or more exhilarating. Emerging from the sparkly, confetti-strewn heights of their 2022 self-titled record, MUNA now channel the raw, anxious, and sweat-soaked energy of living in a city (Los Angeles) of unrelenting heat, a corrupted world wrought by political tension, and the quieter and more personal pressures of millennial precarity and heartache in these uncertain times. The result is a record that feels both intimate and spectacular: a fast-paced, hard-edged dance pop world built with teeth, wit, and emotional resonance?a soundtrack for hearts on fire amidst the tumult of modern life. A portion of the proceeds from MUNA?s Get So Hot Tour will go to The Ally Coalition and their work supporting LGBTQ Youth and Queer Migrants across the US.",
+    "pleaseNote": "There is a delivery delay on all orders until approximately one week prior to the show. This show will be taking place in our outside Fairgrounds space.",
+    "ageRestrictions": {
+     "legalAgeEnforced": false
+    },
+    "doorsTimes": {
+     "localDate": "2026-10-09",
+     "localTime": "17:30:00",
+     "dateTime": "2026-10-09T22:30:00Z"
+    },
+    "ticketing": {
+     "safeTix": {
+      "enabled": true
+     },
+     "allInclusivePricing": {
+      "enabled": true
+     }
+    },
+    "nameOrigin": "custom",
+    "ticketTextLines": {
+     "en-us": {
+      "line6": "  FRI OCT 9 2026 7:00 PM  ",
+      "line5": "                          ",
+      "line4": "      THE SALT SHED       ",
+      "line3": "     GETS SO HOT TOUR     ",
+      "line2": "           MUNA           ",
+      "line1": "                          "
+     }
+    },
+    "_embedded": {
+     "venues": [
+      {
+       "name": "The Salt Shed Outdoors (Fairgrounds)",
+       "type": "venue",
+       "id": "KovZ917Amf0",
+       "test": false,
+       "url": "https://www.ticketmaster.com/the-salt-shed-outdoors-fairgrounds-tickets-chicago/venue/33256",
+       "locale": "en-us",
+       "postalCode": "60642",
+       "timezone": "America/Chicago",
+       "city": {
+        "name": "Chicago"
+       },
+       "state": {
+        "name": "Illinois",
+        "stateCode": "IL"
+       },
+       "country": {
+        "name": "United States Of America",
+        "countryCode": "US"
+       },
+       "address": {
+        "line1": "1357 N Elston Ave"
+       },
+       "location": {
+        "longitude": "-87.65900000",
+        "latitude": "41.90630000"
+       }
+      }
+     ],
+     "attractions": [
+      {
+       "name": "MUNA",
+       "type": "attraction",
+       "id": "K8vZ917f2G7",
+       "test": false,
+       "url": "https://www.ticketmaster.com/muna-tickets/artist/2197571",
+       "locale": "en-us"
+      }
+     ]
+    }
+   },
+   {
+    "name": "Scene Queen: METALICIOUS",
+    "type": "event",
+    "id": "vvG18Z_GFdpG5a",
+    "test": false,
+    "url": "https://www.ticketmaster.com/scene-queen-metalicious-chicago-illinois-10-09-2026/event/040064C20358C2C9",
+    "locale": "en-us",
+    "sales": {
+     "public": {
+      "startDateTime": "2026-06-12T15:00:00Z",
+      "startTBD": false,
+      "startTBA": false,
+      "endDateTime": "2026-10-10T00:00:00Z"
+     },
+     "presales": [
+      {
+       "startDateTime": "2026-06-10T15:00:00Z",
+       "endDateTime": "2026-06-12T03:00:00Z",
+       "name": "Citi® Cardmember Presale"
+      },
+      {
+       "startDateTime": "2026-06-12T15:00:00Z",
+       "endDateTime": "2026-09-11T03:00:00Z",
+       "name": "Citi® Cardmember Preferred Tickets"
+      },
+      {
+       "startDateTime": "2026-06-10T15:00:00Z",
+       "endDateTime": "2026-06-12T03:00:00Z",
+       "name": "Artist Presale"
+      },
+      {
+       "startDateTime": "2026-06-10T15:00:00Z",
+       "endDateTime": "2026-06-12T03:00:00Z",
+       "name": "LIVE NATION PRESALE",
+       "description": "Live Nation Presales are available exclusively to Live Nation All Access members. It only takes a minute to join and membership is free. Sign into Ticketmaster with the same email address you use for All Access to automatically unlock the presale (no presale codes).",
+       "shortDescription": "Available exclusively to Live Nation All Access members",
+       "linkDescription": "Join for Free to Unlock Presale",
+       "url": "https://www.livenation.com/allaccess"
+      },
+      {
+       "startDateTime": "2026-09-22T15:00:00Z",
+       "endDateTime": "2026-09-29T04:59:00Z",
+       "name": "Autumn Access",
+       "shortDescription": "Autumn Access"
+      }
+     ]
+    },
+    "dates": {
+     "start": {
+      "localDate": "2026-10-09",
+      "localTime": "19:00:00",
+      "dateTime": "2026-10-10T00:00:00Z",
+      "dateTBD": false,
+      "dateTBA": false,
+      "timeTBA": false,
+      "noSpecificTime": false
+     },
+     "timezone": "America/Chicago",
+     "status": {
+      "code": "onsale"
+     },
+     "spanMultipleDays": false
+    },
+    "classifications": [
+     {
+      "primary": true,
+      "segment": {
+       "id": "KZFzniwnSyZfZ7v7nJ",
+       "name": "Music"
+      },
+      "genre": {
+       "id": "KnvZfZ7vAeA",
+       "name": "Rock"
+      },
+      "subGenre": {
+       "id": "KZazBEonSMnZfZ7v6F1",
+       "name": "Pop"
+      },
+      "type": {
+       "id": "KZAyXgnZfZ7v7nI",
+       "name": "Undefined"
+      },
+      "subType": {
+       "id": "KZFzBErXgnZfZ7v7lJ",
+       "name": "Undefined"
+      },
+      "family": false
+     }
+    ],
+    "info": "Doors open at 7PM. Performance begins at 8PM. This show is for AGES 17 AND OLDER. Valid Photo ID is required for age restricted shows. Forms of valid ID are current and non-expired Driver's License, State ID, or Passport. House of Blues Chicago is a standing room only venue, all tickets are General Admission unless otherwise stated. *All support acts are subject to change without notice.* Upgrade Your Experience: https://www.sevenrooms.com/events/hobchicago/hobwebsite",
+    "pleaseNote": "Performance begins at 8PM. This show is for AGES 17 AND OLDER. Valid Photo ID is required for age restricted shows. The Music Hall is General Admission Standing Room Only. We are built for dancing and rocking out! That means there is no seat to go along with your ticket despite those pesky little numbers that may be printed on it. For those of you looking to upgrade your experience, we do have some VIP Seating options including chairs, tables, and opera boxes. To upgrade your experience, please visit: https://www.sevenrooms.com/events/hobchicago/hobwebsite All bags will be searched, and no large bags or backpacks will be allowed. House of Blues Chicago is Smoke Free. There is no re-entry.",
+    "ageRestrictions": {
+     "legalAgeEnforced": true,
+     "ageRuleDescription": "17 & Over"
+    },
+    "ticketing": {
+     "safeTix": {
+      "enabled": true
+     },
+     "allInclusivePricing": {
+      "enabled": true
+     }
+    },
+    "nameOrigin": "custom",
+    "ticketTextLines": {
+     "en-us": {
+      "line6": " FRI OCT 9 2026 DOORS 7PM ",
+      "line5": "    STANDING ROOM ONLY    ",
+      "line4": "17+VALID ID/329 N DEARBORN",
+      "line3": "       METALICIOUS        ",
+      "line2": "       Scene Queen        ",
+      "line1": "  HOUSE OF BLUES CHICAGO  "
+     }
+    },
+    "linkMoreInfo": {
+     "descriptions": {
+      "en-nz": "Upgrade your Experience",
+      "en-ca": "Upgrade your Experience",
+      "en-us": "Upgrade your Experience",
+      "pt-br": "Upgrade your Experience",
+      "en-au": "Upgrade your Experience",
+      "es-us": "Upgrade your Experience",
+      "es-br": "Upgrade your Experience",
+      "en-mx": "Upgrade your Experience",
+      "es-mx": "Upgrade your Experience",
+      "fr-ca": "Upgrade your Experience"
+     },
+     "url": "https://www.sevenrooms.com/events/hobchicago/hobwebsite"
+    },
+    "_embedded": {
+     "venues": [
+      {
+       "name": "House of Blues Chicago",
+       "type": "venue",
+       "id": "KovZpZAEAIlA",
+       "test": false,
+       "url": "https://www.ticketmaster.com/house-of-blues-chicago-tickets-chicago/venue/32905",
+       "locale": "en-us",
+       "postalCode": "60654",
+       "timezone": "America/Chicago",
+       "city": {
+        "name": "Chicago"
+       },
+       "state": {
+        "name": "Illinois",
+        "stateCode": "IL"
+       },
+       "country": {
+        "name": "United States Of America",
+        "countryCode": "US"
+       },
+       "address": {
+        "line1": "329 N Dearborn St"
+       },
+       "location": {
+        "longitude": "-87.62931962",
+        "latitude": "41.88811537"
+       }
+      }
+     ],
+     "attractions": [
+      {
+       "name": "Scene Queen",
+       "type": "attraction",
+       "id": "K8vZ917Q47f",
+       "test": false,
+       "url": "https://www.ticketmaster.com/scene-queen-tickets/artist/2874742",
+       "locale": "en-us"
+      },
+      {
+       "name": "WARGASM",
+       "type": "attraction",
+       "id": "K8vZfZ7vnl6",
+       "test": false,
+       "url": "https://www.ticketmaster.com/wargasm-tickets/artist/2685672",
+       "locale": "en-us"
+      },
+      {
+       "name": "Bailey Spinn",
+       "type": "attraction",
+       "id": "K8vZ917hxzV",
+       "test": false,
+       "url": "https://www.ticketmaster.com/bailey-spinn-tickets/artist/3038643",
+       "locale": "en-us"
+      }
+     ]
+    }
+   },
+   {
+    "name": "M??kel??, Petrushka & Belshazzar???s Feast",
+    "type": "event",
+    "id": "Z7r9jZ1AAZk4K",
+    "test": false,
+    "url": "https://www.ticketmaster.com/event/Z7r9jZ1AAZk4K",
+    "locale": "en-us",
+    "sales": {
+     "public": {
+      "startDateTime": "1900-01-01T06:00:00Z",
+      "startTBD": false,
+      "startTBA": false,
+      "endDateTime": "2026-10-10T00:30:00Z"
+     }
+    },
+    "dates": {
+     "start": {
+      "localDate": "2026-10-09",
+      "localTime": "19:30:00",
+      "dateTime": "2026-10-10T00:30:00Z",
+      "dateTBD": false,
+      "dateTBA": false,
+      "timeTBA": false,
+      "noSpecificTime": false
+     },
+     "status": {
+      "code": "onsale"
+     },
+     "spanMultipleDays": false
+    },
+    "classifications": [
+     {
+      "primary": true,
+      "segment": {
+       "id": "KZFzniwnSyZfZ7v7nJ",
+       "name": "Music"
+      },
+      "genre": {
+       "id": "KnvZfZ7vAeJ",
+       "name": "Classical"
+      },
+      "subGenre": {
+       "id": "KZazBEonSMnZfZ7vF1A",
+       "name": "Classical/Vocal"
+      },
+      "family": false
+     }
+    ],
+    "ticketing": {
+     "allInclusivePricing": {
+      "enabled": true
+     }
+    },
+    "nameOrigin": "custom",
+    "_embedded": {
+     "venues": [
+      {
+       "name": "Symphony Center-IL",
+       "type": "venue",
+       "id": "ZFr9jZdv16",
+       "test": false,
+       "locale": "en-us",
+       "postalCode": "60604",
+       "timezone": "America/Chicago",
+       "city": {
+        "name": "Chicago"
+       },
+       "state": {
+        "name": "Illinois",
+        "stateCode": "IL"
+       },
+       "country": {
+        "name": "United States Of America",
+        "countryCode": "US"
+       },
+       "address": {
+        "line1": "220 S. Michigan Ave.",
+        "line2": "Chicago, IL"
+       },
+       "location": {
+        "longitude": "-87.628304000",
+        "latitude": "41.878101000"
+       }
+      }
+     ],
+     "attractions": [
+      {
+       "name": "Chicago Symphony Orchestra",
+       "type": "attraction",
+       "id": "K8vZ9175JD7",
+       "test": false,
+       "url": "https://www.ticketmaster.com/chicago-symphony-orchestra-tickets/artist/931505",
+       "locale": "en-us"
+      }
+     ]
+    }
+   },
+   {
+    "name": "BECK: RIDE LONESOME TOUR",
+    "type": "event",
+    "id": "vv17jZ_FGkTAZbCV",
+    "test": false,
+    "url": "https://www.ticketmaster.com/beck-ride-lonesome-tour-chicago-illinois-10-09-2026/event/0700648FC50183B4",
+    "locale": "en-us",
+    "sales": {
+     "public": {
+      "startDateTime": "2026-04-24T15:00:00Z",
+      "startTBD": false,
+      "startTBA": false,
+      "endDateTime": "2026-10-10T02:30:00Z"
+     },
+     "presales": [
+      {
+       "startDateTime": "2026-04-21T16:00:00Z",
+       "endDateTime": "2026-04-24T03:00:00Z",
+       "name": "Citi® Cardmember Presale",
+       "description": "To access the sale, use the first 6 digits of your eligible Citi® credit card or Citibank Debit Card as your presale code. You will also need to use your Citi® card to successfully complete your purchase.",
+       "shortDescription": "Exclusive Presale for Citi® Cardmembers"
+      },
+      {
+       "startDateTime": "2026-04-22T15:00:00Z",
+       "endDateTime": "2026-04-24T03:00:00Z",
+       "name": "Artist Presale",
+       "shortDescription": "Artist Presale"
+      },
+      {
+       "startDateTime": "2026-04-23T15:00:00Z",
+       "endDateTime": "2026-04-24T03:00:00Z",
+       "name": "LIVE NATION PRESALE",
+       "description": "Live Nation Presales are available exclusively to Live Nation All Access members. It only takes a minute to join and membership is free. Sign into Ticketmaster with the same email address you use for All Access to automatically unlock the presale (no presale codes).",
+       "shortDescription": "Available exclusively to Live Nation All Access members",
+       "linkDescription": "Join for Free to Unlock Presale",
+       "url": "https://www.livenation.com/allaccess"
+      },
+      {
+       "startDateTime": "2026-04-23T15:00:00Z",
+       "endDateTime": "2026-04-24T03:00:00Z",
+       "name": "The Auditorium Presale",
+       "shortDescription": "The Auditorium Presale"
+      },
+      {
+       "startDateTime": "2026-04-23T17:00:00Z",
+       "endDateTime": "2026-04-24T03:00:00Z",
+       "name": "Spotify Presale",
+       "shortDescription": "Spotify Presale"
+      },
+      {
+       "startDateTime": "2026-04-24T15:00:00Z",
+       "endDateTime": "2026-09-12T03:00:00Z",
+       "name": "Citi® Cardmember Preferred Tickets",
+       "description": "To access the sale, use the first 6 digits of your eligible Citi® credit card or Citibank Debit Card as your presale code. You will also need to use your Citi® card to successfully complete your purchase.",
+       "shortDescription": "For Citi® Cardmembers"
+      }
+     ]
+    },
+    "dates": {
+     "start": {
+      "localDate": "2026-10-09",
+      "localTime": "19:30:00",
+      "dateTime": "2026-10-10T00:30:00Z",
+      "dateTBD": false,
+      "dateTBA": false,
+      "timeTBA": false,
+      "noSpecificTime": false
+     },
+     "timezone": "America/Chicago",
+     "status": {
+      "code": "onsale"
+     },
+     "spanMultipleDays": false
+    },
+    "classifications": [
+     {
+      "primary": true,
+      "segment": {
+       "id": "KZFzniwnSyZfZ7v7nJ",
+       "name": "Music"
+      },
+      "genre": {
+       "id": "KnvZfZ7vAeA",
+       "name": "Rock"
+      },
+      "subGenre": {
+       "id": "KZazBEonSMnZfZ7v6dt",
+       "name": "Alternative Rock"
+      },
+      "type": {
+       "id": "KZAyXgnZfZ7v7nI",
+       "name": "Undefined"
+      },
+      "subType": {
+       "id": "KZFzBErXgnZfZ7v7lJ",
+       "name": "Undefined"
+      },
+      "family": false
+     }
+    ],
+    "info": "For current health & safety information, please visit www.auditoriumtheatre.org",
+    "ageRestrictions": {
+     "legalAgeEnforced": false
+    },
+    "doorsTimes": {
+     "localDate": "2026-10-09",
+     "localTime": "19:00:00",
+     "dateTime": "2026-10-10T00:00:00Z"
+    },
+    "ticketing": {
+     "safeTix": {
+      "enabled": true
+     },
+     "allInclusivePricing": {
+      "enabled": true
+     }
+    },
+    "nameOrigin": "custom",
+    "ticketTextLines": {
+     "en-us": {
+      "line6": "   FRI OCT 9 2026 7:30PM  ",
+      "line5": " 50 E. IDA B. WELLS DRIVE ",
+      "line4": "      THE AUDITORIUM      ",
+      "line3": "    RIDE LONESOME TOUR    ",
+      "line2": "           BECK           ",
+      "line1": "   LIVE NATION PRESENTS   "
+     }
+    },
+    "_embedded": {
+     "venues": [
+      {
+       "name": "The Auditorium",
+       "type": "venue",
+       "id": "KovZpa2H7e",
+       "test": false,
+       "url": "https://www.ticketmaster.com/the-auditorium-tickets-chicago/venue/57351",
+       "locale": "en-us",
+       "postalCode": "60605",
+       "timezone": "America/Chicago",
+       "city": {
+        "name": "Chicago"
+       },
+       "state": {
+        "name": "Illinois",
+        "stateCode": "IL"
+       },
+       "country": {
+        "name": "United States Of America",
+        "countryCode": "US"
+       },
+       "address": {
+        "line1": "50 E Ida B. Wells Drive"
+       },
+       "location": {
+        "longitude": "-87.62451860",
+        "latitude": "41.87570220"
+       }
+      }
+     ],
+     "attractions": [
+      {
+       "name": "Beck",
+       "type": "attraction",
+       "id": "K8vZ9171fvf",
+       "test": false,
+       "url": "https://www.ticketmaster.com/beck-tickets/artist/765320",
+       "locale": "en-us"
+      },
+      {
+       "name": "Ioanna Gika",
+       "type": "attraction",
+       "id": "K8vZ9179OK0",
+       "test": false,
+       "url": "https://www.ticketmaster.com/ioanna-gika-tickets/artist/2558320",
+       "locale": "en-us"
+      },
+      {
+       "name": "Wayne Faler",
+       "type": "attraction",
+       "id": "K8vZ917-RI0",
+       "test": false,
+       "url": "https://www.ticketmaster.com/wayne-faler-tickets/artist/4699381",
+       "locale": "en-us",
+       "draftStatus": "ACCEPTED"
+      }
+     ]
+    }
+   },
+   {
+    "name": "Shaboozey - Outlaws Never Die Tour",
+    "type": "event",
+    "id": "vv1kvZv0PoGA2h9X8",
+    "test": false,
+    "url": "https://www.ticketmaster.com/shaboozey-outlaws-never-die-tour-chicago-illinois-10-09-2026/event/040064951F6D7F90",
+    "locale": "en-us",
+    "sales": {
+     "public": {
+      "startDateTime": "2026-05-01T15:00:00Z",
+      "startTBD": false,
+      "startTBA": false,
+      "endDateTime": "2026-10-10T00:30:00Z"
+     },
+     "presales": [
+      {
+       "startDateTime": "2026-04-29T15:00:00Z",
+       "endDateTime": "2026-05-01T03:00:00Z",
+       "name": "Citi® Cardmember Presale"
+      },
+      {
+       "startDateTime": "2026-05-01T15:00:00Z",
+       "endDateTime": "2026-09-26T03:00:00Z",
+       "name": "Citi® Cardmember Preferred Tickets"
+      },
+      {
+       "startDateTime": "2026-04-29T15:00:00Z",
+       "endDateTime": "2026-05-01T03:00:00Z",
+       "name": "Artist Presale"
+      },
+      {
+       "startDateTime": "2026-04-30T15:00:00Z",
+       "endDateTime": "2026-05-01T03:00:00Z",
+       "name": "Support Presale"
+      },
+      {
+       "startDateTime": "2026-04-30T17:00:00Z",
+       "endDateTime": "2026-05-01T03:00:00Z",
+       "name": "Spotify Presale"
+      },
+      {
+       "startDateTime": "2026-04-30T15:00:00Z",
+       "endDateTime": "2026-05-01T03:00:00Z",
+       "name": "LIVE NATION PRESALE",
+       "description": "Live Nation Presales are available exclusively to Live Nation All Access members. It only takes a minute to join and membership is free. Sign into Ticketmaster with the same email address you use for All Access to automatically unlock the presale (no presale codes).",
+       "shortDescription": "Available exclusively to Live Nation All Access members",
+       "linkDescription": "Join for Free to Unlock Presale",
+       "url": "https://www.livenation.com/allaccess"
+      },
+      {
+       "startDateTime": "2026-04-29T15:00:00Z",
+       "endDateTime": "2026-05-01T03:00:00Z",
+       "name": "VIP Package Presale"
+      },
+      {
+       "startDateTime": "2026-05-01T15:00:00Z",
+       "endDateTime": "2026-10-03T03:00:00Z",
+       "name": "VIP Package Onsale"
+      }
+     ]
+    },
+    "dates": {
+     "start": {
+      "localDate": "2026-10-09",
+      "localTime": "19:30:00",
+      "dateTime": "2026-10-10T00:30:00Z",
+      "dateTBD": false,
+      "dateTBA": false,
+      "timeTBA": false,
+      "noSpecificTime": false
+     },
+     "timezone": "America/Chicago",
+     "status": {
+      "code": "onsale"
+     },
+     "spanMultipleDays": false
+    },
+    "classifications": [
+     {
+      "primary": true,
+      "segment": {
+       "id": "KZFzniwnSyZfZ7v7nJ",
+       "name": "Music"
+      },
+      "genre": {
+       "id": "KnvZfZ7vAv6",
+       "name": "Country"
+      },
+      "subGenre": {
+       "id": "KZazBEonSMnZfZ7vAFa",
+       "name": "Country"
+      },
+      "type": {
+       "id": "KZAyXgnZfZ7v7nI",
+       "name": "Undefined"
+      },
+      "subType": {
+       "id": "KZFzBErXgnZfZ7v7lJ",
+       "name": "Undefined"
+      },
+      "family": false
+     }
+    ],
+    "info": "Doors @ 630PM, Performance @ 730PM This is an ALL AGES event. Aragon Ballroom is a standing room only venue, all tickets are General Admission unless otherwise stated. There is NO re-entry. https://www.aragonballroomchicago.com/ Shaboozey has partnered with PLUS1 so that $1 per ticket goes to supporting St. Jude Children's Research Hospital who is leading the way the world understands, treats and defeats childhood cancer and other life-threatening diseases. To become a St. Jude Partner in Hope and get involved, visit musicgives.org. No portion of the purchase price is tax deductible.",
+    "pleaseNote": "Doors @ 630PM, Performance @ 730PM This is an ALL AGES event. Aragon Ballroom is a standing room only venue, all tickets are General Admission unless otherwise stated. There is NO re-entry. https://www.aragonballroomchicago.com/ Shaboozey has partnered with PLUS1 so that $1 per ticket goes to supporting St. Jude Children's Research Hospital who is leading the way the world understands, treats and defeats childhood cancer and other life-threatening diseases. To become a St. Jude Partner in Hope and get involved, visit musicgives.org. No portion of the purchase price is tax deductible.",
+    "ageRestrictions": {
+     "legalAgeEnforced": false
+    },
+    "ticketing": {
+     "safeTix": {
+      "enabled": true
+     },
+     "allInclusivePricing": {
+      "enabled": true
+     }
+    },
+    "nameOrigin": "custom",
+    "ticketTextLines": {
+     "en-us": {
+      "line6": "   FRI OCT 9 2026 730PM   ",
+      "line5": "  ALL AGES/STANDING ONLY  ",
+      "line4": "     ARAGON BALLROOM      ",
+      "line3": " WWW.AMERICANDOGWOOD.COM  ",
+      "line2": "        SHABOOZEY         ",
+      "line1": "   LIVE NATION PRESENTS   "
+     }
+    },
+    "_embedded": {
+     "venues": [
+      {
+       "name": "Aragon Ballroom",
+       "type": "venue",
+       "id": "KovZpZAFdJnA",
+       "test": false,
+       "url": "https://www.ticketmaster.com/aragon-ballroom-tickets-chicago/venue/32771",
+       "locale": "en-us",
+       "postalCode": "60640",
+       "timezone": "America/Chicago",
+       "city": {
+        "name": "Chicago"
+       },
+       "state": {
+        "name": "Illinois",
+        "stateCode": "IL"
+       },
+       "country": {
+        "name": "United States Of America",
+        "countryCode": "US"
+       },
+       "address": {
+        "line1": "1106 W Lawrence"
+       },
+       "location": {
+        "longitude": "-87.65797212",
+        "latitude": "41.96941873"
+       }
+      }
+     ],
+     "attractions": [
+      {
+       "name": "Shaboozey",
+       "type": "attraction",
+       "id": "K8vZ917f2P7",
+       "test": false,
+       "url": "https://www.ticketmaster.com/shaboozey-tickets/artist/2194370",
+       "locale": "en-us"
+      },
+      {
+       "name": "Kashus Culpepper",
+       "type": "attraction",
+       "id": "K8vZ917jjM7",
+       "test": false,
+       "url": "https://www.ticketmaster.com/kashus-culpepper-tickets/artist/3104519",
+       "locale": "en-us"
+      }
+     ]
+    }
+   },
+   {
+    "name": "Eyehategod, BL'ast!, Luicidal, Cavity, Evil Army",
+    "type": "event",
+    "id": "1Ae0Z_8GktdEs3n",
+    "test": false,
+    "url": "https://www.ticketweb.com/event/eyehategod-blast-luicidal-cavity-evil-reggies-rock-club-tickets/15026623?REFERRAL_ID=tmfeed",
+    "locale": "en-us",
+    "sales": {
+     "public": {
+      "startDateTime": "2026-08-11T16:00:00Z",
+      "startTBD": false,
+      "startTBA": false,
+      "endDateTime": "2026-10-10T00:00:00Z"
+     }
+    },
+    "dates": {
+     "start": {
+      "localDate": "2026-10-09",
+      "localTime": "20:00:00",
+      "dateTime": "2026-10-10T01:00:00Z",
+      "dateTBD": false,
+      "dateTBA": false,
+      "timeTBA": false,
+      "noSpecificTime": false
+     },
+     "timezone": "America/Chicago",
+     "status": {
+      "code": "onsale"
+     },
+     "spanMultipleDays": false
+    },
+    "classifications": [
+     {
+      "primary": true,
+      "segment": {
+       "id": "KZFzniwnSyZfZ7v7nJ",
+       "name": "Music"
+      },
+      "genre": {
+       "id": "KnvZfZ7vAeA",
+       "name": "Rock"
+      },
+      "subGenre": {
+       "id": "KZazBEonSMnZfZ7v6dt",
+       "name": "Alternative Rock"
+      },
+      "type": {
+       "id": "KZAyXgnZfZ7v7nI",
+       "name": "Undefined"
+      },
+      "subType": {
+       "id": "KZFzBErXgnZfZ7v7lJ",
+       "name": "Undefined"
+      },
+      "family": false
+     }
+    ],
+    "ageRestrictions": {
+     "legalAgeEnforced": false
+    },
+    "ticketing": {
+     "safeTix": {
+      "enabled": false
+     },
+     "allInclusivePricing": {
+      "enabled": false
+     }
+    },
+    "nameOrigin": "custom",
+    "ticketTextLines": {
+     "en-us": {
+      "line6": "        1 XNUMBER         ",
+      "line5": "         250 OPEN         ",
+      "line4": "       500 CAPACITY       ",
+      "line3": "                          ",
+      "line2": "    RESERVED GA CHART     ",
+      "line1": "          * * *           "
+     }
+    },
+    "_embedded": {
+     "venues": [
+      {
+       "name": "Reggies Rock Club",
+       "type": "venue",
+       "id": "KovZpZAdEl6A",
+       "test": false,
+       "url": "https://www.ticketmaster.com/reggies-rock-club-tickets-chicago/venue/339102",
+       "locale": "en-us",
+       "postalCode": "60616",
+       "timezone": "America/Chicago",
+       "city": {
+        "name": "Chicago"
+       },
+       "state": {
+        "name": "Illinois",
+        "stateCode": "IL"
+       },
+       "country": {
+        "name": "United States Of America",
+        "countryCode": "US"
+       },
+       "address": {
+        "line1": "2109 South State Street"
+       },
+       "location": {
+        "longitude": "-87.62706000",
+        "latitude": "41.85398800"
+       }
+      }
+     ],
+     "attractions": [
+      {
+       "name": "Eyehategod",
+       "type": "attraction",
+       "id": "K8vZ917GLkf",
+       "test": false,
+       "url": "https://www.ticketmaster.com/eyehategod-tickets/artist/1409492",
+       "locale": "en-us"
+      },
+      {
+       "name": "Cavity",
+       "type": "attraction",
+       "id": "K8vZ917u7j7",
+       "test": false,
+       "url": "https://www.ticketmaster.com/cavity-tickets/artist/1493489",
+       "locale": "en-us"
+      }
+     ]
+    }
+   },
+   {
+    "name": "Hank Ruff",
+    "type": "event",
+    "id": "rZ7HnEZ1Af19of",
+    "test": false,
+    "url": "https://www.ticketweb.com/event/hank-ruff-joes-on-weed-street-tickets/14297454",
+    "locale": "en-us",
+    "sales": {
+     "public": {
+      "startDateTime": "2026-09-09T15:00:00Z",
+      "startTBD": false,
+      "startTBA": false,
+      "endDateTime": "2026-10-10T01:00:00Z"
+     }
+    },
+    "dates": {
+     "access": {
+      "startDateTime": "2026-10-10T00:00:00Z",
+      "startApproximate": false,
+      "endApproximate": false
+     },
+     "start": {
+      "localDate": "2026-10-09",
+      "localTime": "20:00:00",
+      "dateTime": "2026-10-10T01:00:00Z",
+      "dateTBD": false,
+      "dateTBA": false,
+      "timeTBA": false,
+      "noSpecificTime": false
+     },
+     "end": {
+      "approximate": false,
+      "noSpecificTime": false
+     },
+     "timezone": "America/Chicago",
+     "status": {
+      "code": "cancelled"
+     },
+     "spanMultipleDays": false
+    },
+    "classifications": [
+     {
+      "primary": true,
+      "segment": {
+       "id": "KZFzniwnSyZfZ7v7nJ",
+       "name": "Music"
+      },
+      "genre": {
+       "id": "KnvZfZ7vAv6",
+       "name": "Country"
+      },
+      "subGenre": {
+       "id": "KZazBEonSMnZfZ7vAFa",
+       "name": "Country"
+      },
+      "type": {
+       "id": "KZAyXgnZfZ7v7nI",
+       "name": "Undefined"
+      },
+      "subType": {
+       "id": "KZFzBErXgnZfZ7v7lJ",
+       "name": "Undefined"
+      },
+      "family": false
+     }
+    ],
+    "info": "As a recent graduate from Indiana University, Hank Ruff has been building a name for himself throughout the state of Indiana while being in college. After his latest EP \"\"Hellbender\"\" went #1 on the iTunes all-genre chart, Ruff hopes to further this momentum by beginning to play all over the midwest and beyond. Now that he is finished with school and pursuing music full-time, Ruff has dreams to bring his more neo-traditional brand of country music all over the country. Hank was born and raised in Southern Indiana, and has been playing country music around the state since the age of 11. Named after Hank Williams Sr., Ruff began playing the mandolin and playing at bluegrass jams, and eventually picking up the guitar and learning classic country songs like \"\"Hey Good Lookin\"\" and \"\"Mama Tried\"\". Ruff started playing with his dad's band, \"\"The Dew Daddies\"\", and soon after that he began writing songs with his dad by the time he was in high school. Most of Ruff's catalogue is comprised of songs that the two wrote together, including \"\"If the Boot Fits\"\". Filled with steel guitar and fiddle, these songs embody what Ruff and his music is all about: combining elements of the traditional country sound with modern influences, and bringing a little more of the classic elements of the distinctive country sound back into mainstream country music.\"",
+    "pleaseNote": "This event is 21 and over. Any ticket holder unable to present valid identification indicating that they are at least 21 years of age will not be admitted to this event, and will not be eligible for a refund. Please note that the resale, attempted resale, or purchase of your ticket from any unauthorized reseller is grounds for seizure and cancellation of said ticket without compensation. The only valid tickets are those purchased and/or redeemed through our venue's website. To the extent you have any inquiries or complaints, in such an event, please contact the Third Party Seller directly. Tickets purchased from any unofficial vendors are at your own risk and may be void upon entry",
+    "priceRanges": [
+     {
+      "type": "standard",
+      "currency": "USD",
+      "min": 11.68,
+      "max": 13.86
+     }
+    ],
+    "nameOrigin": "custom",
+    "_embedded": {
+     "venues": [
+      {
+       "name": "Joe's on Weed Street",
+       "type": "venue",
+       "id": "rZ7HnEZaeyE",
+       "test": false,
+       "url": "https://www.ticketweb.com/venue/joes-on-weed-street-chicago-il/11879",
+       "locale": "en-us",
+       "postalCode": "60642",
+       "timezone": "America/Chicago",
+       "city": {
+        "name": "Chicago"
+       },
+       "state": {
+        "name": "Illinois",
+        "stateCode": "IL"
+       },
+       "country": {
+        "name": "United States Of America",
+        "countryCode": "US"
+       },
+       "address": {
+        "line1": "940 West Weed St."
+       },
+       "location": {
+        "longitude": "-87.65293",
+        "latitude": "41.909857"
+       }
+      }
+     ]
+    }
+   },
+   {
+    "name": "The Dead Bolts with Cab Ellis",
+    "type": "event",
+    "id": "rZ7HnEZ1AfP81K",
+    "test": false,
+    "url": "https://www.ticketweb.com/event/the-dead-bolts-with-cab-thalia-hall-tickets/14950293",
+    "locale": "en-us",
+    "sales": {
+     "public": {
+      "startDateTime": "2026-05-29T15:00:00Z",
+      "startTBD": false,
+      "startTBA": false,
+      "endDateTime": "2026-10-10T01:00:00Z"
+     }
+    },
+    "dates": {
+     "access": {
+      "startDateTime": "2026-10-10T00:00:00Z",
+      "startApproximate": false,
+      "endApproximate": false
+     },
+     "start": {
+      "localDate": "2026-10-09",
+      "localTime": "20:00:00",
+      "dateTime": "2026-10-10T01:00:00Z",
+      "dateTBD": false,
+      "dateTBA": false,
+      "timeTBA": false,
+      "noSpecificTime": false
+     },
+     "end": {
+      "approximate": false,
+      "noSpecificTime": false
+     },
+     "timezone": "America/Chicago",
+     "status": {
+      "code": "onsale"
+     },
+     "spanMultipleDays": false
+    },
+    "classifications": [
+     {
+      "primary": true,
+      "segment": {
+       "id": "KZFzniwnSyZfZ7v7nJ",
+       "name": "Music"
+      },
+      "genre": {
+       "id": "KnvZfZ7vAvv",
+       "name": "Alternative"
+      },
+      "subGenre": {
+       "id": "KZazBEonSMnZfZ7vAvn",
+       "name": "Alternative Rock"
+      },
+      "type": {
+       "id": "KZAyXgnZfZ7v7nI",
+       "name": "Undefined"
+      },
+      "subType": {
+       "id": "KZFzBErXgnZfZ7v7lJ",
+       "name": "Undefined"
+      },
+      "family": false
+     },
+     {
+      "primary": false,
+      "segment": {
+       "id": "KZFzniwnSyZfZ7v7nJ",
+       "name": "Music"
+      },
+      "genre": {
+       "id": "KnvZfZ7vAeA",
+       "name": "Rock"
+      },
+      "subGenre": {
+       "id": "KZazBEonSMnZfZ7v6da",
+       "name": "Rock"
+      },
+      "type": {
+       "id": "KZAyXgnZfZ7v7nI",
+       "name": "Undefined"
+      },
+      "subType": {
+       "id": "KZFzBErXgnZfZ7v7lJ",
+       "name": "Undefined"
+      },
+      "family": false
+     }
+    ],
+    "info": "The Dead Bolts. A true Rock band of the Modern Age, hailing from Chicago, IL. The Dead Bolts didn't come up through the industry - they earned every room they walked into. Eddie Hennessy, John Rolence, James Ryan, Matt Paske, Tyler Hancock, and Pat Corbett - six guys from the South Side who built the kind of band that feels less like a music project and more like a crew you want to be around. Their live show reflects exactly that. The kind of music that evokes Fontaines D.C., Local Natives, and early Kings of Leon. They've sold out rooms across Chicago, played Thalia Hall and Metro, and toured the entire country crammed in an SUV named Vancis with no crew and no safety net. Just a relentless belief in what they're doing. Now with their third record on the way and the momentum of Beau Monde still carrying, The Dead Bolts are stepping into a bigger moment with everything that got them here still fully intact. Raw, loud, and absolutely worth the drive.",
+    "pleaseNote": "This event is 17 and over. Any ticket holder unable to present valid identification indicating that they are at least 17 years of age will not be admitted to this event, and will not be eligible for a refund. Ticket Fee includes 1% City Amusement Tax.",
+    "priceRanges": [
+     {
+      "type": "standard",
+      "currency": "USD",
+      "min": 33.52,
+      "max": 330.23
+     }
+    ],
+    "nameOrigin": "custom",
+    "_embedded": {
+     "venues": [
+      {
+       "name": "Thalia Hall",
+       "type": "venue",
+       "id": "rZ7HnEZ17aJq7",
+       "test": false,
+       "url": "https://www.ticketweb.com/venue/thalia-hall-chicago-il/266744",
+       "locale": "en-us",
+       "postalCode": "60608",
+       "timezone": "America/Chicago",
+       "city": {
+        "name": "Chicago"
+       },
+       "state": {
+        "name": "Illinois",
+        "stateCode": "IL"
+       },
+       "country": {
+        "name": "United States Of America",
+        "countryCode": "US"
+       },
+       "address": {
+        "line1": "1807 S Allport St"
+       },
+       "location": {
+        "longitude": "-87.657459",
+        "latitude": "41.857717"
+       }
+      }
+     ]
+    }
+   },
+   {
+    "name": "Sawyer Hill - Everybody’s Home, Nobody’s Happy World Tour",
+    "type": "event",
+    "id": "rZ7HnEZ1AfPV4d",
+    "test": false,
+    "url": "https://www.ticketweb.com/event/sawyer-hill-everybodys-bottom-lounge-tickets/14974543",
+    "locale": "en-us",
+    "sales": {
+     "public": {
+      "startDateTime": "2026-06-09T15:00:00Z",
+      "startTBD": false,
+      "startTBA": false,
+      "endDateTime": "2026-10-10T01:00:00Z"
+     }
+    },
+    "dates": {
+     "access": {
+      "startDateTime": "2026-10-10T00:00:00Z",
+      "startApproximate": false,
+      "endApproximate": false
+     },
+     "start": {
+      "localDate": "2026-10-09",
+      "localTime": "20:00:00",
+      "dateTime": "2026-10-10T01:00:00Z",
+      "dateTBD": false,
+      "dateTBA": false,
+      "timeTBA": false,
+      "noSpecificTime": false
+     },
+     "end": {
+      "approximate": false,
+      "noSpecificTime": false
+     },
+     "timezone": "America/Chicago",
+     "status": {
+      "code": "onsale"
+     },
+     "spanMultipleDays": false
+    },
+    "classifications": [
+     {
+      "primary": true,
+      "segment": {
+       "id": "KZFzniwnSyZfZ7v7nJ",
+       "name": "Music"
+      },
+      "genre": {
+       "id": "KnvZfZ7vAvv",
+       "name": "Alternative"
+      },
+      "subGenre": {
+       "id": "KZazBEonSMnZfZ7vAvn",
+       "name": "Alternative Rock"
+      },
+      "type": {
+       "id": "KZAyXgnZfZ7v7nI",
+       "name": "Undefined"
+      },
+      "subType": {
+       "id": "KZFzBErXgnZfZ7v7lJ",
+       "name": "Undefined"
+      },
+      "family": false
+     },
+     {
+      "primary": false,
+      "segment": {
+       "id": "KZFzniwnSyZfZ7v7nJ",
+       "name": "Music"
+      },
+      "genre": {
+       "id": "KnvZfZ7vAvv",
+       "name": "Alternative"
+      },
+      "subGenre": {
+       "id": "KZazBEonSMnZfZ7vAvJ",
+       "name": "Alternative"
+      },
+      "type": {
+       "id": "KZAyXgnZfZ7v7nI",
+       "name": "Undefined"
+      },
+      "subType": {
+       "id": "KZFzBErXgnZfZ7v7lJ",
+       "name": "Undefined"
+      },
+      "family": false
+     }
+    ],
+    "info": "Artist Presale: Tuesday, June 9th @ 10:00 AM Kickstand Presale: Wednesday, June 10th @ 10:00 AM General On-Sale: Friday, June 12th @ 10:00 AM In an effort to mitigate scalping, Bottom Lounge does not certify any secondary ticket sales via third parties and is not responsible for fraudulent ticket sales on third party websites. Please be mindful of scammers. Tickets for this event will be sent on a delay (extra time is required to process and confirm all orders), but you'll always receive your tickets in time for your event. If you have not received your tickets one day before your event, be sure to let TicketWeb know. VIP Ticket Information Sawyer Hill Gold VIP Experience: One (1) General Admission Ticket Meet & Greet with Sawyer Hill Individual Photo Opportunity with Sawyer Hill Access to Pre Show Acoustic Performance with Sawyer Hill One (1) Signed Set List One (1) VIP Exclusive Merch Pack One (1) VIP Laminate Early Merch Shopping Access Venue First Entry Sawyer Hill Silver VIP Experience: One (1) General Admission Ticket Access to Pre Show Acoustic Performance with Sawyer Hill One (1) VIP Exclusive Merch Pack One (1) VIP Laminate Early Merch Shopping Access Venue First Entry All package elements will be rendered invalid if resold. Name changes will be issued at the sole discretion of 237 Global. VIP instructions will be sent via email no later than three days (3) prior to the concert. If you do not receive this email three days (3) prior please email info@237global.com. All packages and contents are non-transferable; no refunds or exchanges; all sales are final. All VIP package items and experiences are subject to change. Please note that the information provided at the time of purchase (e-mail and mailing address) is the same information that will be utilized for individual contact requirements where applicable. 237 Global, the artist, tour, promoter, ticketing company, venue or any other affiliated parties are not responsible for outdated or inaccurate information provided by the consumer at the time of purchase. If you have any questions regarding your VIP package elements, or have not received your package information within three days (3) of the concert date, please email info@237global.com.",
+    "pleaseNote": "This event is 17 and over. Any ticket holder unable to present valid identification indicating that they are at least 17 years of age will not be admitted to this event, and will not be eligible for a refund. In an effort to mitigate scalping, Bottom Lounge does not certify any secondary ticket sales via third parties and is not responsible for fraudulent ticket sales on third party websites. Please be mindful of scammers. Tickets for this event will be sent on a delay (extra time is required to process and confirm all orders), but you'll always receive your tickets in time for your event. If you have not received your tickets one day before your event, be sure to let TicketWeb know.",
+    "priceRanges": [
+     {
+      "type": "standard",
+      "currency": "USD",
+      "min": 28.78,
+      "max": 28.78
+     }
+    ],
+    "nameOrigin": "custom",
+    "_embedded": {
+     "venues": [
+      {
+       "name": "Bottom Lounge",
+       "type": "venue",
+       "id": "rZ7HnEZaePL",
+       "test": false,
+       "url": "https://www.ticketweb.com/venue/bottom-lounge-chicago-il/10591",
+       "locale": "en-us",
+       "postalCode": "60607",
+       "timezone": "America/Chicago",
+       "city": {
+        "name": "Chicago"
+       },
+       "state": {
+        "name": "Illinois",
+        "stateCode": "IL"
+       },
+       "country": {
+        "name": "United States Of America",
+        "countryCode": "US"
+       },
+       "address": {
+        "line1": "1375 W. Lake St"
+       },
+       "location": {
+        "longitude": "-87.661767",
+        "latitude": "41.885046"
+       }
+      }
+     ]
+    }
+   },
+   {
+    "name": "Tito Nieves - 50 Años La Historia Continua",
+    "type": "event",
+    "id": "vv17jZ_7Gkm8VKhe",
+    "test": false,
+    "url": "https://www.ticketmaster.com/tito-nieves-50-anos-la-historia-chicago-illinois-10-09-2026/event/0700644B90D136C2",
+    "locale": "en-us",
+    "sales": {
+     "public": {
+      "startDateTime": "2026-03-06T16:00:00Z",
+      "startTBD": false,
+      "startTBA": false,
+      "endDateTime": "2026-10-10T03:00:00Z"
+     },
+     "presales": [
+      {
+       "startDateTime": "2026-03-04T16:00:00Z",
+       "endDateTime": "2026-03-06T15:00:00Z",
+       "name": "Spotify Presale",
+       "shortDescription": "Spotify Presale"
+      },
+      {
+       "startDateTime": "2026-03-04T16:00:00Z",
+       "endDateTime": "2026-03-06T15:00:00Z",
+       "name": "Ticketmaster Presale",
+       "shortDescription": "Ticketmaster Presale"
+      },
+      {
+       "startDateTime": "2026-03-04T16:00:00Z",
+       "endDateTime": "2026-03-06T15:00:00Z",
+       "name": "Fan Club Presale",
+       "shortDescription": "Fan Club Presale"
+      },
+      {
+       "startDateTime": "2026-03-05T16:00:00Z",
+       "endDateTime": "2026-03-06T15:00:00Z",
+       "name": "Loud And Live Presale",
+       "shortDescription": "Loud And Live Presale"
+      },
+      {
+       "startDateTime": "2026-03-05T16:00:00Z",
+       "endDateTime": "2026-03-06T15:00:00Z",
+       "name": "Venue Presale",
+       "shortDescription": "Venue Presale"
+      },
+      {
+       "startDateTime": "2026-03-05T16:00:00Z",
+       "endDateTime": "2026-03-06T15:00:00Z",
+       "name": "Radio Presale",
+       "shortDescription": "Radio Presale"
+      }
+     ]
+    },
+    "dates": {
+     "start": {
+      "localDate": "2026-10-09",
+      "localTime": "20:00:00",
+      "dateTime": "2026-10-10T01:00:00Z",
+      "dateTBD": false,
+      "dateTBA": false,
+      "timeTBA": false,
+      "noSpecificTime": false
+     },
+     "timezone": "America/Chicago",
+     "status": {
+      "code": "onsale"
+     },
+     "spanMultipleDays": false
+    },
+    "classifications": [
+     {
+      "primary": true,
+      "segment": {
+       "id": "KZFzniwnSyZfZ7v7nJ",
+       "name": "Music"
+      },
+      "genre": {
+       "id": "KnvZfZ7vAJ6",
+       "name": "Latin"
+      },
+      "subGenre": {
+       "id": "KZazBEonSMnZfZ7va1a",
+       "name": "Latin"
+      },
+      "type": {
+       "id": "KZAyXgnZfZ7v7nI",
+       "name": "Undefined"
+      },
+      "subType": {
+       "id": "KZFzBErXgnZfZ7v7lJ",
+       "name": "Undefined"
+      },
+      "family": false
+     }
+    ],
+    "info": "Tito Nieves, born Humberto Nieves on June 4, 1958, in Río Piedras, Puerto Rico, is known as the \"Pavarotti of Salsa\" for his clear and powerful voice. Moving to New York City as a child, he grew up in a family of musicians & began his professional career in 1975 with Orquesta Cimarrón. He later worked with Héctor Lavoe, debuted with Johnny Ortiz's Taibori in 1978, and co-founded Conjunto Clásico, recording eight albums with the group before launching his solo career. His solo debut Classic (1988) went gold, followed by Yo Quiero Cantar (1989), which also went gold and featured the groundbreaking English-language salsa hit \"I'll Always Love You.\" His 1990 album Déjame Vivir achieved platinum status, and I Like It Like That (1997), an all-English salsa album, brought mainstream exposure, including a performance with Stevie Wonder at the Alma Awards. Tito's later albums, including Dale Cara a la Vida (1998) and Clase Aparte (1999), showcase his blend of salsa, pop, and R&B influences.",
+    "ageRestrictions": {
+     "legalAgeEnforced": true,
+     "ageRuleDescription": "18 & Over"
+    },
+    "doorsTimes": {
+     "localDate": "2026-10-09",
+     "localTime": "19:00:00",
+     "dateTime": "2026-10-10T00:00:00Z"
+    },
+    "ticketing": {
+     "safeTix": {
+      "enabled": true
+     },
+     "allInclusivePricing": {
+      "enabled": true
+     }
+    },
+    "upsellLandingPageUrl": "https://www.ticketmaster.com/extras/tito-nieves-50-anos-la-historia-chicago-illinois-10-09-2026/0700644B90D136C2",
+    "nameOrigin": "custom",
+    "ticketTextLines": {
+     "en-us": {
+      "line6": "  FRI OCT 9 2026 8:00 PM  ",
+      "line5": "       CHICAGO, IL        ",
+      "line4": "    COPERNICUS CENTER     ",
+      "line3": "                          ",
+      "line2": "       TITO NIEVES        ",
+      "line1": "  LOUD AND LIVE PRESENTS  "
+     }
+    },
+    "_embedded": {
+     "venues": [
+      {
+       "name": "Copernicus Center",
+       "type": "venue",
+       "id": "KovZ917Axum",
+       "test": false,
+       "url": "https://www.ticketmaster.com/copernicus-center-tickets-chicago/venue/57872",
+       "locale": "en-us",
+       "postalCode": "60630",
+       "timezone": "America/Chicago",
+       "city": {
+        "name": "Chicago"
+       },
+       "state": {
+        "name": "Illinois",
+        "stateCode": "IL"
+       },
+       "country": {
+        "name": "United States Of America",
+        "countryCode": "US"
+       },
+       "address": {
+        "line1": "5216 W. Lawrence Ave"
+       },
+       "location": {
+        "longitude": "-87.75861",
+        "latitude": "41.968303"
+       }
+      }
+     ],
+     "attractions": [
+      {
+       "name": "Tito Nieves",
+       "type": "attraction",
+       "id": "K8vZ9171xs7",
+       "test": false,
+       "url": "https://www.ticketmaster.com/tito-nieves-tickets/artist/755119",
+       "locale": "en-us"
+      }
+     ]
+    }
+   },
+   {
+    "name": "Karina Rykman",
+    "type": "event",
+    "id": "vvG18Z_uFRGp9-",
+    "test": false,
+    "url": "https://www.ticketmaster.com/karina-rykman-chicago-illinois-10-09-2026/event/040064D22F3165E1",
+    "locale": "en-us",
+    "sales": {
+     "public": {
+      "startDateTime": "2026-06-26T15:00:00Z",
+      "startTBD": false,
+      "startTBA": false,
+      "endDateTime": "2026-10-10T03:00:00Z"
+     },
+     "presales": [
+      {
+       "startDateTime": "2026-06-25T15:00:00Z",
+       "endDateTime": "2026-06-26T03:00:00Z",
+       "name": "Garcia's Chicago Presale",
+       "description": "Enter password to unlock access to tickets.",
+       "shortDescription": "Presale for Garcia's Chicago Email Subscribers"
+      },
+      {
+       "startDateTime": "2026-06-24T14:00:00Z",
+       "endDateTime": "2026-06-26T02:00:00Z",
+       "name": "Artist Presale",
+       "description": "Enter password to unlock access to tickets.",
+       "shortDescription": "Artist Presale"
+      }
+     ]
+    },
+    "dates": {
+     "start": {
+      "localDate": "2026-10-09",
+      "localTime": "20:00:00",
+      "dateTime": "2026-10-10T01:00:00Z",
+      "dateTBD": false,
+      "dateTBA": false,
+      "timeTBA": false,
+      "noSpecificTime": false
+     },
+     "timezone": "America/Chicago",
+     "status": {
+      "code": "onsale"
+     },
+     "spanMultipleDays": false
+    },
+    "classifications": [
+     {
+      "primary": true,
+      "segment": {
+       "id": "KZFzniwnSyZfZ7v7nJ",
+       "name": "Music"
+      },
+      "genre": {
+       "id": "KnvZfZ7vAeA",
+       "name": "Rock"
+      },
+      "subGenre": {
+       "id": "KZazBEonSMnZfZ7v6dt",
+       "name": "Alternative Rock"
+      },
+      "type": {
+       "id": "KZAyXgnZfZ7v7nI",
+       "name": "Undefined"
+      },
+      "subType": {
+       "id": "KZFzBErXgnZfZ7v7lJ",
+       "name": "Undefined"
+      },
+      "family": false
+     }
+    ],
+    "info": "Late Checkout Tour 2026! With special opener BQ Funk. Event features a General Admission Dance Pit in front of the stage! All sales are final, no refunds/exchanges permitted, but tickets may be transferred through your TM Account. Garcia's is fully ADA compliant featuring wheelchair lifts and ramps between the various levels of the venue, assisted listening devices upon request, and allows official service animals. Premium Table seating is located closest to the stage offering the most intimate music experience for guests and includes table service. Reserved Table seating is located on our main floor, behind the Premium section, and also includes table service. Both Premium and Reserved table seating is cabaret style which means you may be sitting with other fans. Private Booths are available and depending on the booth seats 1 to 4, 5, or 6 guests. General Admission/Standing Room is located around the sides of the room on an elevated level for quality viewing and easy bar access.",
+    "pleaseNote": "21 & Over Show. Must be 21+ with a valid ID to purchase alcohol.",
+    "ageRestrictions": {
+     "legalAgeEnforced": true,
+     "ageRuleDescription": "21 & Over"
+    },
+    "doorsTimes": {
+     "localDate": "2026-10-09",
+     "localTime": "18:30:00",
+     "dateTime": "2026-10-09T23:30:00Z"
+    },
+    "ticketing": {
+     "safeTix": {
+      "enabled": true
+     },
+     "allInclusivePricing": {
+      "enabled": true
+     }
+    },
+    "nameOrigin": "custom",
+    "ticketTextLines": {
+     "en-us": {
+      "line6": "  FRI OCT 9 2026 8:00 PM  ",
+      "line5": "1001 W WASHINGTON BLVD/21+",
+      "line4": "     GARCIA'S CHICAGO     ",
+      "line3": "                          ",
+      "line2": "      KARINA RYKMAN       ",
+      "line1": " LATE CHECKOUT TOUR 2026  "
+     }
+    },
+    "linkMoreInfo": {
+     "descriptions": {
+      "en-nz": "Garcia's Chicago",
+      "en-ca": "Garcia's Chicago",
+      "en-us": "Garcia's Chicago",
+      "pt-br": "Garcia's Chicago",
+      "en-au": "Garcia's Chicago",
+      "es-us": "Garcia's Chicago",
+      "es-br": "Garcia's Chicago",
+      "en-mx": "Garcia's Chicago",
+      "es-mx": "Garcia's Chicago",
+      "fr-ca": "Garcia's Chicago"
+     },
+     "url": "https://garciaschicago.live/"
+    },
+    "_embedded": {
+     "venues": [
+      {
+       "name": "Garcia's Chicago",
+       "type": "venue",
+       "id": "KovZ917AY3o",
+       "test": false,
+       "url": "https://www.ticketmaster.com/garcias-chicago-tickets-chicago/venue/33278",
+       "locale": "en-us",
+       "postalCode": "60607",
+       "timezone": "America/Chicago",
+       "city": {
+        "name": "Chicago"
+       },
+       "state": {
+        "name": "Illinois",
+        "stateCode": "IL"
+       },
+       "country": {
+        "name": "United States Of America",
+        "countryCode": "US"
+       },
+       "address": {
+        "line1": "1001 W Washington Blvd"
+       },
+       "location": {
+        "longitude": "-87.65256000",
+        "latitude": "41.88300000"
+       }
+      }
+     ],
+     "attractions": [
+      {
+       "name": "Karina Rykman",
+       "type": "attraction",
+       "id": "K8vZ917_bn0",
+       "test": false,
+       "url": "https://www.ticketmaster.com/karina-rykman-tickets/artist/2787417",
+       "locale": "en-us"
+      },
+      {
+       "name": "BQ Funk",
+       "type": "attraction",
+       "id": "K8vZ917r1af",
+       "test": false,
+       "url": "https://www.ticketmaster.com/bq-funk-tickets/artist/3678269",
+       "locale": "en-us",
+       "draftStatus": "ACCEPTED"
+      }
+     ]
+    }
+   },
+   {
+    "name": "Fighting for Scraps, Hunting Lions, Squared Off",
+    "type": "event",
+    "id": "1k18vPvOGAGJOUk",
+    "test": false,
+    "url": "https://www.ticketweb.com/event/fighting-for-scraps-hunting-lions-reggies-banannas-shack-tickets/15019193?REFERRAL_ID=tmfeed",
+    "locale": "en-us",
+    "sales": {
+     "public": {
+      "startDateTime": "2026-08-06T18:55:00Z",
+      "startTBD": false,
+      "startTBA": false,
+      "endDateTime": "2026-10-10T00:30:00Z"
+     }
+    },
+    "dates": {
+     "start": {
+      "localDate": "2026-10-09",
+      "localTime": "20:30:00",
+      "dateTime": "2026-10-10T01:30:00Z",
+      "dateTBD": false,
+      "dateTBA": false,
+      "timeTBA": false,
+      "noSpecificTime": false
+     },
+     "timezone": "America/Chicago",
+     "status": {
+      "code": "onsale"
+     },
+     "spanMultipleDays": false
+    },
+    "classifications": [
+     {
+      "primary": true,
+      "segment": {
+       "id": "KZFzniwnSyZfZ7v7nJ",
+       "name": "Music"
+      },
+      "genre": {
+       "id": "KnvZfZ7vAeA",
+       "name": "Rock"
+      },
+      "subGenre": {
+       "id": "KZazBEonSMnZfZ7v6F1",
+       "name": "Pop"
+      },
+      "type": {
+       "id": "KZAyXgnZfZ7v7nI",
+       "name": "Undefined"
+      },
+      "subType": {
+       "id": "KZFzBErXgnZfZ7v7lJ",
+       "name": "Undefined"
+      },
+      "family": false
+     }
+    ],
+    "ageRestrictions": {
+     "legalAgeEnforced": false
+    },
+    "ticketing": {
+     "safeTix": {
+      "enabled": false
+     },
+     "allInclusivePricing": {
+      "enabled": false
+     }
+    },
+    "nameOrigin": "custom",
+    "ticketTextLines": {
+     "en-us": {
+      "line6": "        1 XNUMBER         ",
+      "line5": "         250 OPEN         ",
+      "line4": "       500 CAPACITY       ",
+      "line3": "                          ",
+      "line2": "    RESERVED GA CHART     ",
+      "line1": "          * * *           "
+     }
+    },
+    "_embedded": {
+     "venues": [
+      {
+       "name": "Reggies Bananna's Shack ",
+       "type": "venue",
+       "id": "KovZpZAdIe1A",
+       "test": false,
+       "url": "https://www.ticketmaster.com/reggies-banannas-shack-tickets-chicago/venue/343299",
+       "locale": "en-us",
+       "postalCode": "60616",
+       "timezone": "America/Chicago",
+       "city": {
+        "name": "Chicago"
+       },
+       "state": {
+        "name": "Illinois",
+        "stateCode": "IL"
+       },
+       "country": {
+        "name": "United States Of America",
+        "countryCode": "US"
+       },
+       "address": {
+        "line1": "2105 South State Street"
+       },
+       "location": {
+        "longitude": "-87.626767",
+        "latitude": "41.853865"
+       }
+      }
+     ]
+    }
+   },
+   {
+    "name": "Carrie Nation and the Speakeasy, the Fabulous Cowboys, 6'10, the Bansh",
+    "type": "event",
+    "id": "1718v0G6CH2EsNI",
+    "test": false,
+    "url": "https://www.ticketweb.com/event/carrie-nation-and-the-speakeasy-reggies-music-joint-tickets/14262584?REFERRAL_ID=tmfeed",
+    "locale": "en-us",
+    "sales": {
+     "public": {
+      "startDateTime": "2026-07-15T19:10:00Z",
+      "startTBD": false,
+      "startTBA": false,
+      "endDateTime": "2026-10-10T01:00:00Z"
+     }
+    },
+    "dates": {
+     "start": {
+      "localDate": "2026-10-09",
+      "localTime": "21:00:00",
+      "dateTime": "2026-10-10T02:00:00Z",
+      "dateTBD": false,
+      "dateTBA": false,
+      "timeTBA": false,
+      "noSpecificTime": false
+     },
+     "timezone": "America/Chicago",
+     "status": {
+      "code": "onsale"
+     },
+     "spanMultipleDays": false
+    },
+    "classifications": [
+     {
+      "primary": true,
+      "segment": {
+       "id": "KZFzniwnSyZfZ7v7nJ",
+       "name": "Music"
+      },
+      "genre": {
+       "id": "KnvZfZ7vAv6",
+       "name": "Country"
+      },
+      "subGenre": {
+       "id": "KZazBEonSMnZfZ7vAFI",
+       "name": "Bluegrass"
+      },
+      "type": {
+       "id": "KZAyXgnZfZ7v7nI",
+       "name": "Undefined"
+      },
+      "subType": {
+       "id": "KZFzBErXgnZfZ7v7lJ",
+       "name": "Undefined"
+      },
+      "family": false
+     }
+    ],
+    "ageRestrictions": {
+     "legalAgeEnforced": false
+    },
+    "ticketing": {
+     "safeTix": {
+      "enabled": false
+     },
+     "allInclusivePricing": {
+      "enabled": false
+     }
+    },
+    "nameOrigin": "custom",
+    "ticketTextLines": {
+     "en-us": {
+      "line6": "        1 XNUMBER         ",
+      "line5": "         250 OPEN         ",
+      "line4": "       500 CAPACITY       ",
+      "line3": "                          ",
+      "line2": "    RESERVED GA CHART     ",
+      "line1": "          * * *           "
+     }
+    },
+    "_embedded": {
+     "venues": [
+      {
+       "name": "Reggies Music Joint",
+       "type": "venue",
+       "id": "KovZpZAFEeFA",
+       "test": false,
+       "url": "https://www.ticketmaster.com/reggies-music-joint-tickets-chicago/venue/342286",
+       "locale": "en-us",
+       "postalCode": "60616",
+       "timezone": "America/Chicago",
+       "city": {
+        "name": "Chicago"
+       },
+       "state": {
+        "name": "Illinois",
+        "stateCode": "IL"
+       },
+       "country": {
+        "name": "United States Of America",
+        "countryCode": "US"
+       },
+       "address": {
+        "line1": "2105 South State Street"
+       },
+       "location": {
+        "longitude": "-87.62706",
+        "latitude": "41.853988"
+       }
+      }
+     ],
+     "attractions": [
+      {
+       "name": "Carrie Nation and the Speakeasy",
+       "type": "attraction",
+       "id": "K8vZ917uXo0",
+       "test": false,
+       "url": "https://www.ticketmaster.com/carrie-nation-and-the-speakeasy-tickets/artist/1551476",
+       "locale": "en-us"
+      }
+     ]
+    }
+   },
+   {
+    "name": "Brady Lee",
+    "type": "event",
+    "id": "rZ7HnEZ1A4ZdZS",
+    "test": false,
+    "url": "https://www.ticketweb.com/event/brady-lee-carols-pub-tickets/15003033",
+    "locale": "en-us",
+    "sales": {
+     "public": {
+      "startDateTime": "2026-08-17T15:00:00Z",
+      "startTBD": false,
+      "startTBA": false,
+      "endDateTime": "2026-10-10T02:30:00Z"
+     }
+    },
+    "dates": {
+     "access": {
+      "startDateTime": "2026-10-10T02:30:00Z",
+      "startApproximate": false,
+      "endApproximate": false
+     },
+     "start": {
+      "localDate": "2026-10-09",
+      "localTime": "21:30:00",
+      "dateTime": "2026-10-10T02:30:00Z",
+      "dateTBD": false,
+      "dateTBA": false,
+      "timeTBA": false,
+      "noSpecificTime": false
+     },
+     "end": {
+      "approximate": false,
+      "noSpecificTime": false
+     },
+     "timezone": "America/Chicago",
+     "status": {
+      "code": "onsale"
+     },
+     "spanMultipleDays": false
+    },
+    "classifications": [
+     {
+      "primary": true,
+      "segment": {
+       "id": "KZFzniwnSyZfZ7v7nJ",
+       "name": "Music"
+      },
+      "genre": {
+       "id": "KnvZfZ7vAv6",
+       "name": "Country"
+      },
+      "subGenre": {
+       "id": "KZazBEonSMnZfZ7vAFa",
+       "name": "Country"
+      },
+      "type": {
+       "id": "KZAyXgnZfZ7v7nI",
+       "name": "Undefined"
+      },
+      "subType": {
+       "id": "KZFzBErXgnZfZ7v7lJ",
+       "name": "Undefined"
+      },
+      "family": false
+     }
+    ],
+    "info": "21+ / www.carolspub.comA defining country sound from the heart of the Midwest, Brady Lee is an award winning, nationally touring country artist. With viral songs like I Thank God, duets with Kelsey Lamb and Jake Banfield, and an independent top 40 single to country radio, Brady has shared stages with Riley Green, Cameron Whitcomb, Old Dominion, and others. This event is 21 and over. Any ticket holder unable to present valid identification indicating that they are at least 21 years of age will not be admitted to this event, and will not be eligible for a refund.GA Tickets do not include seating. Reserved Table purchase includes entrance to the show and a reserved table for the designated number of people.Please arrive 30 minutes prior to showtime to claim your table. If your party has not arrived by that time, your table may be subject to be given away to another group and we will do our best to facilitate your group upon your arrival, however a table is no longer guaranteed.",
+    "pleaseNote": "This event is 21 and over. Any ticket holder unable to present valid identification indicating that they are at least 21 years of age will not be admitted to this event, and will not be eligible for a refund. This event is 21 and over. Any ticket holder unable to present valid identification indicating that they are at least 21 years of age will not be admitted to this event, and will not be eligible for a refund. GA Tickets do not include seating. Reserved Table purchase includes entrance to the show and a reserved table for designated number of people. Please arrive 30 minutes prior to showtime to claim your table. If your party has not arrived by that time, your table may be subject to be given away to another group and we will do our best to facilitate your group upon your arrival, however a table is no longer guaranteed. Please note that the resale, attempted resale, or purchase of your ticket from any unauthorized reseller is grounds for seizure and cancellation of said ticket without compensation. The only valid tickets are those purchased and/or redeemed through our venue's website. To the extent you have any inquiries or complaints, in such an event, please contact the Third Party Seller directly. Tickets purchased from any unofficial vendors are at your own risk and may be void upon entry.",
+    "priceRanges": [
+     {
+      "type": "standard",
+      "currency": "USD",
+      "min": 12.08,
+      "max": 22.38
+     }
+    ],
+    "nameOrigin": "custom",
+    "_embedded": {
+     "venues": [
+      {
+       "name": "Carol's Pub",
+       "type": "venue",
+       "id": "rZ7HnEZ17oEag",
+       "test": false,
+       "url": "https://www.ticketweb.com/venue/carols-pub-chicago-il/467275",
+       "locale": "en-us",
+       "postalCode": "60640",
+       "timezone": "America/Chicago",
+       "city": {
+        "name": "Chicago"
+       },
+       "state": {
+        "name": "Illinois",
+        "stateCode": "IL"
+       },
+       "country": {
+        "name": "United States Of America",
+        "countryCode": "US"
+       },
+       "address": {
+        "line1": "4659 North Clark Street"
+       },
+       "location": {
+        "longitude": "-87.666980",
+        "latitude": "41.966640"
+       }
+      }
+     ]
+    }
+   },
+   {
+    "name": "MAR SOLIS - TU TUTU TOUR 2026",
+    "type": "event",
+    "id": "vvG18Z_2rsNhSX",
+    "test": false,
+    "url": "https://www.ticketmaster.com/mar-solis-tu-tutu-tour-2026-chicago-illinois-10-15-2026/event/040064F7B18DBCFE",
+    "locale": "en-us",
+    "sales": {
+     "public": {
+      "startDateTime": "2026-07-31T15:00:00Z",
+      "startTBD": false,
+      "startTBA": false,
+      "endDateTime": "2026-10-16T00:00:00Z"
+     }
+    },
+    "dates": {
+     "start": {
+      "localDate": "2026-10-15",
+      "localTime": "19:00:00",
+      "dateTime": "2026-10-16T00:00:00Z",
+      "dateTBD": false,
+      "dateTBA": false,
+      "timeTBA": false,
+      "noSpecificTime": false
+     },
+     "initialStartDate": {
+      "localDate": "2026-10-15",
+      "localTime": "19:00:00",
+      "dateTime": "2026-10-16T00:00:00Z"
+     },
+     "timezone": "America/Chicago",
+     "status": {
+      "code": "cancelled"
+     },
+     "spanMultipleDays": false
+    },
+    "classifications": [
+     {
+      "primary": true,
+      "segment": {
+       "id": "KZFzniwnSyZfZ7v7nJ",
+       "name": "Music"
+      },
+      "genre": {
+       "id": "KnvZfZ7vAJ6",
+       "name": "Latin"
+      },
+      "subGenre": {
+       "id": "KZazBEonSMnZfZ7va1a",
+       "name": "Latin"
+      },
+      "type": {
+       "id": "KZAyXgnZfZ7v7nI",
+       "name": "Undefined"
+      },
+      "subType": {
+       "id": "KZFzBErXgnZfZ7v7lJ",
+       "name": "Undefined"
+      },
+      "family": false
+     }
+    ],
+    "info": "Doors open at 7PM. Performance begins at 8PM. This show is for AGES 17 AND OLDER. Valid Photo ID is required for age restricted shows. Forms of valid ID are current and non-expired Driver's License, State ID, or Passport. House of Blues Chicago is a standing room only venue, all tickets are General Admission unless otherwise stated. *All support acts are subject to change without notice.* Upgrade Your Experience: https://www.sevenrooms.com/events/hobchicago/hobwebsite",
+    "pleaseNote": "Unfortunately, the Event Organizer has had to cancel your event. You don't need to do a thing. We'll issue a refund to the [original method of payment](https://help.ticketmaster.com/hc/en-us/articles/9614074869009) used at time of purchase, as soon as funds are received from the Event Organizer. It should appear on your account within 14-21 days. Please Note: If the tickets were transferred to you, the refund will go to the fan who originally purchased the tickets from Ticketmaster. Please see our [Purchase Policy](https://help.ticketmaster.com/hc/en-us/articles/10465798887953-Purchase-Policy) for more information.",
+    "ageRestrictions": {
+     "legalAgeEnforced": true,
+     "ageRuleDescription": "17 & Over"
+    },
+    "ticketing": {
+     "safeTix": {
+      "enabled": true
+     },
+     "allInclusivePricing": {
+      "enabled": true
+     }
+    },
+    "nameOrigin": "custom",
+    "ticketTextLines": {
+     "en-us": {
+      "line6": "  THU OCT 15 2026 7:00PM  ",
+      "line5": "    STANDING ROOM ONLY    ",
+      "line4": "17+VALID ID/329 N DEARBORN",
+      "line3": "    TU TUTU TOUR 2026     ",
+      "line2": "        MAR SOLIS         ",
+      "line1": " CANCELED-REFUNDS P.O.P.  "
+     }
+    },
+    "linkMoreInfo": {
+     "descriptions": {
+      "en-nz": "Upgrade your Experience",
+      "en-ca": "Upgrade your Experience",
+      "en-us": "Upgrade your Experience",
+      "pt-br": "Upgrade your Experience",
+      "en-au": "Upgrade your Experience",
+      "es-us": "Upgrade your Experience",
+      "es-br": "Upgrade your Experience",
+      "en-mx": "Upgrade your Experience",
+      "es-mx": "Upgrade your Experience",
+      "fr-ca": "Upgrade your Experience"
+     },
+     "url": "https://www.sevenrooms.com/events/hobchicago/hobwebsite"
+    },
+    "_embedded": {
+     "venues": [
+      {
+       "name": "House of Blues Chicago",
+       "type": "venue",
+       "id": "KovZpZAEAIlA",
+       "test": false,
+       "url": "https://www.ticketmaster.com/house-of-blues-chicago-tickets-chicago/venue/32905",
+       "locale": "en-us",
+       "postalCode": "60654",
+       "timezone": "America/Chicago",
+       "city": {
+        "name": "Chicago"
+       },
+       "state": {
+        "name": "Illinois",
+        "stateCode": "IL"
+       },
+       "country": {
+        "name": "United States Of America",
+        "countryCode": "US"
+       },
+       "address": {
+        "line1": "329 N Dearborn St"
+       },
+       "location": {
+        "longitude": "-87.62931962",
+        "latitude": "41.88811537"
+       }
+      }
+     ],
+     "attractions": [
+      {
+       "name": "Mar Solis",
+       "type": "attraction",
+       "id": "K8vZ917-6sV",
+       "test": false,
+       "url": "https://www.ticketmaster.com/mar-solis-tickets/artist/4583167",
+       "locale": "en-us",
+       "draftStatus": "ACCEPTED"
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "page": {
+  "size": 200,
+  "totalElements": 93,
+  "totalPages": 1,
+  "number": 0
+ }
+}

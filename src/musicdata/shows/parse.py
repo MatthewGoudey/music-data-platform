@@ -16,7 +16,7 @@ import html
 import json
 import re
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime
 
 
 @dataclass(frozen=True)
@@ -49,6 +49,13 @@ class Show:
     tickets_url: str | None = None
     on_sale_at: datetime | None = None
     price: str | None = None
+    local_date: date | None = None  # when starts_at is not in the venue's own offset
+    cancelled: bool = False
+
+    @property
+    def show_date(self) -> date:
+        """The venue's calendar date: what one night means across sources."""
+        return self.local_date or self.starts_at.date()
 
 
 def _float(value: object) -> float | None:
@@ -155,6 +162,81 @@ def parse_omr_show_page(page: str, show_id: str) -> Show | None:
         on_sale_at=_time(record.get("on_sale_at")),
         price=record.get("price") or None,
     )
+
+
+# --- Ticketmaster (Discovery API) -----------------------------------------------------
+
+
+def _tm_price(event: dict) -> str | None:
+    ranges = [r for r in event.get("priceRanges") or [] if r.get("min") is not None]
+    if not ranges:
+        return None
+    low = min(float(r["min"]) for r in ranges)
+    high = max(float(r.get("max") or r["min"]) for r in ranges)
+    if high <= 0:
+        return None
+    return f"${low:.0f}" if low == high else f"${low:.0f}–${high:.0f}"
+
+
+def parse_tm_events(body: dict) -> list[Show]:
+    """Events from one Discovery API page. Attractions are the lineup when present; a title
+    without them is split later like any listing title."""
+    shows: list[Show] = []
+    for e in (body.get("_embedded") or {}).get("events") or []:
+        start = (e.get("dates") or {}).get("start") or {}
+        starts_at = _time((start.get("dateTime") or "").replace("Z", "+00:00"))
+        venues = (e.get("_embedded") or {}).get("venues") or []
+        if starts_at is None or not venues or not venues[0].get("id"):
+            continue
+        v = venues[0]
+        location = v.get("location") or {}
+        address = ", ".join(
+            x
+            for x in (
+                (v.get("address") or {}).get("line1"),
+                (v.get("city") or {}).get("name"),
+                " ".join(
+                    filter(None, ((v.get("state") or {}).get("stateCode"), v.get("postalCode")))
+                ),
+            )
+            if x
+        )
+        attractions = (e.get("_embedded") or {}).get("attractions") or []
+        local = start.get("localDate")
+        shows.append(
+            Show(
+                source="ticketmaster",
+                source_id=e["id"],
+                url=e.get("url") or "",
+                starts_at=starts_at,
+                title=_text(e.get("name")),
+                venue=Venue(
+                    source="ticketmaster",
+                    slug=v["id"],
+                    name=_text(v.get("name")),
+                    address=_text(address) or None,
+                    latitude=_float(location.get("latitude")),
+                    longitude=_float(location.get("longitude")),
+                    website=v.get("url") or None,
+                ),
+                performers=[
+                    Performer(name=_text(a.get("name")), slug=a.get("id"))
+                    for a in attractions
+                    if _text(a.get("name"))
+                ],
+                structured=bool(attractions),
+                tickets_url=e.get("url") or None,
+                on_sale_at=_time(
+                    (
+                        ((e.get("sales") or {}).get("public") or {}).get("startDateTime") or ""
+                    ).replace("Z", "+00:00")
+                ),
+                price=_tm_price(e),
+                local_date=date.fromisoformat(local) if local else None,
+                cancelled=((e.get("dates") or {}).get("status") or {}).get("code") == "cancelled",
+            )
+        )
+    return shows
 
 
 # --- do312 ----------------------------------------------------------------------------

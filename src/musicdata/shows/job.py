@@ -1,4 +1,4 @@
-"""The shows job: Oh My Rockness → venue, show, show_source, show_artist.
+"""The shows job: Oh My Rockness, then Ticketmaster → venue, show, show_source, show_artist.
 
 Each run reads the venue index, then the pages of venues that had upcoming shows last
 time plus a rotating slice of the rest (`--sweep` reads all), and fetches a show page
@@ -15,11 +15,13 @@ from datetime import UTC, datetime
 import asyncpg
 
 from musicdata.clients.omr import OhMyRockness
+from musicdata.clients.ticketmaster import Ticketmaster
+from musicdata.config import get_settings
 from musicdata.db import connection
-from musicdata.identity import clean_performer, non_artist_event, norm_key
+from musicdata.identity import clean_performer, non_artist_event, norm_key, split_lineup
 from musicdata.jobs.runs import JobFn, RunContext
 from musicdata.log import get_logger
-from musicdata.shows.parse import Show, Venue
+from musicdata.shows.parse import Performer, Show, Venue
 
 log = get_logger(__name__)
 
@@ -54,9 +56,18 @@ async def resolve_performer(conn: asyncpg.Connection, name: str) -> int | None:
 
 
 async def _lineup(conn: asyncpg.Connection, show: Show) -> list[dict]:
-    """Show artists in order: cleaned, resolved, "A & B" split only when that resolves."""
+    """Show artists in order: cleaned, resolved, "A & B" split only when that resolves.
+    A listing without structured performers is split from its title, unless the whole
+    title is an artist ("Earth, Wind & Fire")."""
+    performers = show.performers
+    if not performers:
+        whole = clean_performer(show.title)[0]
+        if not non_artist_event(show.title) and await resolve_performer(conn, whole):
+            performers = [Performer(name=whole)]
+        else:
+            performers = [Performer(name=n) for n in split_lineup(show.title)]
     out: list[dict] = []
-    for p in show.performers:
+    for p in performers:
         clean, note = clean_performer(p.name)
         artist_id = await resolve_performer(conn, clean)
         parts = [clean]
@@ -141,19 +152,20 @@ async def upsert_show(conn: asyncpg.Connection, show: Show) -> int:
         headliner = lineup[0]["clean_name"] if lineup else show.title
         show_id = await conn.fetchval(
             """INSERT INTO show (venue_id, starts_at, show_date, headliner_key, title,
-                                 non_artist)
-               VALUES ($1, $2, $3, $4, $5, $6)
+                                 non_artist, cancelled)
+               VALUES ($1, $2, $3, $4, $5, $6, $7)
                ON CONFLICT (venue_id, show_date, headliner_key) DO UPDATE
                   SET starts_at = EXCLUDED.starts_at, title = EXCLUDED.title,
                       non_artist = EXCLUDED.non_artist, last_seen_at = now(),
-                      missed_runs = 0, cancelled = false
+                      missed_runs = 0, cancelled = EXCLUDED.cancelled
                RETURNING show_id""",
             venue_id,
             show.starts_at,
-            show.starts_at.date(),  # the site's own local date: starts_at carries its offset
+            show.show_date,
             norm_key(headliner) or headliner.casefold(),
             show.title,
             non_artist_event(show.title),
+            show.cancelled,
         )
         await conn.execute(
             """INSERT INTO show_source (source, source_id, show_id, url, tickets_url,
@@ -275,6 +287,37 @@ def shows(*, sweep: bool = False, venue_limit: int | None = None) -> JobFn:
                 if venues_read % 25 == 0:
                     log.info("shows progress", extra={"venues": venues_read, "new": stored})
             requests = omr.web.requests
+        tm_new = tm_seen = 0
+        key = get_settings().ticketmaster_api_key
+        if key is not None and key.get_secret_value():
+            async with Ticketmaster(key.get_secret_value()) as tm:
+                listed = await tm.upcoming()
+                requests += tm.web.requests
+            async with connection(ctx.pool) as conn:
+                known = {
+                    r["source_id"]
+                    for r in await conn.fetch(
+                        """UPDATE show_source SET seen_at = now()
+                            WHERE source = 'ticketmaster' AND source_id = ANY($1::text[])
+                            RETURNING source_id""",
+                        [s.source_id for s in listed],
+                    )
+                }
+                cancelled = [s.source_id for s in listed if s.cancelled and s.source_id in known]
+                await conn.execute(
+                    """UPDATE show SET cancelled = true
+                         FROM show_source ss
+                        WHERE ss.show_id = show.show_id AND ss.source = 'ticketmaster'
+                          AND ss.source_id = ANY($1::text[])""",
+                    cancelled,
+                )
+            tm_seen = len(known)
+            for show in listed:
+                if show.source_id in known:
+                    continue
+                async with connection(ctx.pool) as conn:
+                    await upsert_show(conn, show)
+                tm_new += 1
         async with connection(ctx.pool) as conn:
             await conn.execute(
                 """UPDATE show s SET last_seen_at = now(), missed_runs = 0
@@ -301,12 +344,14 @@ def shows(*, sweep: bool = False, venue_limit: int | None = None) -> JobFn:
                                  AND sa.role = 'headliner')) AS with_known_headliner
                      FROM show s WHERE s.starts_at > now() AND NOT s.cancelled"""
             )
-        ctx.rows = stored
+        ctx.rows = stored + tm_new
         ctx.notes.update(
             mode="sweep" if sweep else "nightly",
             venues_indexed=len(index),
             venues_read=venues_read,
             new_shows=stored,
+            ticketmaster_new=tm_new,
+            ticketmaster_seen=tm_seen,
             requests=requests,
             missed=int(missed.split()[-1]),
             resolved_later=resolved_later,
