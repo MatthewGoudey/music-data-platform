@@ -2,7 +2,8 @@
 
 Most-listened groups go first, so a partial pass (`--limit`) covers the albums that
 matter. Each group is one MusicBrainz request and one transaction. A group MusicBrainz
-cannot answer is stored as `unresolved` and retried after RETRY_AFTER. After the mapped
+cannot answer is stored as `unresolved` and retried after RETRY_AFTER. Groups with no
+listens yet (albums `lists resolve` added) wait until their first listen. After the mapped
 groups, the unmapped tail is settled by tracklist overlap (resolve/unmapped.py).
 """
 
@@ -26,6 +27,7 @@ PENDING = f"""
     FROM release_group rg
     LEFT JOIN release_group_tracklist t USING (release_group_id)
    WHERE rg.mbid IS NOT NULL
+     AND EXISTS (SELECT 1 FROM listen l WHERE l.release_group_id = rg.release_group_id)
      AND (t.release_group_id IS NULL
           OR (t.source = 'unresolved' AND t.resolved_at < now() - interval '{RETRY_AFTER}'))
 """
@@ -126,8 +128,11 @@ def resolve(
     retry_unresolved: bool = False,
 ) -> JobFn:
     async def _run(ctx: RunContext) -> None:
+        from musicdata.resolve.manual import apply_manual_tracklists
+
         settings = get_settings()
         async with connection(ctx.pool) as conn:
+            ctx.notes["manual"] = await apply_manual_tracklists(conn)
             todo = await conn.fetch(
                 f"""SELECT rg.release_group_id, rg.mbid::text AS mbid {PENDING}
                      ORDER BY (SELECT count(*) FROM listen l

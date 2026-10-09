@@ -1,0 +1,41 @@
+artist,album,track_count,release_type,note
+Beastie Boys,Ill Communication,20,Album,"Standard is 20. Correct count, user only played 8."
+Beastie Boys,Licensed To Ill,13,Album,Standard is 13. min() picked 8.
+Bright Eyes,"I'm Wide Awake, It's Morning",10,Album,Standard is 10. Was 14.
+CAKE,Showroom Of Compassion,11,Album,Standard edition. Was 12 (deluxe).
+Crumb,Crumb,5,EP,"It's an EP, 5 tracks. Was resolved as 12-track Album."
+Crumb,Jinx,10,Album,Standard is 10. Correct.
+Darren Korb,Pyre (Original Soundtrack),45,Album,Full Pyre OST. min() picked 8 (a sampler EP on MB).
+Darren Korb,Transistor Original Soundtrack,23,Album,Standard OST. Was 24 (includes bonus).
+Deltron 3030,Deltron 3030,15,Album,Standard with skits. Was 24 (deluxe with instrumentals).
+Electric Light Orchestra,Time,16,Album,UK standard is 16 tracks.
+Eminem,Kamikaze,12,Album,Standard edition. Was 13 (deluxe with Venom).
+Glass Animals,Dreamland,16,Album,Standard edition. Was resolved to 20 (deluxe with bonus tracks).
+Glass Animals,Dreamland - Real Life Edition,16,Album,Standard Dreamland. Real Life Edition name but standard tracklist.
+Glass Animals,How To Be A Human Being,11,Album,Standard is 11 tracks. min() picked 10.
+Gorillaz,Demon Days,15,Album,Standard edition. Was 22 (deluxe/expanded with instrumentals + bonus).
+Gorillaz,Plastic Beach,16,Album,Standard is 16 tracks.
+J. Cole,2014 Forest Hills Drive,13,Album,Standard edition. Was 21. User played 17 (likely deluxe + live bonus). Standard is 13 tracks.
+J. Cole,Born Sinner,18,Album,Standard edition. Was 21 (deluxe).
+J. Cole,The Fall-Off,10,Album,Standard edition is 10 tracks.
+Jain,Zanaka (Deluxe),16,Album,Deluxe is 16 tracks. User explicitly listened to deluxe edition.
+Johnny Cash,At Folsom Prison,16,Album,Standard edition. Was resolved to 22 (Legacy Edition with bonus tracks).
+Kanye West,The Life Of Pablo,20,Album,Final version (20 tracks). MB has various editions 10-20.
+Kendrick Lamar,"good kid, m.A.A.d city",12,Album,Standard is 12. User played 17 (deluxe bonus tracks scrobbled as variants).
+MF DOOM,BORN LIKE THIS,15,Album,Standard is 15. Was 20.
+MF DOOM,MM...FOOD,21,Album,Standard with skits is 21. Was 15 (no-skits version too short).
+MF DOOM,Operation: Doomsday (Complete),19,Album,"Original is 19. Was resolved to 19, keeping."
+Nirvana,In Utero,12,Album,Standard is 12 tracks.
+Nirvana,MTV Unplugged In New York,14,Album,Standard is 14. Correct.
+Nirvana,Nevermind,12,Album,Standard is 12 tracks.
+Pixies,Doolittle,15,Album,Standard edition. MB returned 30 (deluxe with bonus tracks).
+Songs: Ohia,Magnolia Electric Co.,9,Album,Standard edition is 9 tracks. MB returned 19 (deluxe). Scrobbles split across artist variants.
+"Songs: Ohia, Jason Molina",Magnolia Electric Co. (Deluxe Edition),19,Album,Deluxe edition. ListenBrainz credits individual performers.
+"Songs: Ohia, Jason Molina, Lawrence Peters",Magnolia Electric Co. (Deluxe Edition),19,Album,Deluxe edition. ListenBrainz credits individual performers.
+"Songs: Ohia, Jason Molina, Scout Niblett",Magnolia Electric Co. (Deluxe Edition),19,Album,Deluxe edition. ListenBrainz credits individual performers.
+The Beatles,The Beatles,30,Album,White Album is 30 tracks (2 discs). min() picked 16 (single disc release).
+The Postal Service,Give Up (Deluxe 10th Anniversary Edition),10,Album,Original album is 10 tracks. Deluxe has 25 but user listened to core tracklist.
+The Rolling Stones,Exile On Main Street,18,Album,Standard is 18. Was 28 (deluxe remaster).
+Tomppabeats,Harbor,38,Album,Beat tape with 38 short tracks. Not a box set - was incorrectly flagged.
+WHY?,Alopecia,14,Album,Standard is 14. User played 19 (bonus tracks/variants).
+Wu-Tang Clan,Enter The Wu-Tang (36 Chambers) [Expanded Edition],12,Album,Standard 36 Chambers is 12 tracks. Expanded name but standard tracklist.

@@ -31,6 +31,23 @@ def test_a_shared_shape_list_keys_and_dedupes(tmp_path: Path) -> None:
     assert yhf.priority == "Essential" and yhf.year == 2002
 
 
+def test_same_keys_years_apart_are_two_albums(tmp_path: Path) -> None:
+    f = tmp_path / "seeds" / "lists" / "y.csv"
+    f.parent.mkdir(parents=True)
+    f.write_text(
+        "position,artist,album,year,priority,genre,descriptors,note\n"
+        "1,Weezer,Weezer,1994,,,,Blue\n"
+        "2,Weezer,Weezer,2001,,,,Green\n"
+        "3,Weezer,Weezer,2000,,,,a year from row 2: the same album\n"
+        "4,D'Angelo,Black Messiah,2014,,,,\n"
+        "5,D'Angelo,Black Messiah,2015,,,,one year apart: the same album\n",
+        encoding="utf-8",
+    )
+    lf = read_list(_spec("y", "seeds/lists/y.csv"), tmp_path)
+    assert [e.album_key for e in lf.entries] == ["weezer", "weezer #2001", "black messiah"]
+    assert lf.duplicates == 2
+
+
 def test_the_atlas_maps_lane_zone_layer_and_facets() -> None:
     spec = _spec("v_atlas", "seeds/atlas/albums.csv", ranked=False)
     lf = read_list(spec, ROOT)

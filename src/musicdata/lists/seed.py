@@ -140,8 +140,25 @@ def _atlas_entry(r: dict[str, str], notes: dict[str, dict[str, str]]) -> Entry:
     )
 
 
+YEAR_MARK = " #"
+
+
+def base_album_key(key: str) -> str:
+    """The identity key of an entry's album, without a year mark (`weezer #2001` → `weezer`)."""
+    return key.split(YEAR_MARK, 1)[0]
+
+
+def _far_apart(a: int | None, b: int | None) -> bool:
+    return a is not None and b is not None and abs(a - b) > 1
+
+
 def read_list(spec: ListSpec, root: Path) -> ListFile:
-    """Every entry of one list, deduplicated on its keys (first row wins)."""
+    """Every entry of one list, deduplicated on its keys (first row wins).
+
+    Two rows with the same keys whose years are more than one apart are two albums
+    (Weezer 1994 and 2001, both titled "Weezer"): the later row keeps its own entry, its
+    album key marked with its year (`weezer #2001`). Resolve matches on the unmarked key.
+    """
     path = root / spec.file
     rows = _rows(path)
     if spec.slug == "v_atlas":
@@ -154,15 +171,20 @@ def read_list(spec: ListSpec, root: Path) -> ListFile:
             raise ValueError(f"{path}: missing columns {missing}")
         make = _shared_entry
     entries: dict[tuple[str, str], Entry] = {}
+    by_key: dict[tuple[str, str], list[Entry]] = {}  # kept entries per unmarked key
     duplicates = keyless = 0
     for r in rows:
         e = make(r)
         if not e.artist_key or not e.album_key:
             keyless += 1
             continue
-        if (e.artist_key, e.album_key) in entries:
-            duplicates += 1
-            continue
+        same = by_key.setdefault((e.artist_key, e.album_key), [])
+        if same:
+            if not all(_far_apart(x.year, e.year) for x in same):
+                duplicates += 1
+                continue
+            e.album_key = f"{e.album_key}{YEAR_MARK}{e.year}"
+        same.append(e)
         entries[(e.artist_key, e.album_key)] = e
     return ListFile(spec, list(entries.values()), len(rows), duplicates, keyless)
 

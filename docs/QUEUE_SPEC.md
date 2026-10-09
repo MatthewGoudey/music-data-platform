@@ -390,3 +390,21 @@ priority Essential. Matt has played other Ratboys records but no session of this
   strip joins the page. Acclaimed Music's Top 3,000 joins the lists; BestEverAlbums and AOTY are
   documented as Matt's steps (section 3a). Step 0 now asks how to keep third-party lists out of
   the public repo.
+- 2026-10-09 v3: Matt's answers to the Block A report (Claude Code).
+  - `claude_canon` carries artist, album, year and tier only (no genre, subgenre or
+    description; they conflict with the atlas), at weight 0.5; tiers map essential →
+    Essential, important → Recommended, deep → Deep cut.
+  - Only the 40 hand-verified rows of the old `album_tracklist` become
+    `seeds/manual_tracklists.csv`; the resolve job applies them as `source = 'manual'`.
+    Venues stay in the old database until the venue work after the gate.
+  - Two rows of one list with the same keys whose years are more than one apart are two
+    albums: the later one's `album_key` gets a year mark (`weezer #2001`), and resolve
+    matches on the unmarked key with the year. This recovers Weezer *Green*, Crystal
+    Castles *(I)* and Elvis's '68 NBC-TV Special from the Acclaimed list.
+  - `lists resolve` (section 5) accepts a known album only when its first-release year is
+    within ±1 of the entry's, and settles entries naming the same album on several lists
+    together. Release groups it creates get tracklists from the normal resolve job once
+    they have a listen.
+  - BestEverAlbums' overall chart (10,000, downloaded by Matt) joins as
+    `besteveralbums_overall`: canon, weight 1.0, ranked; `scripts/convert_besteveralbums.py`
+    turns a fresh download into the shared shape.
