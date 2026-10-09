@@ -78,7 +78,11 @@ def test_the_albums_own_wikipedia_page_beats_an_atlas_citation() -> None:
             "source": "musicbrainz",
         },
     ]
-    assert plan(links, 3) == [("https://en.wikipedia.org/wiki/Boat_Songs", "facts")]
+    assert plan(links, 3, "Boat Songs") == [("https://en.wikipedia.org/wiki/Boat_Songs", "facts")]
+    atlas_only = links[:1]  # Lucky has no article; its note cites the artist's page
+    assert plan(atlas_only, 3, "Lucky") == []
+    cited_album = [{**links[0], "url": "https://en.wikipedia.org/wiki/Crazy_Horse_(album)"}]
+    assert plan(cited_album, 3, "Crazy Horse") == [(cited_album[0]["url"], "facts")]
 
 
 def test_facts_merge_roles_per_person_and_name_places() -> None:

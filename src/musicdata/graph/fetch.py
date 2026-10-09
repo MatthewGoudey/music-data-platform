@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import json
 from collections import defaultdict
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 import asyncpg
 
@@ -25,6 +25,7 @@ from musicdata.clients.firecrawl import COST, SCHEMA_VERSION, FirecrawlClient
 from musicdata.config import get_settings
 from musicdata.db import connection
 from musicdata.graph.importer import order_key, slice_targets
+from musicdata.graph.verify import match_key
 from musicdata.jobs.runs import JobFn, RunContext
 from musicdata.log import get_logger
 
@@ -42,13 +43,27 @@ def is_english_wikipedia(url: str) -> bool:
     return (urlparse(url).hostname or "").lower() == "en.wikipedia.org"
 
 
-def plan(links: list[asyncpg.Record], tier: int) -> list[tuple[str, str]]:
+def about_album(url: str, album: str) -> bool:
+    """The page's title names the album ("Boat_Songs", "Crazy_Horse_(album)")."""
+    title = match_key(unquote(urlparse(url).path.rsplit("/", 1)[-1]).replace("_", " "))
+    key = match_key(album.split("(")[0])
+    return bool(key) and key in title
+
+
+def plan(links: list[asyncpg.Record], tier: int, album: str = "") -> list[tuple[str, str]]:
     """(url, mode) pages to fetch for one album; `tier` as in importer.order_key (0 Essential,
-    1 start here / on a path, 2 Recommended, 3 Deep cut)."""
-    # the album's own page (MusicBrainz, Wikidata) before pages an atlas note cites, which
-    # can be the artist's
+    1 start here / on a path, 2 Recommended, 3 Deep cut). The album's own Wikipedia page comes
+    from MusicBrainz or Wikidata; a page an atlas note cites counts only when its title names
+    the album (a note often cites the artist's page, and facts mode would credit its people
+    to the album)."""
     wikis = sorted(
-        (x for x in links if x["kind"] == "wikipedia" and is_english_wikipedia(x["url"])),
+        (
+            x
+            for x in links
+            if x["kind"] == "wikipedia"
+            and is_english_wikipedia(x["url"])
+            and (not (x.get("source") or "").startswith("map:") or about_album(x["url"], album))
+        ),
         key=lambda x: ((x.get("source") or "").startswith("map:"), x["url"]),
     )
     wiki = wikis[0]["url"] if wikis else None
@@ -104,7 +119,7 @@ def graph_fetch(
                         "SELECT kind, url, source FROM entity_link WHERE entity_id = $1 AND status = 'ok'",
                         t["entity_id"],
                     )
-                for url, mode in plan(links, order_key(t)[0]):
+                for url, mode in plan(links, order_key(t)[0], t["raw_album"] or ""):
                     async with connection(ctx.pool) as conn:
                         cached = await conn.fetchval(
                             "SELECT fetch_id FROM source_fetch WHERE url = $1 AND schema_version = $2 AND ok",
