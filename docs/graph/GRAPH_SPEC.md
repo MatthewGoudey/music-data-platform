@@ -559,4 +559,4 @@ Tests:
   for "Wally Heider Studios"). The pilot slice's first verify rejected 28 such names. Also from
   that run: `graph fetch` reads an atlas-cited Wikipedia page in facts mode only when its title
   names the album (ten artist and discography pages had credited their people to the album;
-  Matt approved deleting those 82 claims).
+  Matt approved deleting those 64 claims).
