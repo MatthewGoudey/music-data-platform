@@ -59,3 +59,12 @@ def test_do312_day_reads_every_card() -> None:
 def test_do312_event_lists_linked_performers_headliner_first() -> None:
     performers = parse_do312_event(_page("do312_event.html"))
     assert [p.name for p in performers][:3] == ["GORILLAZ", "Little Simz", "Deltron 3030"]
+
+
+def test_omr_venue_index_lists_every_venue() -> None:
+    from musicdata.shows.parse import parse_omr_venue_index
+
+    venues = dict(parse_omr_venue_index(_page("omr_venues_all.html")))
+    assert len(venues) > 500
+    assert venues["thalia-hall"] == "Thalia Hall" and venues["abbey-pub"] == "Abbey Pub"
+    assert "all" not in venues

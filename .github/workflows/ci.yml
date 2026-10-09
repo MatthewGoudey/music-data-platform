@@ -41,4 +41,3 @@ jobs:
         run: |
           uv run musicdata version
           uv run musicdata derive
-          uv run musicdata shows

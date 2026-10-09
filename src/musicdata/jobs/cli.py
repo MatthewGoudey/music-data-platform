@@ -121,12 +121,17 @@ def derive(
 
 
 @app.command()
-def shows() -> None:
-    """Sync Chicago shows (Phase 3). No-op for now."""
+def shows(
+    sweep: bool = typer.Option(False, "--sweep", help="Read every venue, not just active ones."),
+    venue_limit: int | None = typer.Option(None, help="Read at most this many venues (tests)."),
+) -> None:
+    """Sync Chicago shows from Oh My Rockness and resolve their performers to artists."""
     from musicdata.jobs import runs
-    from musicdata.jobs.stubs import noop
+    from musicdata.shows.job import shows as shows_job
 
-    raise typer.Exit(runs.run("shows", noop({}), trigger=_trigger()))
+    raise typer.Exit(
+        runs.run("shows", shows_job(sweep=sweep, venue_limit=venue_limit), trigger=_trigger())
+    )
 
 
 @app.command()

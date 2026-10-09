@@ -64,7 +64,11 @@ def test_ops_status_requires_token() -> None:
     assert set(r.json()) >= {"healthy", "failing", "jobs", "dq"}
 
 
-def test_noop_job_records_a_run() -> None:
+def test_noop_job_records_a_run(monkeypatch) -> None:
+    import musicdata.shows.job as shows_job
+    from musicdata.jobs.stubs import noop
+
+    monkeypatch.setattr(shows_job, "shows", lambda **_: noop({}))  # no live crawl in tests
     runner = CliRunner()
     result = runner.invoke(cli, ["shows"])
     assert result.exit_code == 0, result.output

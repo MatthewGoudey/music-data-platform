@@ -80,6 +80,18 @@ _LD_JSON = re.compile(r'<script type="application/ld\+json">(.*?)</script>', re.
 _DATA_SHOWS = re.compile(r'data-shows?="([^"]+)"')  # data-show: the page's own record
 
 
+_VENUE_INDEX = re.compile(r'<a class="omrlink" href="/venues/([a-z0-9-]+)">([^<]+)</a>')
+
+
+def parse_omr_venue_index(page: str) -> list[tuple[str, str]]:
+    """(slug, name) for every venue on /venues/all, past ones included."""
+    seen: dict[str, str] = {}
+    for slug, name in _VENUE_INDEX.findall(page):
+        if slug != "all":
+            seen.setdefault(slug, _text(name))
+    return list(seen.items())
+
+
 def parse_omr_venue_page(page: str) -> list[str]:
     """Ids of the upcoming shows a venue page lists, in page order."""
     ids: list[str] = []
