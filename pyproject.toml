@@ -1,6 +1,6 @@
 [project]
 name = "musicdata"
-version = "0.2.2"
+version = "0.2.3"
 description = "Personal listening tracker: ListenBrainz in, a queue out."
 readme = "README.md"
 requires-python = ">=3.12"
