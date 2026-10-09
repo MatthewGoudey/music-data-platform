@@ -130,6 +130,46 @@ async def queue_page(request: Request, pool: Pool, t: Annotated[str, Query()] = 
     return HTMLResponse(PAGE)
 
 
+async def _check_status(pool) -> dict[str, object]:
+    from musicdata.api.routers.ingest import _running
+
+    async with connection(pool) as conn:
+        last = await conn.fetchrow(
+            """SELECT finished_at, notes->>'listens_inserted' AS new_listens
+                 FROM pipeline_run
+                WHERE job = 'ingest' AND status = 'ok'
+                ORDER BY started_at DESC LIMIT 1"""
+        )
+        running = bool(_running) or bool(
+            await conn.fetchval(
+                """SELECT 1 FROM pipeline_run
+                    WHERE job IN ('ingest', 'derive') AND status = 'running'
+                      AND started_at > now() - interval '15 minutes' LIMIT 1"""
+            )
+        )
+    return {
+        "running": running,
+        "last_checked": last["finished_at"] if last else None,
+        "new_listens": int(last["new_listens"] or 0) if last else 0,
+    }
+
+
+@router.post("/queue/check-listens", dependencies=[Depends(page_or_bearer)])
+async def check_listens(pool: Pool):
+    """Pull the newest listens from ListenBrainz and rebuild their sessions (about 20
+    seconds). At most once every five minutes; a press inside that window starts nothing."""
+    from musicdata.api.routers.ingest import start_catch_up
+
+    started = await start_catch_up(pool)
+    return render_object({"started": started} | await _check_status(pool))
+
+
+@router.get("/queue/check-listens", dependencies=[Depends(page_or_bearer)])
+async def check_listens_status(pool: Pool):
+    """Whether a catch-up is running, when listens were last pulled, and how many were new."""
+    return render_object(await _check_status(pool))
+
+
 @router.get("/queue/data", dependencies=[Depends(page_or_bearer)])
 async def queue_data(
     pool: Pool,

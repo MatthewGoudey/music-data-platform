@@ -28,6 +28,7 @@ body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--b
 header { display: grid; gap: 10px; }
 h1 { font-family: var(--display); font-weight: 700; font-size: 30px; letter-spacing: -0.02em; margin: 0; }
 .sub { color: var(--muted); font-size: 13px; min-height: 1.4em; }
+.headline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .profiles { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .chip { font: 600 13px var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--ink);
   border-radius: 999px; padding: 6px 12px; cursor: pointer; }
@@ -75,7 +76,7 @@ h2 { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercas
 <body>
 <div class="wrap">
   <header>
-    <h1>Up next</h1>
+    <div class="headline"><h1>Up next</h1><button class="chip" id="check" type="button">Check listens</button></div>
     <div class="profiles" id="profiles"></div>
     <div class="sub" id="sub">Loading…</div>
   </header>
@@ -188,6 +189,39 @@ async function act(id, action, params = {}) {
   if (!r.ok) throw new Error(`${r.status}`);
   return r.json();
 }
+
+function ago(iso) {
+  if (!iso) return "never";
+  const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  return m < 1 ? "just now" : m < 60 ? `${m} min ago` : `${Math.round(m / 60)} h ago`;
+}
+
+async function checkListens() {
+  const b = $("check");
+  b.disabled = true;
+  b.textContent = "Checking…";
+  try {
+    let r = await fetch(url("/queue/check-listens"), { method: "POST" });
+    if (!r.ok) throw new Error(`${r.status}`);
+    let s = await r.json();
+    const started = s.started, until = Date.now() + 120000;
+    while (s.running && Date.now() < until) {
+      await new Promise(res => setTimeout(res, 2500));
+      r = await fetch(url("/queue/check-listens"));
+      if (!r.ok) throw new Error(`${r.status}`);
+      s = await r.json();
+    }
+    await load({ again: true });
+    toast(started || s.new_listens
+      ? `Listens checked: ${s.new_listens} new`
+      : `Up to date: listens checked ${ago(s.last_checked)}`);
+  } catch (err) {
+    toast(`Couldn't check listens (${err.message}). Try again in a minute.`);
+  }
+  b.disabled = false;
+  b.textContent = "Check listens";
+}
+$("check").addEventListener("click", checkListens);
 
 document.addEventListener("click", async e => {
   const b = e.target.closest("button");

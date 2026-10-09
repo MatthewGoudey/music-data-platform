@@ -284,3 +284,20 @@ def test_tags_apply_remove_and_now_playing(client, monkeypatch) -> None:
     finally:
         asyncio.run(_cleanup_queue_state(rg))
         asyncio.run(_cleanup())
+
+
+def test_check_listens_starts_a_catch_up_and_reports(client, monkeypatch) -> None:
+    from musicdata.api.routers import ingest
+
+    calls = []
+
+    async def _fake_start(pool) -> bool:
+        calls.append(1)
+        return True
+
+    monkeypatch.setattr(ingest, "start_catch_up", _fake_start)
+    assert client.post("/queue/check-listens").status_code == 401
+    r = client.post("/queue/check-listens?t=page-token")
+    assert r.status_code == 200 and r.json()["started"] is True and calls == [1]
+    s = client.get("/queue/check-listens?t=page-token").json()
+    assert {"running", "last_checked", "new_listens"} <= set(s)
