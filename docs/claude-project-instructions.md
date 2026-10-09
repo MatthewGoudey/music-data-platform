@@ -32,7 +32,7 @@ Every listening endpoint takes the same window: `start_date` and `end_date`
 | Everything about an artist | `GET /artists/{artist_id}` |
 | Look up many names at once | `POST /artists/batch` with `{"names": ["Wilco", "Big Thief"]}` |
 | Albums by completion | `GET /albums?min_completion=0.8&sort=recent` |
-| Everything about an album | `GET /albums/{release_group_id}` (tracklist with plays per track, sessions) |
+| Everything about an album | `GET /albums/{release_group_id}` (tracklist with plays per track, sessions, Matt's verdicts and notes) |
 | Album sessions | `GET /sessions?days=30&session_type=full` |
 | Record a vinyl play or a show | `POST /sessions` with `{"release_group_id": 123, "listened_at": "2026-10-01T20:00:00Z", "completion": 1.0}` |
 | Record a verdict | `POST /verdicts` with `{"release_group_id": 123, "verdict": "again", "note": "..."}` (again, later, never) |

@@ -60,7 +60,8 @@ async def albums(
 
 @router.get("/{release_group_id}")
 async def album_page(release_group_id: int, pool: Pool, format: FormatParam = Format.json):
-    """Metadata, the standard tracklist with plays per track, sessions, and spellings seen."""
+    """Metadata, the standard tracklist with plays per track, sessions, spellings seen,
+    and every verdict with its note."""
     async with connection(pool) as conn:
         album = await conn.fetchrow(
             """SELECT rg.release_group_id, rg.mbid, rg.title, a.artist_id, a.name AS artist,
@@ -99,11 +100,17 @@ async def album_page(release_group_id: int, pool: Pool, format: FormatParam = Fo
             "SELECT DISTINCT raw_album FROM release_group_alias WHERE release_group_id = $1",
             release_group_id,
         )
+        verdicts = await conn.fetch(
+            """SELECT verdict, note, rating, created_at, session_started_at FROM verdict
+                WHERE release_group_id = $1 ORDER BY created_at DESC""",
+            release_group_id,
+        )
     if format is Format.compact:
         return render(tracks, format)
     body = dict(album) | {
         "tracks": [dict(r) for r in tracks],
         "sessions": [dict(r) for r in sessions],
         "aliases": [r["raw_album"] for r in aliases],
+        "verdicts": [dict(r) for r in verdicts],  # newest first: the first is the current one
     }
     return render_object(body)

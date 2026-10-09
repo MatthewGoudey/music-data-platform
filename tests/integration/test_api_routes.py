@@ -150,6 +150,8 @@ def test_verdicts_and_manual_sessions_round_trip(client) -> None:
         assert s.status_code == 201 and s.json()["session_type"] == "full"
         page = client.get(f"/albums/{rg}", headers=AUTH).json()
         assert page["sessions"][0]["source"] == "manual"
+        assert page["verdicts"][0]["verdict"] == "later"
+        assert page["verdicts"][0]["note"] == "rainy day"
         assert (
             client.post(
                 "/verdicts", json={"release_group_id": rg, "verdict": "maybe"}, headers=AUTH
