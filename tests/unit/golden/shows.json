@@ -1,0 +1,41 @@
+{
+  "_comment": "The contract for show lineup parsing in musicdata.identity. Titles are real do312 listings from 2026-10-08 plus the April 2026 audit's residue patterns (E1, E3). Change this file and the functions together, on purpose.",
+  "split_lineup": [
+    ["Gorillaz - The Mountain Tour", ["Gorillaz"]],
+    ["Koe Wetzel: The Night Champion World Tour", ["Koe Wetzel"]],
+    ["Overmono - Pure Devotion World Tour", ["Overmono"]],
+    ["Audrey Hobert: The Staircase To Stardom Tour", ["Audrey Hobert"]],
+    ["The Last King World Tour: Don Omar", ["Don Omar"]],
+    ["Don Omar \"The Last King World Tour\"", ["Don Omar"]],
+    ["Karina Rykman", ["Karina Rykman"]],
+    ["Quintron and Miss Pussycat / Aaron Dilloway", ["Quintron and Miss Pussycat", "Aaron Dilloway"]],
+    ["Quintron and Miss Pussycat (with Michael Zerang on drums) / Aaron Dilloway", ["Quintron and Miss Pussycat", "Aaron Dilloway"]],
+    ["SYML - Solo in North America 2026 with Roger Weeks", ["SYML", "Roger Weeks"]],
+    ["Harrison Gordon, Liquid Mike, Excuse Me, Who Are You?", ["Harrison Gordon", "Liquid Mike", "Excuse Me", "Who Are You?"]],
+    ["Inverted Temple / Esculis / Jtopium / Zakhoury", ["Inverted Temple", "Esculis", "Jtopium", "Zakhoury"]],
+    ["Chelsea Handler, The High and Mighty Tour", ["Chelsea Handler"]],
+    ["Mäkelä, Petrushka & Belshazzar’s Feast", ["Mäkelä", "Petrushka & Belshazzar’s Feast"]],
+    ["Simon & Garfunkel", ["Simon & Garfunkel"]],
+    ["Earth, Wind & Fire", ["Earth", "Wind & Fire"]],
+    ["Empty Bottle presents: Wilco w/ Big Thief, Ryan Davis", ["Wilco", "Big Thief", "Ryan Davis"]],
+    ["Wilco w/ Big Thief", ["Wilco", "Big Thief"]],
+    ["Beck + Ioanna Gika", ["Beck", "Ioanna Gika"]],
+    ["", []]
+  ],
+  "clean_performer": [
+    ["DIIV (DJ set)", ["DIIV", "DJ set"]],
+    ["Quintron (with Michael Zerang on drums)", ["Quintron", "with Michael Zerang on drums"]],
+    ["Wilco", ["Wilco", null]],
+    ["(Sandy) Alex G", ["(Sandy) Alex G", null]],
+    ["  Big   Thief  ", ["Big Thief", null]]
+  ],
+  "non_artist_event": [
+    ["GHOSTBUSTERS IN CONCERT", true],
+    ["Souvenirs: 80 Years of John Prine", true],
+    ["The Making of “How Lucky Can One Man Get?”", true],
+    ["A Tribute to Tom Petty", true],
+    ["The Music of Radiohead", true],
+    ["Gorillaz - The Mountain Tour", false],
+    ["Wilco", false]
+  ]
+}

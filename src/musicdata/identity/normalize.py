@@ -190,3 +190,69 @@ def split_featured(name: str) -> tuple[str, list[str]]:
     rest = m.group(1).strip().rstrip(")]").strip()
     featured = [p.strip() for p in re.split(r",|&|\band\b", rest) if p.strip()]
     return primary, featured
+
+
+# Show lineups (Phase 3). Listing sites write one free-text title per show; these turn it
+# into performer names. "&" and "and" never split here: "Simon & Garfunkel" is one act,
+# and the artist lookup decides whether "A & B" is two (see musicdata.shows).
+
+_QUOTED = re.compile(r"\s*[\"“”„‟][^\"“”„‟]*[\"“”„‟]")
+_SUPPORT = re.compile(r"\s+(?:w/|with)\s+", re.IGNORECASE)
+_TOUR = re.compile(r"\btour\b", re.IGNORECASE)
+_PRESENTS = re.compile(r"^.*?\bpresents:?\s+", re.IGNORECASE)
+_SEPARATORS = re.compile(r"\s+/\s+|\s*,\s+|\s+\+\s+")
+_TRAILING_NOTE = re.compile(r"\s*\(([^()]*)\)\s*$")
+_PARENTHESES = re.compile(r"\s*\([^()]*\)")
+_NON_ARTIST = re.compile(
+    r"\btribute\b|\bin concert\b|\bmusic of\b|\byears of\b|\bcelebrat\w*|\bsalute to\b"
+    r"|\bthe making of\b|\blive to film\b|\bfilm with live\b|\bscreening\b",
+    re.IGNORECASE,
+)
+
+
+def clean_performer(name: str) -> tuple[str, str | None]:
+    """A performer as listed, without a trailing performance note: ("DIIV (DJ set)") →
+    ("DIIV", "DJ set"). The note is kept for display; the name is what gets resolved."""
+    s = " ".join(str(name or "").split())
+    m = _TRAILING_NOTE.search(s)
+    if m and m.start() > 0:
+        return s[: m.start()].strip(), m.group(1).strip() or None
+    return s, None
+
+
+def non_artist_event(title: str) -> bool:
+    """Tributes, film-in-concert screenings and the like: no performer is the artist named."""
+    return bool(_NON_ARTIST.search(title or ""))
+
+
+def _head(title: str) -> str:
+    """Cut a promoter prefix and a tour or event name off the headliner part of a title."""
+    title = _PRESENTS.sub("", title)
+    if " - " in title:
+        title = title.split(" - ", 1)[0]
+    if ": " in title:
+        left, right = title.split(": ", 1)
+        title = right if _TOUR.search(left) and not _TOUR.search(right) else left
+    return title
+
+
+def split_lineup(title: str) -> list[str]:
+    """Performer names from a show title, headliner first.
+
+    "SYML - Solo in North America 2026 with Roger Weeks" → ["SYML", "Roger Weeks"];
+    "Quintron and Miss Pussycat (with Michael Zerang) / Aaron Dilloway" →
+    ["Quintron and Miss Pussycat", "Aaron Dilloway"]. Parts naming a tour are dropped.
+    """
+    s = " ".join(str(title or "").split())
+    s = _QUOTED.sub("", s).strip() or s
+    s = _PARENTHESES.sub("", s).strip() or s  # notes like "(with X on drums)" are not acts
+    names: list[str] = []
+    m = _SUPPORT.search(s)
+    head, support = (s[: m.start()], s[m.end() :]) if m else (s, "")
+    for chunk in (_head(head), support):
+        for part in _SEPARATORS.split(chunk):
+            name, _note = clean_performer(part)
+            name = name.strip(" -:")
+            if name and not _TOUR.search(name) and name not in names:
+                names.append(name)
+    return names

@@ -8,20 +8,26 @@ golden file together, on purpose.
 
 from musicdata.identity.normalize import (
     album_key,
+    clean_performer,
     has_edition_marker,
+    non_artist_event,
     norm_key,
     primary_artist,
     split_featured,
+    split_lineup,
     strip_edition_markers,
     title_key,
 )
 
 __all__ = [
     "album_key",
+    "clean_performer",
     "has_edition_marker",
+    "non_artist_event",
     "norm_key",
     "primary_artist",
     "split_featured",
+    "split_lineup",
     "strip_edition_markers",
     "title_key",
 ]
