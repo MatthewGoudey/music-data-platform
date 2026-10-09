@@ -10,6 +10,12 @@ runs on the laptop except development and tests. The old pipeline in
 Read first: `docs/REDESIGN_PLAN.md` (sections "What this is for", "Data model", "Edge rules",
 "Phases and gates") and `docs/adr/` (one decision per file; recommendations are the defaults).
 
+**The queue, lists and the atlas: always read `docs/QUEUE_SPEC.md` first and follow it exactly.**
+It is the authoritative spec and overrides the plan and the ADRs where they differ. Its core rule:
+the queue's new albums always come from `list_entry` (the lists in `seeds/`); listening history
+only marks entries heard / started / unheard, fills the revisit slice, and adds a small affinity
+boost. Always ask Matt before changing a rule in that spec, and log the change at its bottom.
+
 ## Working conventions
 - Always run commands through uv: `uv run <cmd>`; always run `uv lock` after editing `pyproject.toml`.
 - Always run `uv run ruff check . ; uv run ruff format . ; uv run pytest -q` before committing.
@@ -56,11 +62,15 @@ Load or reload an environment with `gh workflow run full-load -f env=<dev|prod>`
 `musicdata shows --sweep` reads all ~600 Oh My Rockness venues once (~20 min); nightly
 runs read active venues plus a rotating 85.
 
+Current priority (Matt, 2026-10-09): the queue. Follow `docs/QUEUE_SPEC.md` section 0:
+Step 0 cleanup, then Phase 4 Blocks A–G. Shows and verdict work waits until the Phase 4 gate.
+
 Open items that need Matt:
-- Paste `docs/claude-project-instructions.md` into the claude.ai Project (gate step 19).
-- Phase 0: disable the old Task Scheduler task, rotate the old Neon password and Render
-  `API_SECRET`, export the seed CSVs (`seeds/manual_tracklists.csv` feeds resolve,
-  `seeds/venues.csv` carries travel times).
+- Done: `docs/claude-project-instructions.md` pasted into the claude.ai Project (gate step 19).
+- Keep the old pipeline and its Task Scheduler task running until Matt says otherwise.
+- Rotating the old Neon password and Render `API_SECRET` waits for Matt.
+- The old-database exports (Claude canon, venues, manual tracklists) are Claude Code's job in
+  Phase 4 Block A (read-only SELECT; ask Matt once before connecting).
 
 Notes for the next session:
 - Never migrate a shared database (dev, prod) ahead of `main`: a cloud job running the
@@ -78,6 +88,34 @@ Notes for the next session:
   shrinks pages, waits out outages, and `ingest --full` resumes below the oldest listen.
 - Integration tests run against Neon dev; they use made-up MBIDs and coordinates far from
   Chicago, and clean up their rows.
+
+## Phase 4 checklist — lists, the atlas and the queue (spec: `docs/QUEUE_SPEC.md`)
+Gate: dev green on checks L1–L5 and tests Q1–Q5, the version tagged and live in prod with
+lists loaded and resolved, and Matt using the `/queue` page for a week.
+
+The seed data is in the working tree, uncommitted (added 2026-10-09): `seeds/lists/_lists.csv`
+registers five lists — `v_atlas` (2,942, `seeds/atlas/albums.csv` + `album_notes.csv`),
+`rolling_stone_500` (500), `1001_albums` (978), `aoty_2007_2024` (899), `acclaimed_music_3000`
+(3,000) — and `seeds/atlas/` holds lanes, paths, scenes, labels, tags and artists. The repo is
+public: commit `seeds/lists/` only the way Matt chooses in Step 0. The `/queue` page carries albums only: Step 0 takes the shows
+section and the verdict cards off it, and Block E puts "Up next" there. Verdicts are dormant.
+
+- [ ] Step 0 — shows section and verdict cards off `/queue` (read-only recent sessions until
+      Block E); ask Matt whether v0.2.3 goes to prod; ask Matt how to keep `seeds/lists/`
+      unpublished (private repo, or gitignored and loaded from the laptop).
+- [ ] Block A — commit `seeds/atlas/`, and `seeds/lists/` as Matt chose; migration 0011 (lists, entries, atlas lanes
+      and paths); `musicdata lists load`; check L1; export the Claude canon, venues and manual
+      tracklists from the old database; register `claude_canon`.
+- [ ] Block B — `musicdata lists resolve` (known release groups first, then MusicBrainz search);
+      backfill passes in dev; checks L2–L3; report resolved / ambiguous / unresolved per list.
+- [ ] Block C — `list_entry_status`, `GET /lists`, `GET /gaps`; checks L4–L5; report atlas coverage.
+- [ ] Block D — migrations 0012–0013; `src/musicdata/queue/`; `GET /next`; tests Q1–Q5;
+      report the first `default` and `home-genre` queues with their why lines; wait for Matt.
+- [ ] Block E — Up next, profile switcher, shuffle, pin, bump, snooze, mark played, not for me,
+      progress strip.
+- [ ] Block F — Tag control on cards, `POST /tags/{name}/apply` and `/remove`, `POST /tag-now-playing`.
+- [ ] Block G — the gate; add `/next`, `/gaps`, `/lists` to `docs/claude-project-instructions.md`
+      and remove its "Record a verdict" row.
 
 ## Phase 3 checklist — Chicago shows
 Gate (plan): E1 and E3 at 0, E2 ≥ 95%, shows endpoints in prod.

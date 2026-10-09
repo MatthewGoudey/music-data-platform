@@ -31,7 +31,7 @@ Five requirements are fixed, and every later choice in this plan is checked agai
 | Requirement | What it means in practice |
 | --- | --- |
 | Greenfield, not migration | New repo, new schema, loaded from the raw source. Old code is reference only. The old Neon database is never copied table-for-table; the few things in it that cannot be re-derived (Claude's canon, manual tracklist overrides, venues, show interests) are exported once to CSV and committed as seed data. |
-| Nothing runs on the laptop | Scheduled jobs, scrapers and the API run in the cloud. The laptop is for writing code and running tests. The Task Scheduler job is disabled on day one; ListenBrainz keeps the history server-side, so pausing ingestion loses nothing. |
+| Nothing runs on the laptop | Scheduled jobs, scrapers and the API run in the cloud. The laptop is for writing code and running tests. The old pipeline keeps running untouched until Matt says otherwise; both systems read ListenBrainz independently, so they never conflict. |
 | Two environments, dev → prod | Dev receives every change. Prod runs only versions that passed dev's acceptance checks and were promoted by a release tag. Separate databases, secrets and hosts. |
 | $40/month total | Both environments, all vendors, including the old system while it overlaps. The recommended stack lands near $7–12 (section Environments and cost). |
 | Data-quality backlog closed by design | Every P0/P1 from the April 2026 audits is either impossible under the new schema or covered by an automated check with a threshold (section Acceptance checks). |
@@ -224,6 +224,8 @@ Identity is decided once at ingest, by ID where ListenBrainz supplies one and by
 
 ## Lists, the atlas and the queue
 
+> The detailed, authoritative spec for this section is `docs/QUEUE_SPEC.md` (2026-10-09). Where the two differ, the spec wins.
+
 Every list is a source, an album on it is a candidate, and a session is evidence. There are no wishlists to maintain and no Heard column to fill in.
 
 | Table | Purpose |
@@ -303,7 +305,7 @@ Each diamond is a promotion gate: a phase is done only when its criteria hold in
 
 | Phase | Dates | Deliverable | Gate to promote |
 | --- | --- | --- | --- |
-| 0 · Week 0 | Oct 8–14 | Scheduler off, secrets rotated, ListenBrainz export saved, seed CSVs exported, decisions answered | all items in Next seven days ticked |
+| 0 · Week 0 | Oct 8–14 | Secrets rotated, ListenBrainz export saved, seed CSVs exported, decisions answered | all items in Next seven days ticked |
 | 1 · Foundations | Oct 15 – Nov 8 | Repo with uv, ruff, pytest, pre-commit, Docker; Neon dev + prod; Alembic; GitHub Environments; CI; hello-world API on Fly dev + prod with `/health` and `/ops/status`; a no-op daily job writing `pipeline_run`; failure alerts; do312 spike result | a tag deploys to prod; a scheduled job runs in both environments; a forced failure notifies |
 | 2 · Listening core | Nov 9 – Dec 13 | Identity + listen schema; full ListenBrainz load into dev; incremental and catch-up ingest; resolution via MBIDs with MusicBrainz and Last.fm fallback, tracklists stored; sessions (scrobbled and manual) and stats; `tests/dq`; listens, artists, albums, sessions and `/query` endpoints; a first `/queue` page that only shows recent sessions and takes a verdict | acceptance suite green; database count within 0.5% of ListenBrainz; promoted to prod; old API retired for listening questions |
 | 3 · Chicago shows | Dec 14 – Jan 10 | Venue seed; Ticketmaster + do312 (or the fallback decided in Phase 1); headliner cleaning with tests; match scoring; interests; festivals from CSV | E1 and E3 at 0, E2 ≥ 95%; shows endpoints in prod |
@@ -335,7 +337,7 @@ Fourteen choices are yours; each has a recommendation, and each answer becomes o
 
 Everything below is small, reversible, and makes the planning session concrete. None of it writes pipeline code.
 
-- [ ] Disable the Windows Task Scheduler task `foo`. Nothing is lost; ListenBrainz keeps the history.
+- [ ] Leave the old pipeline and its Task Scheduler task `foo` running until Matt says otherwise.
 - [ ] Rotate the Neon database password and the Render `API_SECRET`. Delete the permission rule holding the password in `music-pipeline\.claude\settings.local.json`.
 - [ ] Request a full ListenBrainz export (`POST /1/export/`, or the website's export page) and save the zip beside `spotifydata.zip`.
 - [ ] Export seed data from the old database to CSV: `canonical_albums`, `checklist_sources` (list memberships with rank), `album_tracklist` where `source = 'manual'`, `venues`, `show_interests`. The atlas is already a workbook; it becomes seven CSVs in Phase 4.
