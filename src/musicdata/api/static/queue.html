@@ -28,6 +28,14 @@ body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--b
 header { display: grid; gap: 10px; }
 h1 { font-family: var(--display); font-weight: 700; font-size: 30px; letter-spacing: -0.02em; margin: 0; }
 .sub { color: var(--muted); font-size: 13px; min-height: 1.4em; }
+.extra { display: grid; gap: 8px; }
+.mini { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 10px 12px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.mini .what { font-weight: 700; min-width: 0; overflow-wrap: anywhere; }
+.mini .what span { font-weight: 400; color: var(--muted); }
+.mini .when { font: 400 12px var(--mono); color: var(--muted); text-align: right; white-space: nowrap; }
+.mini .detail { grid-column: 1 / -1; font-size: 12.5px; color: var(--muted); overflow-wrap: anywhere; }
+.mini a { color: var(--accent); font-weight: 700; }
 .headline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .profiles { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .chip { font: 600 13px var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--ink);
@@ -81,6 +89,14 @@ h2 { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercas
     <div class="sub" id="sub">Loading…</div>
   </header>
   <section class="list" id="list" aria-label="Queue" aria-live="polite"></section>
+  <section class="extra" id="recent-wrap" hidden aria-label="Recently finished">
+    <h2>Recently finished</h2>
+    <div id="recent"></div>
+  </section>
+  <section class="extra" id="shows-wrap" hidden aria-label="Shows">
+    <h2>Shows you might like</h2>
+    <div id="shows"></div>
+  </section>
   <section class="progress" aria-label="Progress">
     <h2>Heard so far</h2>
     <div id="progress"></div>
@@ -190,6 +206,35 @@ async function act(id, action, params = {}) {
   return r.json();
 }
 
+const DAY = new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "America/Chicago" });
+
+async function loadExtras() {
+  try {
+    const r = await fetch(url("/queue/recent"));
+    if (r.ok) {
+      const items = (await r.json()).items;
+      $("recent").innerHTML = items.map(i => `<div class="mini">
+        <div class="what">${esc(i.album)} <span>· ${esc(i.artist)}</span></div>
+        <div class="when">${DAY.format(new Date(i.played_at))}</div>
+        <div class="detail">${esc(i.history)}${i.manual ? " · marked played" : ""}</div></div>`).join("")
+        || `<p class="meta">Nothing played through in the last 30 days.</p>`;
+      $("recent-wrap").hidden = false;
+    }
+  } catch (e) {}
+  try {
+    const r = await fetch(url("/queue/shows"));
+    if (r.ok) {
+      const items = (await r.json()).items;
+      $("shows").innerHTML = items.map(s => `<div class="mini">
+        <div class="what">${esc(s.matched_artist)} <span>· ${esc(s.venue)}</span></div>
+        <div class="when">${DAY.format(new Date(s.show_date + "T12:00:00"))}${s.time ? " " + esc(s.time) : ""}</div>
+        <div class="detail">${esc(s.lineup)}${s.next_presale ? ` · presale ${esc(s.next_presale)}` : ""}${s.tickets ? ` · <a href="${esc(s.tickets)}" target="_blank" rel="noopener">Tickets</a>` : ""}</div></div>`).join("")
+        || `<p class="meta">No shows in the next 60 days by artists you listen to.</p>`;
+      $("shows-wrap").hidden = false;
+    }
+  } catch (e) {}
+}
+
 function ago(iso) {
   if (!iso) return "never";
   const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
@@ -212,6 +257,7 @@ async function checkListens() {
       s = await r.json();
     }
     await load({ again: true });
+    loadExtras();
     toast(started || s.new_listens
       ? `Listens checked: ${s.new_listens} new`
       : `Up to date: listens checked ${ago(s.last_checked)}`);
@@ -277,6 +323,7 @@ document.addEventListener("click", async e => {
   }
 });
 load();
+loadExtras();
 </script>
 </body>
 </html>

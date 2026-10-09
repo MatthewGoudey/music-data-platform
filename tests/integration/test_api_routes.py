@@ -301,3 +301,13 @@ def test_check_listens_starts_a_catch_up_and_reports(client, monkeypatch) -> Non
     assert r.status_code == 200 and r.json()["started"] is True and calls == [1]
     s = client.get("/queue/check-listens?t=page-token").json()
     assert {"running", "last_checked", "new_listens"} <= set(s)
+
+
+def test_queue_trial_sections_recent_and_shows(client) -> None:
+    assert client.get("/queue/recent").status_code == 401
+    recent = client.get("/queue/recent?t=page-token")
+    assert recent.status_code == 200 and isinstance(recent.json()["items"], list)
+    shows = client.get("/queue/shows?t=page-token")
+    assert shows.status_code == 200 and isinstance(shows.json()["items"], list)
+    for s in shows.json()["items"]:
+        assert {"show_id", "show_date", "venue", "matched_artist", "lineup"} <= set(s)

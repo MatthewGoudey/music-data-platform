@@ -429,3 +429,7 @@ priority Essential. Matt has played other Ratboys records but no session of this
   written by an AI for the old pipeline, with some songs named as albums and some names
   invented for obscure genres, so about a sixth of it cannot resolve (dev: 83.1%). The
   other canon lists keep 90%.
+- 2026-10-09 v7 (trial, dev only): Matt asked to try two sections below Up next again:
+  "Recently finished" (full sessions in the last 30 days, `GET /queue/recent`) and "Shows
+  you might like" (the `GET /shows?match=true` ranking, next 60 days, `GET /queue/shows`).
+  They load after the queue and never slow it. Prod gets them only if Matt keeps them.
