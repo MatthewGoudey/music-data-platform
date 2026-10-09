@@ -54,10 +54,10 @@ tags and Check listens. Prod lists were settled by `lists copy-resolutions --sou
 (22,156 matched), prod ran `full-load -f mode=repair` with the reported-album rule (At
 Folsom Prison: 12 full sessions), and every prod check passes, L1–L5 included.
 
-On `main`, dev only (spec v7 trial, waiting for Matt): "Recently finished" and "Shows you
-might like" sections on the page, and venue travel times by CTA and on foot (migration
-0016, `musicdata venues travel`, ADR 0008 amendment; dev venues timed). Prod gets them as
-v0.3.2 only if Matt keeps the sections.
+`v0.3.2` (same day) adds Recently finished, Presales & on-sales and Shows you might like
+to the page (spec v7–v8), same-night show twins merged in `/shows`, and venue travel times
+by CTA and on foot (migration 0016, `musicdata venues travel`, ADR 0008 amendment); dev and
+prod venues are timed, and the nightly sync times new ones.
 
 Identity change (ADR 0015 amendment 2026-10-09, migration 0015): listens go home to the
 album the player reported (`listen.reported_key`, `derive/reported.py`), and sessions match
