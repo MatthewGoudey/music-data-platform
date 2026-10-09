@@ -71,7 +71,11 @@ class RoutesClient:
                 headers={"X-Goog-Api-Key": self._key, "X-Goog-FieldMask": FIELDS},
             )
             if r.status_code != 200:
-                detail = r.json().get("error", {}).get("message", "") if r.content else ""
+                body = r.json() if r.content else {}
+                body = (
+                    body[0] if isinstance(body, list) and body else body
+                )  # a matrix answers in a list
+                detail = body.get("error", {}).get("message", "") if isinstance(body, dict) else ""
                 raise RuntimeError(f"Routes API {r.status_code}: {detail[:200]}")
             self.elements += len(batch)
             found: dict[int, Leg] = {}
