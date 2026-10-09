@@ -67,6 +67,9 @@ h2 { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercas
   align-items: center; font-size: 14px; max-width: calc(100% - 32px); box-shadow: 0 6px 24px rgb(0 0 0 / .25); }
 .toast button { font: 700 14px var(--body); background: none; border: 0; color: inherit; text-decoration: underline; cursor: pointer; }
 .error { color: #b42318; font-size: 13px; }
+.tags { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font: 600 12px var(--body); border: 1px dashed var(--line); background: transparent; color: var(--ink); border-radius: 999px; padding: 5px 10px; cursor: pointer; }
+.tag[aria-pressed="true"] { border-style: solid; border-color: var(--accent); color: var(--accent); }
 </style>
 </head>
 <body>
@@ -88,6 +91,7 @@ h2 { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercas
 const T = new URLSearchParams(location.search).get("t") || "";
 let profile = "default";
 try { profile = localStorage.getItem("queue.profile") || "default"; } catch (e) {}
+const openTags = new Set();
 let shuffled = false, presses = 0, seen = new Set(), data = null, toastTimer = null, lastParams = null;
 
 const $ = id => document.getElementById(id);
@@ -146,7 +150,10 @@ function card(a, i) {
       <button class="btn" data-act="snooze" data-days="90" data-id="${a.release_group_id}">Snooze 90</button>
       <button class="btn" data-act="played" data-id="${a.release_group_id}">Mark played</button>
       <button class="btn" data-act="hide" data-id="${a.release_group_id}">Not for me</button>
+      <button class="btn" data-act="tags" data-id="${a.release_group_id}">Tag${a.tags.length ? ` (${a.tags.length})` : ""}</button>
     </div>
+    ${openTags.has(a.release_group_id) ? `<div class="tags">${data.tags.map(t =>
+      `<button class="tag" aria-pressed="${a.tags.includes(t)}" data-tag="${esc(t)}" data-id="${a.release_group_id}">${esc(t)}</button>`).join("")}</div>` : ""}
   </article>`;
 }
 
@@ -193,6 +200,21 @@ document.addEventListener("click", async e => {
   if (b.id === "shuffle") { shuffled = true; presses++; return load({ shuffle: true }); }
   if (b.id === "top") { shuffled = false; presses = 0; seen = new Set(); return load(); }
   const id = b.dataset.id, action = b.dataset.act;
+  if (id && b.dataset.tag) {
+    const item = data.items.find(i => String(i.release_group_id) === id);
+    const on = item.tags.includes(b.dataset.tag);
+    const r = await fetch(url(`/tags/${encodeURIComponent(b.dataset.tag)}/${on ? "remove" : "apply"}`), {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ release_group_ids: [Number(id)] }) });
+    if (!r.ok) return toast(`That tag didn't save (${r.status}). Try again.`);
+    item.tags = on ? item.tags.filter(t => t !== b.dataset.tag) : [...item.tags, b.dataset.tag];
+    return render();
+  }
+  if (id && action === "tags") {
+    const n = Number(id);
+    openTags.has(n) ? openTags.delete(n) : openTags.add(n);
+    return render();
+  }
   if (!id || !action) return;
   const item = data.items.find(i => String(i.release_group_id) === id);
   const name = item ? `${item.album}` : "Album";

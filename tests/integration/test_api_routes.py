@@ -236,5 +236,51 @@ async def _cleanup_queue_state(rg: int) -> None:
     try:
         await conn.execute("DELETE FROM queue_state WHERE release_group_id = $1", rg)
         await conn.execute("DELETE FROM album_session WHERE release_group_id = $1", rg)
+        await conn.execute("DELETE FROM release_group_tag WHERE release_group_id = $1", rg)
     finally:
         await conn.close()
+
+
+def test_tags_apply_remove_and_now_playing(client, monkeypatch) -> None:
+    from musicdata.clients.listenbrainz import ListenBrainzClient
+    from musicdata.config import get_settings
+
+    monkeypatch.setenv("LISTENBRAINZ_USER", "zz-test-user")
+    get_settings.cache_clear()
+
+    rg = asyncio.run(_temp_album())
+    try:
+        assert client.post("/tags/rainy/apply", json={"release_group_ids": [rg]}).status_code == 401
+        r = client.post("/tags/rainy/apply?t=page-token", json={"release_group_ids": [rg]})
+        assert r.status_code == 200 and r.json()["applied"] == 1
+        assert "rainy" in client.get("/tags", headers=AUTH).text
+        assert (
+            client.post(
+                "/tags/nope/apply", json={"release_group_ids": [rg]}, headers=AUTH
+            ).status_code
+            == 404
+        )
+        r = client.post("/tags/rainy/remove", json={"release_group_ids": [rg]}, headers=AUTH)
+        assert r.json()["removed"] == 1
+
+        async def _silence(self):
+            return None
+
+        monkeypatch.setattr(ListenBrainzClient, "playing_now", _silence)
+        assert client.post("/tag-now-playing?tag=rainy", headers=AUTH).status_code == 404
+
+        async def _playing(self):
+            return {
+                "track_metadata": {
+                    "artist_name": "Zz Api Test",
+                    "track_name": "Zz Song",
+                    "release_name": "Zz Api Album",
+                }
+            }
+
+        monkeypatch.setattr(ListenBrainzClient, "playing_now", _playing)
+        r = client.post("/tag-now-playing?tag=study", headers=AUTH)
+        assert r.status_code == 200 and r.json()["release_group_id"] == rg
+    finally:
+        asyncio.run(_cleanup_queue_state(rg))
+        asyncio.run(_cleanup())

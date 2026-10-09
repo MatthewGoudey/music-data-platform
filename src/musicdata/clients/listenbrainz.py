@@ -91,6 +91,12 @@ class ListenBrainzClient:
         body = await self._get(f"/user/{self.user}/listen-count")
         return int(body["payload"]["count"])
 
+    async def playing_now(self) -> dict | None:
+        """The listen the user's player reports as playing right now, or None."""
+        body = await self._get(f"/user/{self.user}/playing-now", attempts=2)
+        listens = body.get("payload", {}).get("listens") or []
+        return listens[0] if listens else None
+
     async def listens_page(
         self, max_ts: int | None = None, count: int = PAGE_SIZE, *, attempts: int = 5
     ) -> list[dict]:

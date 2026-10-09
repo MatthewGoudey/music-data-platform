@@ -27,6 +27,7 @@ from musicdata.api.routers import (
     queue,
     sessions,
     shows,
+    tags,
 )
 from musicdata.config import Settings, get_settings
 from musicdata.db import connection, create_pool
@@ -62,7 +63,19 @@ app = FastAPI(
     description="Personal listening tracker: ListenBrainz in, a queue out.",
     lifespan=lifespan,
 )
-for module in (listens, artists, albums, sessions, query, queue, ingest, shows, lists, next_queue):
+for module in (
+    listens,
+    artists,
+    albums,
+    sessions,
+    query,
+    queue,
+    ingest,
+    shows,
+    lists,
+    next_queue,
+    tags,
+):
     app.include_router(module.router)
 
 

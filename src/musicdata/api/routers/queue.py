@@ -171,6 +171,9 @@ async def queue_data(
                 "SELECT name, description FROM queue_profile ORDER BY name <> 'default', name"
             )
         ]
+        tag_names = [
+            r[0] for r in await conn.fetch("SELECT name FROM tag WHERE active ORDER BY tag_id")
+        ]
         lists = await progress(conn, "list")
         core = await progress(conn, "zone", slug="v_atlas", zone="Core")
     for item in q["items"]:
@@ -190,7 +193,13 @@ async def queue_data(
     ]
     strip += [{"label": "V Atlas · Core", "heard": r["heard"], "total": r["total"]} for r in core]
     return render_object(
-        q | {"profiles": profiles, "progress": strip, "shuffle_pool": config.SHUFFLE_POOL}
+        q
+        | {
+            "profiles": profiles,
+            "progress": strip,
+            "tags": tag_names,
+            "shuffle_pool": config.SHUFFLE_POOL,
+        }
     )
 
 
