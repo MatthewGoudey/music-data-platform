@@ -20,7 +20,7 @@ from collections import defaultdict
 
 import asyncpg
 
-from musicdata.db import connection
+from musicdata.db import _TRANSIENT, connection
 from musicdata.jobs.runs import JobFn, RunContext
 from musicdata.lists.match import Candidate
 from musicdata.lists.resolve import ensure_release_group, settle
@@ -57,34 +57,40 @@ def lists_copy(source_url: str) -> JobFn:
             if r is None:
                 counts["not_in_source"] += 1
                 continue
-            async with connection(ctx.pool) as conn, conn.transaction():
-                if r["resolve_status"] != "resolved":
-                    detail = json.loads(r["resolve_detail"] or "{}") | {"copied": True}
-                    await settle(conn, [p["entry_id"]], r["resolve_status"], None, detail)
-                    counts[r["resolve_status"]] += 1
-                elif r["mbid"] and r["artist_mbid"]:
-                    rg_id, _ = await ensure_release_group(
-                        conn,
-                        Candidate(
-                            mbid=r["mbid"],
-                            title=r["title"],
-                            year=r["first_release_year"],
-                            primary_type=r["primary_type"],
-                            secondary_types=tuple(r["secondary_types"] or ()),
-                            artist_mbid=r["artist_mbid"],
-                            artist_name=r["artist_name"],
-                        ),
-                    )
-                    await settle(
-                        conn,
-                        [p["entry_id"]],
-                        "resolved",
-                        rg_id,
-                        {"via": "copied", "mbid": r["mbid"]},
-                    )
-                    counts["resolved"] += 1
-                else:
-                    counts["left_for_known"] += 1
+            for attempt in (1, 2):  # a dropped connection loses one entry's work: redo it
+                try:
+                    async with connection(ctx.pool) as conn, conn.transaction():
+                        if r["resolve_status"] != "resolved":
+                            detail = json.loads(r["resolve_detail"] or "{}") | {"copied": True}
+                            await settle(conn, [p["entry_id"]], r["resolve_status"], None, detail)
+                            counts[r["resolve_status"]] += 1
+                        elif r["mbid"] and r["artist_mbid"]:
+                            rg_id, _ = await ensure_release_group(
+                                conn,
+                                Candidate(
+                                    mbid=r["mbid"],
+                                    title=r["title"],
+                                    year=r["first_release_year"],
+                                    primary_type=r["primary_type"],
+                                    secondary_types=tuple(r["secondary_types"] or ()),
+                                    artist_mbid=r["artist_mbid"],
+                                    artist_name=r["artist_name"],
+                                ),
+                            )
+                            await settle(
+                                conn,
+                                [p["entry_id"]],
+                                "resolved",
+                                rg_id,
+                                {"via": "copied", "mbid": r["mbid"]},
+                            )
+                            counts["resolved"] += 1
+                        else:
+                            counts["left_for_known"] += 1
+                    break
+                except _TRANSIENT:
+                    if attempt == 2:
+                        raise
         ctx.rows = counts["resolved"]
         ctx.notes.update(pending=len(pending), **counts)
 

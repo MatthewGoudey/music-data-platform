@@ -51,17 +51,28 @@ async def create_pool(
 
 @asynccontextmanager
 async def connection(pool: asyncpg.Pool) -> AsyncIterator[asyncpg.Connection]:
-    """Acquire a connection for one unit of work, retrying once on a dropped connection."""
+    """Acquire a live connection for one unit of work. A pooled connection the server has
+    dropped is found by a probe and replaced once; a drop during the work itself is
+    raised to the caller (a context manager cannot run its body twice)."""
     for attempt in (1, 2):
+        held = pool.acquire()
+        conn = await held.__aenter__()
         try:
-            async with pool.acquire() as conn:
-                yield conn
-                return
+            await conn.execute("SELECT 1")
+            break
         except _TRANSIENT as exc:
+            await held.__aexit__(type(exc), exc, exc.__traceback__)
             if attempt == 2:
                 raise
             log.warning("db connection dropped; retrying once", extra={"error": str(exc)})
             await asyncio.sleep(1)
+    try:
+        yield conn
+    except BaseException as exc:
+        await held.__aexit__(type(exc), exc, exc.__traceback__)
+        raise
+    else:
+        await held.__aexit__(None, None, None)
 
 
 @asynccontextmanager
