@@ -197,6 +197,46 @@ def graph_import_cmd(
     )
 
 
+@graph_app.command("fetch")
+def graph_fetch_cmd(
+    slice_: str = typer.Option(
+        "crazy_horse", "--slice", help="crazy_horse, v_atlas or album:<id>."
+    ),
+    limit: int | None = typer.Option(None, help="Max albums this run."),
+    max_credits: int = typer.Option(
+        500, "--max-credits", help="Firecrawl credits this run may spend."
+    ),
+    refresh: bool = typer.Option(False, "--refresh", help="Fetch for albums already fetched."),
+) -> None:
+    """Firecrawl pages (registered links only) for a slice's baselined albums. Costs credits."""
+    from musicdata.graph.fetch import graph_fetch
+    from musicdata.jobs import runs
+
+    raise typer.Exit(
+        runs.run(
+            "graph_fetch",
+            graph_fetch(slice_name=slice_, limit=limit, max_credits=max_credits, refresh=refresh),
+            trigger=_trigger(),
+        )
+    )
+
+
+@graph_app.command("facts")
+def graph_facts_cmd(
+    slice_: str = typer.Option(
+        "crazy_horse", "--slice", help="crazy_horse, v_atlas or album:<id>."
+    ),
+    refresh: bool = typer.Option(False, "--refresh", help="Re-read albums already done."),
+) -> None:
+    """Claims from each Firecrawl facts fetch (Wikipedia personnel and recording places)."""
+    from musicdata.graph.facts import graph_facts
+    from musicdata.jobs import runs
+
+    raise typer.Exit(
+        runs.run("graph_facts", graph_facts(slice_name=slice_, refresh=refresh), trigger=_trigger())
+    )
+
+
 @graph_app.command("link")
 def graph_link_cmd() -> None:
     """Point album and artist entities at release_group and artist rows by MBID."""
