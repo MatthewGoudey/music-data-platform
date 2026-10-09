@@ -74,3 +74,12 @@ pointed at groups other than their own. Two rules close it:
   no track of the tracklist, sessions try `loose_title_keys`: numbered parts alike
   ("Pt. I" = "Part 1"), a trailing "live at …" description dropped, and either half of a
   " / " track. Stored keys do not change, so no rekey is needed.
+
+A home is a mapped group, never an expanded form of the current album ("Play & Play: The
+B Sides" on Play), never a compilation or box set for a listen on a real album, and among
+namesakes the one already holding listens reported under that name. Applied to dev
+(rekey, resolve's unmapped tail, full derive): 33 albums gained full sessions (At Folsom
+Prison 12, Chet Baker Sings 9, Sgt. Pepper 6, Endtroducing 3 …), full sessions rose from
+3,106 to 3,214, heard list entries from 1,625 to 1,689, every listening check stayed
+green, and one album lost its only session (Etta James, At Last!: 8 of 10 became 7 of 10
+when a track its player reported under another album stopped being pulled in).
