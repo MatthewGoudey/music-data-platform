@@ -70,11 +70,10 @@ Open items that need Matt:
 - Done: `docs/claude-project-instructions.md` pasted into the claude.ai Project (gate step 19).
 - Keep the old pipeline and its Task Scheduler task running until Matt says otherwise.
 - Rotating the old Neon password and Render `API_SECRET` waits for Matt.
-- The old-database exports (Claude canon, venues, manual tracklists): analysed read-only in
-  Block A; what to export waits for Matt's answer to the Block A report.
-- Three Acclaimed Music rows collapse onto another entry's keys (Weezer *Blue*/*Green*,
-  Crystal Castles *I*/*II*, Elvis 1956 vs the '68 NBC-TV Special); the fix touches the key
-  rule, so it waits for Matt.
+- Old-database exports done (2026-10-09): `claude_canon` and the 40 hand-verified track
+  counts. Venues (432, with Google travel times) stay in the old database for the venue
+  work after the gate. `GOOGLE_ROUTES_API_KEY` is in `.env.dev` / `.env.prod` for that work.
+- A fresh BestEverAlbums download converts with `scripts/convert_besteveralbums.py`.
 
 Notes for the next session:
 - Never migrate a shared database (dev, prod) ahead of `main`: a cloud job running the
@@ -114,6 +113,9 @@ section and the verdict cards off it, and Block E puts "Up next" there. Verdicts
       Matt's decision on the Block A report.
 - [ ] Block B — `musicdata lists resolve` (known release groups first, then MusicBrainz search);
       backfill passes in dev; checks L2–L3; report resolved / ambiguous / unresolved per list.
+      Built 2026-10-09 with `claude_canon` (weight 0.5), `besteveralbums_overall` (10,000),
+      year-marked keys and `seeds/manual_tracklists.csv` (spec v3). Dev backfill: chained
+      `gh workflow run backfill -f env=dev -f job=lists -f args="resolve --limit 5000"`.
 - [ ] Block C — `list_entry_status`, `GET /lists`, `GET /gaps`; checks L4–L5; report atlas coverage.
 - [ ] Block D — migrations 0012–0013; `src/musicdata/queue/`; `GET /next`; tests Q1–Q5;
       report the first `default` and `home-genre` queues with their why lines; wait for Matt.
