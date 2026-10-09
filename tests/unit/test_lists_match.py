@@ -115,3 +115,11 @@ def test_a_subtitled_musicbrainz_title_matches_its_main_title() -> None:
     )
     c = candidate(hit, "refused", "shape of punk to come")
     assert c is not None and not c.exact
+
+
+def test_a_double_title_and_a_slashed_title() -> None:
+    from musicdata.lists.match import plain_title
+
+    hit = _hit("m", "Microcastle / Weird Era Cont.", "2008", artist="Deerhunter")
+    assert candidate(hit, "deerhunter", "microcastle") is not None
+    assert plain_title("Getz/Gilberto") == "Getz Gilberto"

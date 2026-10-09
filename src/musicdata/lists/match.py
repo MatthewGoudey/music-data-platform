@@ -99,12 +99,23 @@ def artist_variants(name: str) -> list[str]:
     return _unique([v.strip() for n in (name, _COUNTRY.sub("", name)) for v in _both_scripts(n)])
 
 
+_NICKNAME = re.compile(r"\s*\([^()]*\)\s*$")
+_PUNCT = re.compile(r"[/\\:;!?.,\"()\[\]]+")
+
+
+def plain_title(title: str) -> str:
+    """The title with punctuation as spaces, for a search the punctuation trips up
+    ("Getz/Gilberto" → "Getz Gilberto")."""
+    return " ".join(_PUNCT.sub(" ", title).split())
+
+
 def title_variants(title: str, *, subtitle: bool = True) -> list[str]:
     """As artist_variants for a title: entities decoded, a trailing "(1968)" dropped, each
     half of "native [romanized]", and last (unless `subtitle` is False) the title before
     a colon, for a list that names only the main title's first part."""
     title = html.unescape(title).strip()
     out = [v.strip() for t in (title, _YEAR.sub("", title)) for v in _both_scripts(t)]
+    out.append(_NICKNAME.sub("", title).strip())  # "Weezer (Blue Album)" → "Weezer"
     if subtitle and ":" in title:
         out.append(title.split(":", 1)[0].strip())
     return _unique(out)
@@ -118,6 +129,8 @@ def _title_keys(hit: dict) -> set[str]:
     out = {key}
     if ":" in title:  # "The Shape of Punk to Come: A Chimerical Bombination in 12 Bursts"
         out.add(group_key(title.split(":", 1)[0]))
+    if " / " in title:  # "Microcastle / Weird Era Cont."
+        out |= {group_key(part) for part in title.split(" / ")}
     for c in hit.get("artist-credit") or []:
         for n in (c.get("name", ""), (c.get("artist") or {}).get("name", "")):
             prefix = norm_key(n) + " "

@@ -8,6 +8,7 @@ by MBID costs one request.
 from __future__ import annotations
 
 import asyncio
+import re
 import time
 
 import httpx
@@ -19,6 +20,9 @@ log = get_logger(__name__)
 BASE_URL = "https://musicbrainz.org/ws/2"
 BROWSE_LIMIT = 100
 MAX_RELEASES = 300  # Beatles-sized groups: the canonical release is among the first pages
+
+
+_WORD = re.compile(r"\w+")
 
 
 def _lucene(text: str) -> str:
@@ -93,11 +97,19 @@ class MusicBrainzClient:
         artist_name: str | None = None,
         artist_mbid: str | None = None,
         limit: int = 5,
+        loose: bool = False,
     ) -> list[dict]:
-        """Release groups matching a title, by an artist when one is given; best score first."""
-        query = f'releasegroup:"{_lucene(title)}"'
+        """Release groups matching a title, by an artist when one is given; best score first.
+        `loose` searches the words instead of the exact phrase ("Lift Yr. Skinny Fists …")."""
+        if loose:
+            words = " ".join(w.lower() for w in _WORD.findall(title)) or title
+            query = f"releasegroup:({_lucene(words)})"
+        else:
+            query = f'releasegroup:"{_lucene(title)}"'
         if artist_mbid:
             query += f" AND arid:{artist_mbid}"
+        elif artist_name and loose:
+            query += f" AND artist:({_lucene(' '.join(w.lower() for w in _WORD.findall(artist_name)) or artist_name)})"
         elif artist_name:
             query += f' AND artist:"{_lucene(artist_name)}"'
         body = await self._get("/release-group", {"query": query, "limit": limit})

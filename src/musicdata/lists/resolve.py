@@ -18,9 +18,11 @@ to pending and resolves again.
 
 from __future__ import annotations
 
+import asyncio
 import json
 from collections import defaultdict
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 
 import asyncpg
 
@@ -37,6 +39,7 @@ from musicdata.lists.match import (
     group_key,
     lead_artist,
     near_year,
+    plain_title,
     title_variants,
 )
 from musicdata.lists.seed import base_album_key
@@ -47,6 +50,7 @@ from musicdata.resolve.unmapped import search_titles
 log = get_logger(__name__)
 
 SEARCH_LIMIT = 15
+EMPTY_RETRY_SECONDS = 3
 
 PENDING = """
     FROM list_entry e JOIN list l USING (list_id)
@@ -73,7 +77,8 @@ async def pending_albums(conn: asyncpg.Connection, retry: bool) -> list[Album]:
     rows = await conn.fetch(
         f"""SELECT e.entry_id, e.raw_artist, e.raw_album, e.artist_key, e.album_key, e.year
               {PENDING}
-             ORDER BY (l.slug = 'v_atlas') DESC, l.weight DESC,
+             ORDER BY CASE WHEN $1 THEN e.resolve_detail->>'tried_at' END NULLS FIRST,
+                      (l.slug = 'v_atlas') DESC, l.weight DESC,
                       CASE e.priority WHEN 'Essential' THEN 0 WHEN 'Recommended' THEN 1
                                       WHEN 'Deep cut' THEN 2 ELSE 1 END,
                       e.position NULLS LAST, e.entry_id""",
@@ -149,16 +154,33 @@ async def search(mb: MusicBrainzClient, album: Album) -> tuple[str, list[Candida
     titles = title_variants(album.raw_album)
     keys = {album.key} | {group_key(t) for t in titles}
     forms = list(dict.fromkeys(f for t in titles for f in search_titles(t)))
+    forms += [p for t in titles if (p := plain_title(t)) and p not in forms]
     for artist in artists:
         for title in forms:
             searched.append(f"{artist} / {title}")
             hits = await mb.search_release_groups(title, artist_name=artist, limit=SEARCH_LIMIT)
+            if not hits and len(searched) == 1:
+                # an overloaded MusicBrainz answers some searches with nothing: ask once more
+                await asyncio.sleep(EMPTY_RETRY_SECONDS)
+                hits = await mb.search_release_groups(title, artist_name=artist, limit=SEARCH_LIMIT)
             cands = [
                 c for h in hits for ak in artist_keys for k in keys if (c := candidate(h, ak, k))
             ]
             status, chosen = choose(cands, album.year)
             if status != "unresolved":
                 return status, chosen, searched
+    # Last resorts, still held to the artist and title checks: the title alone (an artist
+    # filter sometimes hides the album), then its words instead of the exact phrase.
+    for label, kwargs in (
+        ("title only", {}),
+        ("words", {"artist_name": artists[-1], "loose": True}),
+    ):
+        searched.append(f"{label} / {titles[0]}")
+        hits = await mb.search_release_groups(titles[0], limit=SEARCH_LIMIT * 2, **kwargs)
+        cands = [c for h in hits for ak in artist_keys for k in keys if (c := candidate(h, ak, k))]
+        status, chosen = choose(cands, album.year)
+        if status != "unresolved":
+            return status, chosen, searched
     return status, chosen, searched
 
 
@@ -232,7 +254,11 @@ def lists_resolve(*, limit: int, retry: bool = False) -> JobFn:
         async with MusicBrainzClient(user_agent=settings.musicbrainz_user_agent) as mb:
             for i, a in enumerate(to_search[:limit], 1):
                 status, cands, searched = await search(mb, a)
-                detail: dict[str, object] = {"via": "search", "searched": searched}
+                detail: dict[str, object] = {
+                    "via": "search",
+                    "searched": searched,
+                    "tried_at": datetime.now(UTC).isoformat(timespec="seconds"),
+                }
                 async with connection(ctx.pool) as conn, conn.transaction():
                     rg_id = None
                     if status == "resolved":
