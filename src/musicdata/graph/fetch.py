@@ -45,10 +45,13 @@ def is_english_wikipedia(url: str) -> bool:
 def plan(links: list[asyncpg.Record], tier: int) -> list[tuple[str, str]]:
     """(url, mode) pages to fetch for one album; `tier` as in importer.order_key (0 Essential,
     1 start here / on a path, 2 Recommended, 3 Deep cut)."""
-    wiki = next(
-        (x["url"] for x in links if x["kind"] == "wikipedia" and is_english_wikipedia(x["url"])),
-        None,
+    # the album's own page (MusicBrainz, Wikidata) before pages an atlas note cites, which
+    # can be the artist's
+    wikis = sorted(
+        (x for x in links if x["kind"] == "wikipedia" and is_english_wikipedia(x["url"])),
+        key=lambda x: ((x.get("source") or "").startswith("map:"), x["url"]),
     )
+    wiki = wikis[0]["url"] if wikis else None
     others = sorted(
         {x["url"]: x for x in links if x["kind"] not in SKIP_KINDS}.values(),
         key=lambda x: (OTHER_ORDER.get(x["kind"], 9), x["url"]),
@@ -98,7 +101,7 @@ def graph_fetch(
             for t in todo:
                 async with connection(ctx.pool) as conn:
                     links = await conn.fetch(
-                        "SELECT kind, url FROM entity_link WHERE entity_id = $1 AND status = 'ok'",
+                        "SELECT kind, url, source FROM entity_link WHERE entity_id = $1 AND status = 'ok'",
                         t["entity_id"],
                     )
                 for url, mode in plan(links, order_key(t)[0]):

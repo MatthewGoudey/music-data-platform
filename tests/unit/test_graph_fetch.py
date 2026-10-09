@@ -65,6 +65,22 @@ def test_depth_follows_the_atlas_priority() -> None:
     assert plan([_link("discogs", "https://www.discogs.com/master/1")], 0) == []
 
 
+def test_the_albums_own_wikipedia_page_beats_an_atlas_citation() -> None:
+    links = [
+        {
+            "kind": "wikipedia",
+            "url": "https://en.wikipedia.org/wiki/MJ_Lenderman",
+            "source": "map:v_atlas",
+        },
+        {
+            "kind": "wikipedia",
+            "url": "https://en.wikipedia.org/wiki/Boat_Songs",
+            "source": "musicbrainz",
+        },
+    ]
+    assert plan(links, 3) == [("https://en.wikipedia.org/wiki/Boat_Songs", "facts")]
+
+
 def test_facts_merge_roles_per_person_and_name_places() -> None:
     facts = {
         "producers": ["David Briggs", "Neil Young"],
