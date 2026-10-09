@@ -1,7 +1,7 @@
 """Google Routes API: travel time from one origin to many venues (computeRouteMatrix).
 
 The key rides in a header, never the URL, so it cannot appear in an error or a log line.
-Transit matrices allow 100 elements a request, so destinations go in batches of 100.
+A request may name at most 50 addresses (the origin counts), so destinations go 49 at a time.
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ import httpx
 
 URL = "https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix"
 FIELDS = "originIndex,destinationIndex,duration,distanceMeters,condition,status"
-BATCH = 100
+BATCH = 49
 
 
 @dataclass(frozen=True)
