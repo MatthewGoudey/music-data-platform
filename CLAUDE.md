@@ -118,7 +118,7 @@ Notes for the next session:
 ## Phase 5 checklist — the music graph (spec: `docs/graph/GRAPH_SPEC.md`)
 Gate (milestone M3): the pilot slice verified in dev (Block E), the API live, the walk-back
 profile working, and on Matt's go the graph copied to prod with G1–G8 green; then Matt uses
-`walk-back` for a week. The prototype is `scripts/graph/`; run T1 is in `data/graph/runs/T1/`.
+`walk-back` for a week. The prototype (`scripts/graph/`) is ported and deleted; run T1 is in `data/graph/runs/T1/` and `tests/unit/fixtures/graph/T1/`.
 
 - [x] Block 0 — ADR 0017 (the claims graph); `FIRECRAWL_API_KEY` and `DISCOGS_TOKEN` as optional
       settings, GitHub Environment secrets (dev, prod) and backfill workflow env. Done
