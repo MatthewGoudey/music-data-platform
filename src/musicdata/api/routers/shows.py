@@ -28,6 +28,24 @@ SCORED = f"""
 """
 
 
+# Sources of a show and of its same-night twins (one headliner, one night, two venue names).
+TWINS = (
+    "ss.show_id IN (SELECT t.show_id FROM show t"
+    " WHERE t.show_date = s.show_date AND t.headliner_key = s.headliner_key)"
+)
+# One show per headliner and night: Ticketmaster and Oh My Rockness can name a venue two
+# ways (a show moved indoors from the Salt Shed's fairgrounds); Oh My Rockness's listing
+# wins, then the older one.
+ONE_PER_NIGHT = """NOT EXISTS (
+                       SELECT 1 FROM show w
+                        WHERE w.show_date = s.show_date AND w.headliner_key = s.headliner_key
+                          AND w.show_id <> s.show_id AND NOT w.cancelled
+                          AND (EXISTS (SELECT 1 FROM show_source o WHERE o.show_id = w.show_id
+                                         AND o.source = 'omr')::int, -w.show_id)
+                            > (EXISTS (SELECT 1 FROM show_source o WHERE o.show_id = s.show_id
+                                         AND o.source = 'omr')::int, -s.show_id))"""
+
+
 @router.get("")
 async def shows(
     pool: Pool,
@@ -61,7 +79,7 @@ async def shows(
                        (SELECT string_agg(sa.clean_name, ', ' ORDER BY sa.position)
                           FROM show_artist sa WHERE sa.show_id = s.show_id) AS lineup,
                        (SELECT ss.tickets_url FROM show_source ss
-                         WHERE ss.show_id IN (SELECT t.show_id FROM show t WHERE t.show_date = s.show_date AND t.headliner_key = s.headliner_key) AND ss.tickets_url IS NOT NULL
+                         WHERE {TWINS} AND ss.tickets_url IS NOT NULL
                          ORDER BY ss.source = 'omr' DESC LIMIT 1) AS tickets,
                        to_char(sale.next_presale AT TIME ZONE 'America/Chicago',
                                'YYYY-MM-DD HH24:MI') AS next_presale,
@@ -80,24 +98,24 @@ async def shows(
                                      ORDER BY score DESC LIMIT 1) best ON true
                   LEFT JOIN LATERAL (
                       SELECT (SELECT min(ss.on_sale_at) FROM show_source ss
-                               WHERE ss.show_id IN (SELECT t.show_id FROM show t WHERE t.show_date = s.show_date AND t.headliner_key = s.headliner_key) AND ss.on_sale_at > now()) AS on_sale,
+                               WHERE {TWINS} AND ss.on_sale_at > now()) AS on_sale,
                              p.start AS next_presale, p.name AS presale_name,
                              o.name AS presale_now, o.ends AS presale_now_ends,
                              EXISTS (SELECT 1 FROM show_source ss
-                                      WHERE ss.show_id IN (SELECT t.show_id FROM show t WHERE t.show_date = s.show_date AND t.headliner_key = s.headliner_key)
+                                      WHERE {TWINS}
                                         AND ss.on_sale_at <= now()) AS on_sale_passed
                         FROM (SELECT NULL) one
                         LEFT JOIN LATERAL (  -- a presale open right now
                             SELECT x ->> 'name' AS name, (x ->> 'end')::timestamptz AS ends
                               FROM show_source ss, jsonb_array_elements(ss.presales) x
-                             WHERE ss.show_id IN (SELECT t.show_id FROM show t WHERE t.show_date = s.show_date AND t.headliner_key = s.headliner_key)
+                             WHERE {TWINS}
                                AND (x ->> 'start')::timestamptz <= now()
                                AND (x ->> 'end')::timestamptz > now()
                              ORDER BY 2 LIMIT 1) o ON true
                         LEFT JOIN LATERAL (
                             SELECT (x ->> 'start')::timestamptz AS start, x ->> 'name' AS name
                               FROM show_source ss, jsonb_array_elements(ss.presales) x
-                             WHERE ss.show_id IN (SELECT t.show_id FROM show t WHERE t.show_date = s.show_date AND t.headliner_key = s.headliner_key)
+                             WHERE {TWINS}
                                AND (x ->> 'start')::timestamptz > now()
                              ORDER BY 1 LIMIT 1) p ON true
                   ) sale ON true
@@ -115,14 +133,7 @@ async def shows(
                    -- one show per headliner and night: Ticketmaster and Oh My Rockness can
                    -- name a venue two ways (a show moved indoors from the Salt Shed's
                    -- fairgrounds); Oh My Rockness's listing wins, then the older one
-                   AND NOT EXISTS (
-                       SELECT 1 FROM show w
-                        WHERE w.show_date = s.show_date AND w.headliner_key = s.headliner_key
-                          AND w.show_id <> s.show_id AND NOT w.cancelled
-                          AND (EXISTS (SELECT 1 FROM show_source o WHERE o.show_id = w.show_id
-                                         AND o.source = 'omr')::int, -w.show_id)
-                            > (EXISTS (SELECT 1 FROM show_source o WHERE o.show_id = s.show_id
-                                         AND o.source = 'omr')::int, -s.show_id))
+                   AND {ONE_PER_NIGHT}
                  ORDER BY {order}
                  LIMIT $6""",
             days,

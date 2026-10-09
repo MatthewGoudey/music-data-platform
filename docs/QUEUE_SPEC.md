@@ -439,3 +439,7 @@ priority Essential. Matt has played other Ratboys records but no session of this
   days, soonest sale first; a window still open after the public on-sale is a perk, not a
   presale. Shows by one headliner on one night are one show (Oh My Rockness's venue wins:
   shows moved indoors from the Salt Shed's fairgrounds). All three sections go to prod.
+- 2026-10-09 v9: Matt clarified that by "presale" he means announced but not on sale yet. The
+  section is "Not on sale yet": shows up to a year out by artists he listens to whose public
+  on-sale is still ahead (no 30-day window), each with any presale before it and the public
+  on-sale time, soonest first. On-sale times come from Ticketmaster.
