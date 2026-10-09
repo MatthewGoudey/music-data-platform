@@ -89,3 +89,29 @@ def test_manual_rows_prefer_the_plain_title_on_a_conflict() -> None:
     ]
     assert pick(rows)["track_count"] == "9"
     assert pick([{"album": "A", "track_count": "9"}, {"album": "B", "track_count": "10"}]) is None
+
+
+def test_list_spellings_give_searchable_variants() -> None:
+    from musicdata.lists.match import artist_variants, title_variants
+
+    assert artist_variants("Sleep (US)") == ["Sleep (US)", "Sleep"]
+    assert artist_variants("フィッシュマンズ [Fishmans]") == [
+        "フィッシュマンズ [Fishmans]",
+        "フィッシュマンズ",
+        "Fishmans",
+    ]
+    assert title_variants("Françoise Hardy (1968)") == ["Françoise Hardy (1968)", "Françoise Hardy"]
+    assert title_variants("&quot;i&quot;") == ['"i"']
+    assert title_variants("Dawn: Winter Journal")[-1] == "Dawn"
+    assert title_variants("Dawn: Winter Journal", subtitle=False) == ["Dawn: Winter Journal"]
+
+
+def test_a_subtitled_musicbrainz_title_matches_its_main_title() -> None:
+    hit = _hit(
+        "r",
+        "The Shape of Punk to Come: A Chimerical Bombination in 12 Bursts",
+        "1998",
+        artist="Refused",
+    )
+    c = candidate(hit, "refused", "shape of punk to come")
+    assert c is not None and not c.exact

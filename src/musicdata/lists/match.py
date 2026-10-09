@@ -14,6 +14,7 @@ One left → resolved; several → ambiguous (kept for review); none → unresol
 
 from __future__ import annotations
 
+import html
 import re
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
@@ -73,11 +74,50 @@ def credit_matches(credits: list[dict], artist_key: str) -> bool:
     }
 
 
+_COUNTRY = re.compile(r"\s*\((?:[A-Z]{2,3}|\d+)\)$")  # "Sleep (US)", "Clinic (UK)", "Bush (2)"
+_YEAR = re.compile(r"\s*\((?:19|20)\d\d\)$")  # "Françoise Hardy (1968)"
+_BRACKETED = re.compile(r"^(.*?)\s*\[([^\]]+)\]\s*$")  # "フィッシュマンズ [Fishmans]"
+
+
+def _unique(items: list[str]) -> list[str]:
+    seen: list[str] = []
+    for i in items:
+        if i and i not in seen:
+            seen.append(i)
+    return seen
+
+
+def _both_scripts(name: str) -> list[str]:
+    m = _BRACKETED.match(name)
+    return [name, m.group(1), m.group(2)] if m else [name]
+
+
+def artist_variants(name: str) -> list[str]:
+    """The list's spelling, then cleaner forms to search with: HTML entities decoded, a
+    disambiguating country or number dropped, each half of "native [romanized]"."""
+    name = html.unescape(name).strip()
+    return _unique([v.strip() for n in (name, _COUNTRY.sub("", name)) for v in _both_scripts(n)])
+
+
+def title_variants(title: str, *, subtitle: bool = True) -> list[str]:
+    """As artist_variants for a title: entities decoded, a trailing "(1968)" dropped, each
+    half of "native [romanized]", and last (unless `subtitle` is False) the title before
+    a colon, for a list that names only the main title's first part."""
+    title = html.unescape(title).strip()
+    out = [v.strip() for t in (title, _YEAR.sub("", title)) for v in _both_scripts(t)]
+    if subtitle and ":" in title:
+        out.append(title.split(":", 1)[0].strip())
+    return _unique(out)
+
+
 def _title_keys(hit: dict) -> set[str]:
     """The hit's title key, and the same without a leading artist name
     ("Johnny Cash at San Quentin" → "at san quentin")."""
-    key = group_key(hit.get("title", ""))
+    title = hit.get("title", "")
+    key = group_key(title)
     out = {key}
+    if ":" in title:  # "The Shape of Punk to Come: A Chimerical Bombination in 12 Bursts"
+        out.add(group_key(title.split(":", 1)[0]))
     for c in hit.get("artist-credit") or []:
         for n in (c.get("name", ""), (c.get("artist") or {}).get("name", "")):
             prefix = norm_key(n) + " "

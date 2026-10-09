@@ -27,14 +27,17 @@ import asyncpg
 from musicdata.clients.musicbrainz import MusicBrainzClient
 from musicdata.config import get_settings
 from musicdata.db import connection
+from musicdata.identity import norm_key
 from musicdata.jobs.runs import JobFn, RunContext
 from musicdata.lists.match import (
     Candidate,
+    artist_variants,
     candidate,
     choose,
     group_key,
     lead_artist,
     near_year,
+    title_variants,
 )
 from musicdata.lists.seed import base_album_key
 from musicdata.log import get_logger
@@ -113,15 +116,20 @@ class Known:
         return k
 
     def find(self, album: Album) -> int | None:
-        artists = self.by_alias.get(album.raw_artist, set()) | self.by_key.get(
-            album.artist_key, set()
+        artists: set[int] = set()
+        for name in artist_variants(album.raw_artist):
+            artists |= self.by_alias.get(name, set()) | self.by_key.get(norm_key(name), set())
+        artists |= self.by_key.get(album.artist_key, set())
+        keys = {album.key} | {group_key(t) for t in title_variants(album.raw_album, subtitle=False)}
+        found = list(
+            {
+                g
+                for a in artists
+                for k in keys
+                for g in self.groups.get((a, k), [])
+                if near_year(g[2], album.year)
+            }
         )
-        found = [
-            g
-            for a in artists
-            for g in self.groups.get((a, album.key), [])
-            if near_year(g[2], album.year)
-        ]
         mapped = [g for g in found if g[1]]
         found = mapped or found
         return found[0][0] if len(found) == 1 else None
@@ -134,14 +142,20 @@ async def search(mb: MusicBrainzClient, album: Album) -> tuple[str, list[Candida
     """The first title form that finds candidates decides; returns the forms searched."""
     searched: list[str] = []
     status, chosen = "unresolved", []
-    artists = [album.raw_artist]
-    if (lead := lead_artist(album.raw_artist)) and lead != album.raw_artist:
-        artists.append(lead)  # MusicBrainz may join the credit differently
+    names = artist_variants(album.raw_artist)
+    # MusicBrainz may join a credit differently: the lead artist comes last
+    artists = names + [lead for n in names if (lead := lead_artist(n)) and lead not in names]
+    artist_keys = {album.artist_key} | {norm_key(a) for a in artists}
+    titles = title_variants(album.raw_album)
+    keys = {album.key} | {group_key(t) for t in titles}
+    forms = list(dict.fromkeys(f for t in titles for f in search_titles(t)))
     for artist in artists:
-        for title in search_titles(album.raw_album):
+        for title in forms:
             searched.append(f"{artist} / {title}")
             hits = await mb.search_release_groups(title, artist_name=artist, limit=SEARCH_LIMIT)
-            cands = [c for h in hits if (c := candidate(h, album.artist_key, album.key))]
+            cands = [
+                c for h in hits for ak in artist_keys for k in keys if (c := candidate(h, ak, k))
+            ]
             status, chosen = choose(cands, album.year)
             if status != "unresolved":
                 return status, chosen, searched
