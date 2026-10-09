@@ -33,3 +33,21 @@ jobs:
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - name: deploy ${{ env.TARGET }}
         run: flyctl deploy --remote-only --config "fly.${TARGET}.toml"
+      # The shows job runs on Fly, not here: Oh My Rockness refuses GitHub's datacenter
+      # addresses (ADR 0006). A scheduled machine on the image just deployed replaces the
+      # previous one. `fly machine run` skips fly.toml [env], so the env is passed here.
+      - name: schedule the nightly shows job on ${{ env.TARGET }}
+        run: |
+          cfg="fly.${TARGET}.toml"
+          image="$(flyctl machine list --config "$cfg" --json \
+            | jq -r '[.[] | select(.config.metadata.fly_process_group == "app")][0].config.image')"
+          for id in $(flyctl machine list --config "$cfg" --json \
+                      | jq -r '.[] | select(.name == "shows-nightly") | .id'); do
+            flyctl machine destroy "$id" --force --config "$cfg"
+          done
+          flyctl machine run "$image" musicdata shows \
+            --config "$cfg" --name shows-nightly --schedule daily --region ord \
+            --vm-size shared-cpu-1x --vm-memory 256 --restart no \
+            --env MUSICDATA_ENV="$TARGET" \
+            --env LISTENBRAINZ_USER=MatthewG606 \
+            --env "MUSICBRAINZ_USER_AGENT=musicdata/0.1 (https://github.com/MatthewGoudey/music-data-platform)"

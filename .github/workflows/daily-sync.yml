@@ -60,10 +60,8 @@ jobs:
         id: derive
         if: always()
         run: uv run musicdata derive
-      - name: shows
-        id: shows
-        if: always()
-        run: uv run musicdata shows
+      # shows runs on a scheduled Fly machine (deploy-api): Oh My Rockness refuses GitHub's
+      # datacenter addresses (ADR 0006).
       - name: dq
         id: dq
         if: always()
@@ -77,7 +75,7 @@ jobs:
           if [ -n "$NTFY_TOPIC" ]; then
             curl -fsS -H "Title: musicdata ${{ matrix.env }} sync failed" \
                  -H "Priority: high" \
-                 -d "ingest=${{ steps.ingest.outcome }} resolve=${{ steps.resolve.outcome }} derive=${{ steps.derive.outcome }} shows=${{ steps.shows.outcome }} dq=${{ steps.dq.outcome }}
+                 -d "ingest=${{ steps.ingest.outcome }} resolve=${{ steps.resolve.outcome }} derive=${{ steps.derive.outcome }} dq=${{ steps.dq.outcome }}
           ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
                  "https://ntfy.sh/$NTFY_TOPIC" || true
           fi

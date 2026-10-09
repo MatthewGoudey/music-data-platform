@@ -35,3 +35,8 @@ fallback above.
   environment secrets): arenas, blues clubs and tours Oh My Rockness skips.
 - Shows from both merge on venue, local date and headliner; the first run in dev stored
   902 upcoming shows, 133 of them listed by both.
+- **The shows job runs on Fly, not GitHub Actions.** Oh My Rockness's Cloudflare
+  answers 403 to GitHub runners' datacenter addresses and 200 to Fly's (2026-10-09).
+  `deploy-api` replaces a scheduled machine (`shows-nightly`, `--schedule daily`) on the
+  image it just deployed; `daily-sync` no longer runs `shows`. This is the "run the
+  scraper on the Fly machine" fallback above; cost is minutes of the smallest machine a day.
