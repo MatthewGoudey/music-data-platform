@@ -136,4 +136,6 @@ async def test_seeding_twice_adds_nothing(conn) -> None:
     }
     names = {r[0] for r in await conn.fetch("SELECT name FROM predicate WHERE lineage")}
     assert names == {"influenced_by", "sounds_like", "covers", "samples"}
-    assert await conn.fetchval("SELECT symmetric FROM predicate WHERE name = 'associated_with'")
+    assert await conn.fetchval(
+        """SELECT "symmetric" FROM predicate WHERE name = 'associated_with'"""
+    )

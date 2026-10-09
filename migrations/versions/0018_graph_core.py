@@ -28,7 +28,7 @@ def upgrade() -> None:
             facet          TEXT    NOT NULL,
             subject_types  TEXT[]  NOT NULL,
             object_types   TEXT[]  NOT NULL,   -- '{literal}' for literal objects
-            symmetric      BOOLEAN NOT NULL DEFAULT false,
+            "symmetric"    BOOLEAN NOT NULL DEFAULT false,  -- quoted: a reserved word
             lineage        BOOLEAN NOT NULL DEFAULT false,  -- influenced_by, sounds_like, covers, samples
             description    TEXT    NOT NULL
         );

@@ -87,12 +87,12 @@ async def seed(conn: asyncpg.Connection, run_id: int | None, root: Path = Path("
     predicates = read_predicates(root / PREDICATES)
     async with conn.transaction():
         await conn.executemany(
-            """INSERT INTO predicate (name, facet, subject_types, object_types, symmetric,
+            """INSERT INTO predicate (name, facet, subject_types, object_types, "symmetric",
                                       lineage, description)
                VALUES ($1, $2, $3, $4, $5, $6, $7)
                ON CONFLICT (name) DO UPDATE
                   SET facet = EXCLUDED.facet, subject_types = EXCLUDED.subject_types,
-                      object_types = EXCLUDED.object_types, symmetric = EXCLUDED.symmetric,
+                      object_types = EXCLUDED.object_types, "symmetric" = EXCLUDED."symmetric",
                       lineage = EXCLUDED.lineage, description = EXCLUDED.description""",
             [tuple(p.values()) for p in predicates],
         )
