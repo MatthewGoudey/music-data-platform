@@ -23,6 +23,7 @@ GETS = [
     "/sessions?days=30",
     "/shows?days=30",
     "/shows?match=true&limit=5",
+    "/shows?presales=true&days=180",
 ]
 
 
@@ -157,3 +158,53 @@ def test_verdicts_and_manual_sessions_round_trip(client) -> None:
         )
     finally:
         asyncio.run(_cleanup())
+
+
+async def _temp_show() -> int:
+    conn = await asyncpg.connect(os.environ["DATABASE_URL"])
+    try:
+        venue = await conn.fetchval(
+            """INSERT INTO venue (name, norm_key) VALUES ('Zz Api Venue', 'zz api venue')
+               ON CONFLICT (norm_key) DO UPDATE SET name = EXCLUDED.name RETURNING venue_id"""
+        )
+        return await conn.fetchval(
+            """INSERT INTO show (venue_id, starts_at, show_date, headliner_key, title)
+               VALUES ($1, '2031-01-01T20:00:00-06:00', '2031-01-01', 'zz api band', 'Zz Api Band')
+               ON CONFLICT (venue_id, show_date, headliner_key) DO UPDATE SET title = EXCLUDED.title
+               RETURNING show_id""",
+            venue,
+        )
+    finally:
+        await conn.close()
+
+
+async def _drop_temp_show() -> None:
+    conn = await asyncpg.connect(os.environ["DATABASE_URL"])
+    try:
+        await conn.execute("DELETE FROM show WHERE headliner_key = 'zz api band'")
+        await conn.execute("DELETE FROM venue WHERE norm_key = 'zz api venue'")
+    finally:
+        await conn.close()
+
+
+def test_show_interest_from_the_page_and_the_api(client) -> None:
+    show_id = asyncio.run(_temp_show())
+    try:
+        form = client.post(
+            "/queue/interest?t=page-token",
+            data={"show_id": show_id, "status": "going"},
+            follow_redirects=False,
+        )
+        assert form.status_code == 303
+        put = client.put(f"/shows/{show_id}/interest", json={"status": "interested"}, headers=AUTH)
+        assert put.status_code == 200 and put.json()["status"] == "interested"
+        cleared = client.post(
+            "/queue/interest?t=page-token",
+            data={"show_id": show_id, "status": "none"},
+            follow_redirects=False,
+        )
+        assert cleared.status_code == 303
+        assert client.delete(f"/shows/{show_id}/interest", headers=AUTH).status_code == 204
+        assert client.put("/shows/-1/interest", json={}, headers=AUTH).status_code == 404
+    finally:
+        asyncio.run(_drop_temp_show())
