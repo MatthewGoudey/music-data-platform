@@ -163,5 +163,19 @@ def lists_load(
     raise typer.Exit(runs.run("lists", load_job(root=Path(root)), trigger=_trigger()))
 
 
+@lists_app.command("resolve")
+def lists_resolve(
+    limit: int = typer.Option(300, help="Max MusicBrainz searches this run (1 req/s each)."),
+    retry: bool = typer.Option(False, "--retry", help="Search unresolved entries again."),
+) -> None:
+    """Match pending list entries to release groups: known albums first, then MusicBrainz."""
+    from musicdata.jobs import runs
+    from musicdata.lists.resolve import lists_resolve as resolve_job
+
+    raise typer.Exit(
+        runs.run("lists_resolve", resolve_job(limit=limit, retry=retry), trigger=_trigger())
+    )
+
+
 if __name__ == "__main__":  # pragma: no cover
     app()

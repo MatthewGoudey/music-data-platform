@@ -86,9 +86,12 @@ def pick_by_overlap[K: Hashable](
 
 
 async def merge_release_group(conn: asyncpg.Connection, src: int, dst: int) -> None:
-    """Move every listen and alias of `src` onto `dst`, then drop `src`."""
+    """Move every listen, alias and list entry of `src` onto `dst`, then drop `src`."""
     await conn.execute(
         "UPDATE listen SET release_group_id = $2 WHERE release_group_id = $1", src, dst
+    )
+    await conn.execute(
+        "UPDATE list_entry SET release_group_id = $2 WHERE release_group_id = $1", src, dst
     )
     await conn.execute(
         """INSERT INTO release_group_alias (artist_id, raw_album, release_group_id, source)

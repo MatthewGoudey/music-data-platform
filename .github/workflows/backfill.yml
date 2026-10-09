@@ -9,7 +9,7 @@ on:
         required: true
         default: "dev"
       job:
-        description: "ingest | resolve | derive | shows | dq"
+        description: "ingest | resolve | derive | shows | dq | lists (args: resolve --limit 2000)"
         required: true
         default: "resolve"
       args:

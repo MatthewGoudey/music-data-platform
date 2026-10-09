@@ -202,6 +202,39 @@ async def _lists_match_files(conn: asyncpg.Connection) -> Result:
     return float(len(off)), not off, {"lists": len(rows), "mismatched": off}
 
 
+RESOLVED_SHARE = """
+    SELECT l.slug, count(*) AS total,
+           count(*) FILTER (WHERE e.resolve_status = 'resolved'
+                              AND e.release_group_id IS NOT NULL) AS resolved
+      FROM list l JOIN list_entry e USING (list_id)
+     WHERE e.review_status = 'accepted' AND {where}
+     GROUP BY l.slug
+"""
+
+
+async def _atlas_resolved(conn: asyncpg.Connection) -> Result:
+    """L2: atlas entries resolved to a release group. Passes before the atlas is loaded."""
+    row = await conn.fetchrow(RESOLVED_SHARE.format(where="l.slug = 'v_atlas'"))
+    if row is None:
+        return None, True, {"reason": "v_atlas not loaded"}
+    share = row["resolved"] / row["total"]
+    return (
+        round(share * 100, 2),
+        share >= 0.95,
+        {"total": row["total"], "resolved": row["resolved"]},
+    )
+
+
+async def _canon_resolved(conn: asyncpg.Connection) -> Result:
+    """L3: each canon list resolved; observed is the lowest list's share."""
+    rows = await conn.fetch(RESOLVED_SHARE.format(where="l.goal = 'canon'"))
+    if not rows:
+        return None, True, {"reason": "no canon list loaded"}
+    shares = {r["slug"]: round(100 * r["resolved"] / r["total"], 2) for r in rows}
+    low = min(shares.values())
+    return low, low >= 90, shares
+
+
 async def _overshoot(conn: asyncpg.Connection) -> Result:
     resolved, over = await conn.fetchrow(
         """SELECT count(*), count(*) FILTER (WHERE distinct_tracks > 1.5 * track_count)
@@ -248,6 +281,8 @@ CHECKS = (
     Check("show_support_unsplit", "= 0", _support_unsplit),
     Check("upcoming_headliners_resolved_pct", ">= 95", _headliners_resolved),
     Check("L1_list_entries_match_files", "= 0 mismatched", _lists_match_files),
+    Check("L2_atlas_resolved_pct", ">= 95", _atlas_resolved),
+    Check("L3_canon_lists_resolved_min_pct", ">= 90", _canon_resolved),
 )
 
 

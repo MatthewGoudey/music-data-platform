@@ -56,6 +56,10 @@ jobs:
         id: resolve
         if: always()
         run: uv run musicdata resolve
+      - name: lists resolve
+        id: lists_resolve
+        if: always()
+        run: uv run musicdata lists resolve --limit 300
       - name: derive
         id: derive
         if: always()
@@ -75,7 +79,7 @@ jobs:
           if [ -n "$NTFY_TOPIC" ]; then
             curl -fsS -H "Title: musicdata ${{ matrix.env }} sync failed" \
                  -H "Priority: high" \
-                 -d "ingest=${{ steps.ingest.outcome }} resolve=${{ steps.resolve.outcome }} derive=${{ steps.derive.outcome }} dq=${{ steps.dq.outcome }}
+                 -d "ingest=${{ steps.ingest.outcome }} resolve=${{ steps.resolve.outcome }} lists=${{ steps.lists_resolve.outcome }} derive=${{ steps.derive.outcome }} dq=${{ steps.dq.outcome }}
           ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
                  "https://ntfy.sh/$NTFY_TOPIC" || true
           fi
