@@ -147,5 +147,21 @@ def dq(
     raise typer.Exit(runs.run("dq", fn, trigger=_trigger()))
 
 
+lists_app = typer.Typer(no_args_is_help=True, help="Lists and the atlas (docs/QUEUE_SPEC.md).")
+app.add_typer(lists_app, name="lists")
+
+
+@lists_app.command("load")
+def lists_load(
+    root: str = typer.Option(".", help="Repository root holding seeds/."),
+) -> None:
+    """Load seeds/lists/_lists.csv, every list it names, and the atlas lanes and paths.
+    Idempotent; run from the laptop (the third-party lists are not on GitHub)."""
+    from musicdata.jobs import runs
+    from musicdata.lists.load import lists_load as load_job
+
+    raise typer.Exit(runs.run("lists", load_job(root=Path(root)), trigger=_trigger()))
+
+
 if __name__ == "__main__":  # pragma: no cover
     app()

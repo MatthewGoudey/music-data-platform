@@ -187,6 +187,21 @@ async def _headliners_resolved(conn: asyncpg.Connection) -> Result:
     return round(share * 100, 2), share >= 0.95, {"known": total, "resolved": resolved}
 
 
+async def _lists_match_files(conn: asyncpg.Connection) -> Result:
+    """L1 (QUEUE_SPEC.md section 14): every list holds as many entries as its file had
+    distinct rows at the last load. Passes trivially before any list is loaded."""
+    rows = await conn.fetch(
+        """SELECT l.slug, l.file_rows, count(e.entry_id) AS entries
+             FROM list l LEFT JOIN list_entry e USING (list_id)
+            WHERE l.file_rows IS NOT NULL
+            GROUP BY l.slug, l.file_rows"""
+    )
+    off = {
+        r["slug"]: [r["entries"], r["file_rows"]] for r in rows if r["entries"] != r["file_rows"]
+    }
+    return float(len(off)), not off, {"lists": len(rows), "mismatched": off}
+
+
 async def _overshoot(conn: asyncpg.Connection) -> Result:
     resolved, over = await conn.fetchrow(
         """SELECT count(*), count(*) FILTER (WHERE distinct_tracks > 1.5 * track_count)
@@ -232,6 +247,7 @@ CHECKS = (
     Check("show_headliner_residue", "= 0", _headliner_residue),
     Check("show_support_unsplit", "= 0", _support_unsplit),
     Check("upcoming_headliners_resolved_pct", ">= 95", _headliners_resolved),
+    Check("L1_list_entries_match_files", "= 0 mismatched", _lists_match_files),
 )
 
 
