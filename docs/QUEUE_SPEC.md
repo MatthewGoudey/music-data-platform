@@ -229,8 +229,14 @@ Input: profile, `n` (default 10, max 50), `shuffle` (default false), `seed` (opt
    the next candidate.
 6. **Determinism.** Same profile, same Chicago calendar day and same data give the same queue:
    seed the wildcard draw with `profile + date`. With `shuffle=true`, fill the new slots by a
-   weighted sample (weight = score) without replacement from the top `3 × new slots`
-   candidates, using `seed` or a fresh random seed. Always return the seed used.
+   weighted sample (weight = score) without replacement from the top `SHUFFLE_POOL` (200)
+   candidates, leaving out the release groups in `exclude`, using `seed` or a fresh random
+   seed; the wildcard is drawn with the same seed. Always return the seed used.
+7. **Shuffle again.** The page's Shuffle is a button pressed as often as Matt likes: each
+   press calls `/next?shuffle=true` with a fresh seed and `exclude` = every new album shown
+   since the last "Top picks", so no album repeats. When fewer than the new slots remain
+   outside `exclude`, the page clears it and starts over. "Top picks" returns to the
+   ranked queue.
 
 ## 9. Revisit pools (the only candidates that come from listening history)
 
@@ -280,7 +286,7 @@ they are, and the queue reads nothing from them. Revisit them with Matt after th
 
 | Endpoint | Purpose |
 | --- | --- |
-| `GET /next?profile=default&n=10&shuffle=false&seed=` | the queue as JSON (compact with `format=compact`): `profile`, `generated_at`, `seed`, `items[]` with `slot`, `release_group_id`, `artist`, `album`, `year`, `primary_type`, `score`, `status`, `tracks_heard`, `track_count`, `why[]` (list, position, priority, lane, zone, start_here), `pool` and `reason` for revisits, `tags`, `play_url` |
+| `GET /next?profile=default&n=10&shuffle=false&seed=&exclude=` | the queue as JSON (compact with `format=compact`; `exclude`: comma-separated release group ids kept out of the shuffled new slots): `profile`, `generated_at`, `seed`, `items[]` with `slot`, `release_group_id`, `artist`, `album`, `year`, `primary_type`, `score`, `status`, `tracks_heard`, `track_count`, `why[]` (list, position, priority, lane, zone, start_here), `pool` and `reason` for revisits, `tags`, `play_url` |
 | `GET /gaps?list=&goal=&lane=&zone=` | progress per list and per atlas lane: total, resolved, heard, started, unheard, % heard, needs matching |
 | `GET /lists`, `GET /lists/{slug}?status=unheard&limit=` | lists with counts; one list's entries with status |
 | `POST /lists` | create a list: `slug, name, goal, weight, ranked, default_priority` |
@@ -294,7 +300,8 @@ they are, and the queue reads nothing from them. Revisit them with Matt after th
 ## 13. The `/queue` page
 
 One phone-width column, albums only:
-1. **Profile switcher**: links for each profile; the current one highlighted; a Shuffle link.
+1. **Profile switcher**: links for each profile; the current one highlighted; a Shuffle
+   button that draws a fresh set on every press, and "Top picks" after a shuffle (section 8).
 2. **Up next**: the `/next` items for the profile. Each card: artist — album (year · type);
    a *why* line (`V Atlas · C1 Indie twang · Essential · start here` or
    `Rolling Stone #2 · 1001 Albums`); for revisits, the pool and reason
@@ -408,3 +415,7 @@ priority Essential. Matt has played other Ratboys records but no session of this
   - BestEverAlbums' overall chart (10,000, downloaded by Matt) joins as
     `besteveralbums_overall`: canon, weight 1.0, ranked; `scripts/convert_besteveralbums.py`
     turns a fresh download into the shared shape.
+- 2026-10-09 v4: Matt, after trying the page mockup. Shuffle is a button pressed as often as
+  he likes, each press drawing a fresh set: the weighted sample comes from the top 200
+  candidates (was the top `3 × new slots`), and `exclude` keeps albums already shown out
+  until the pool runs low (section 8 steps 6–7, section 12, section 13).
