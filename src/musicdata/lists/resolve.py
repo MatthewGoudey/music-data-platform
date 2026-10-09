@@ -28,7 +28,14 @@ from musicdata.clients.musicbrainz import MusicBrainzClient
 from musicdata.config import get_settings
 from musicdata.db import connection
 from musicdata.jobs.runs import JobFn, RunContext
-from musicdata.lists.match import Candidate, candidate, choose, group_key, near_year
+from musicdata.lists.match import (
+    Candidate,
+    candidate,
+    choose,
+    group_key,
+    lead_artist,
+    near_year,
+)
 from musicdata.lists.seed import base_album_key
 from musicdata.log import get_logger
 from musicdata.resolve.job import _ensure_artist
@@ -127,15 +134,17 @@ async def search(mb: MusicBrainzClient, album: Album) -> tuple[str, list[Candida
     """The first title form that finds candidates decides; returns the forms searched."""
     searched: list[str] = []
     status, chosen = "unresolved", []
-    for title in search_titles(album.raw_album):
-        searched.append(title)
-        hits = await mb.search_release_groups(
-            title, artist_name=album.raw_artist, limit=SEARCH_LIMIT
-        )
-        cands = [c for h in hits if (c := candidate(h, album.artist_key, album.key))]
-        status, chosen = choose(cands, album.year)
-        if status != "unresolved":
-            break
+    artists = [album.raw_artist]
+    if (lead := lead_artist(album.raw_artist)) and lead != album.raw_artist:
+        artists.append(lead)  # MusicBrainz may join the credit differently
+    for artist in artists:
+        for title in search_titles(album.raw_album):
+            searched.append(f"{artist} / {title}")
+            hits = await mb.search_release_groups(title, artist_name=artist, limit=SEARCH_LIMIT)
+            cands = [c for h in hits if (c := candidate(h, album.artist_key, album.key))]
+            status, chosen = choose(cands, album.year)
+            if status != "unresolved":
+                return status, chosen, searched
     return status, chosen, searched
 
 

@@ -14,6 +14,7 @@ One left → resolved; several → ambiguous (kept for review); none → unresol
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 
@@ -45,15 +46,44 @@ def group_key(title: str) -> str:
     return album_key(title) or title_key(title) or "untitled"
 
 
+_JOIN = re.compile(r"\s+(?:&|and|with|featuring|feat\.?|x)\s+|,\s+", re.IGNORECASE)
+
+
+def lead_artist(name: str) -> str:
+    """The first name in a joint credit ("Neil Young and Crazy Horse" → "Neil Young")."""
+    return _JOIN.split(name, maxsplit=1)[0].strip()
+
+
 def credit_matches(credits: list[dict], artist_key: str) -> bool:
-    """The credit names the artist: the whole credit, one credited artist, or the credit
-    led by the artist ("Prince and the Revolution" for "Prince")."""
+    """The credit names the artist: the whole credit, one credited artist, the credit led by
+    the artist ("Prince and the Revolution" for "Prince"), or the same lead artist joined
+    differently ("Neil Young with Crazy Horse" for "Neil Young and Crazy Horse")."""
     phrase = norm_key("".join(c.get("name", "") + c.get("joinphrase", "") for c in credits))
     if phrase == artist_key or phrase.startswith(artist_key + " "):
         return True
     names = {c.get("name", "") for c in credits}
     names |= {(c.get("artist") or {}).get(f, "") for c in credits for f in ("name", "sort-name")}
-    return any(norm_key(n) == artist_key for n in names if n)
+    if any(norm_key(n) == artist_key for n in names if n):
+        return True
+    lead = norm_key(lead_artist(artist_key))
+    first = credits[0] if credits else {}
+    return lead != artist_key and lead in {
+        norm_key(first.get("name", "")),
+        norm_key((first.get("artist") or {}).get("name", "")),
+    }
+
+
+def _title_keys(hit: dict) -> set[str]:
+    """The hit's title key, and the same without a leading artist name
+    ("Johnny Cash at San Quentin" → "at san quentin")."""
+    key = group_key(hit.get("title", ""))
+    out = {key}
+    for c in hit.get("artist-credit") or []:
+        for n in (c.get("name", ""), (c.get("artist") or {}).get("name", "")):
+            prefix = norm_key(n) + " "
+            if n and key.startswith(prefix):
+                out.add(key[len(prefix) :])
+    return out
 
 
 def candidate(hit: dict, artist_key: str, key: str) -> Candidate | None:
@@ -62,8 +92,8 @@ def candidate(hit: dict, artist_key: str, key: str) -> Candidate | None:
         return None
     if not credit_matches(hit.get("artist-credit") or [], artist_key):
         return None
-    hit_key = group_key(hit.get("title", ""))
-    if hit_key != key and not titles_match(hit_key, key):
+    keys = _title_keys(hit)
+    if key not in keys and not any(titles_match(k, key) for k in keys):
         return None
     first = (hit.get("first-release-date") or "")[:4]
     credit = (hit.get("artist-credit") or [{}])[0]
@@ -75,7 +105,7 @@ def candidate(hit: dict, artist_key: str, key: str) -> Candidate | None:
         secondary_types=tuple(hit.get("secondary-types") or ()),
         artist_mbid=(credit.get("artist") or {}).get("id"),
         artist_name=credit.get("name") or (credit.get("artist") or {}).get("name"),
-        exact=hit_key == key,
+        exact=group_key(hit.get("title", "")) == key,
     )
 
 

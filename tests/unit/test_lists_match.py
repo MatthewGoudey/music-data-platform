@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from musicdata.lists.match import candidate, choose, credit_matches
+from musicdata.lists.match import candidate, choose, credit_matches, lead_artist
 from musicdata.resolve.manual import pick
 
 
@@ -28,6 +28,21 @@ def test_the_credit_names_the_artist() -> None:
     assert credit_matches([_credit("Prince", " & "), _credit("The Revolution")], "prince")
     assert credit_matches([_credit("Lou Reed", " & "), _credit("Metallica")], "metallica")
     assert not credit_matches([_credit("Princess Chelsea")], "prince")
+
+
+def test_a_band_credit_joined_differently_still_matches() -> None:
+    credits = [_credit("Neil Young", " with "), _credit("Crazy Horse")]
+    assert credit_matches(credits, "neil young and crazy horse")
+    assert not credit_matches([_credit("Neil Diamond")], "neil young and crazy horse")
+    assert lead_artist("Merle Haggard & The Strangers") == "Merle Haggard"
+
+
+def test_a_title_that_repeats_the_artist_matches() -> None:
+    hit = _hit(
+        "sq", "Johnny Cash at San Quentin", "1969", secondary=("Live",), artist="Johnny Cash"
+    )
+    c = candidate(hit, "johnny cash", "at san quentin")
+    assert c is not None and not c.exact
 
 
 def test_a_hit_needs_the_type_artist_and_title() -> None:
