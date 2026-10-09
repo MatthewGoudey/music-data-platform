@@ -160,6 +160,22 @@ def dq(
     raise typer.Exit(runs.run("dq", fn, trigger=_trigger()))
 
 
+graph_app = typer.Typer(no_args_is_help=True, help="The music graph (docs/graph/GRAPH_SPEC.md).")
+app.add_typer(graph_app, name="graph")
+
+
+@graph_app.command("seed")
+def graph_seed_cmd(
+    root: str = typer.Option(".", help="Repository root holding seeds/graph/."),
+) -> None:
+    """Load predicates, the v_atlas map, its lanes and lane_parent claims, the lists, and an
+    album entity with map coordinates for every resolved atlas entry. Idempotent."""
+    from musicdata.graph.seed import graph_seed
+    from musicdata.jobs import runs
+
+    raise typer.Exit(runs.run("graph_seed", graph_seed(Path(root)), trigger=_trigger()))
+
+
 venues_app = typer.Typer(no_args_is_help=True, help="Venues (shows).")
 app.add_typer(venues_app, name="venues")
 
