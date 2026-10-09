@@ -46,6 +46,7 @@ class MusicBrainzClient:
             base_url=BASE_URL,
             headers={"User-Agent": user_agent, "Accept": "application/json"},
             timeout=60,
+            follow_redirects=True,  # a merged MBID answers 301 with its new MBID
         )
         self._min_interval = min_interval
         self._last = 0.0

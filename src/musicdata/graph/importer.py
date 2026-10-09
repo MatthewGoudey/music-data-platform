@@ -244,6 +244,8 @@ def graph_import(*, slice_name: str, limit: int | None = None, refresh: bool = F
                 notes: dict[str, object] = {}
                 try:
                     rg = await mb.release_group(t["mbid"])
+                    if rg["id"] != t["mbid"]:  # merged in MusicBrainz: browse by the new MBID
+                        notes["merged_into"] = rg["id"]
                     links = [(k, u, "musicbrainz") for k, u in url_links(rg)]
                     if not any(k == "wikipedia" for k, _, _ in links):
                         for _k, u, _ in [x for x in links if x[0] == "wikidata"][:1]:
@@ -251,7 +253,7 @@ def graph_import(*, slice_name: str, limit: int | None = None, refresh: bool = F
                             if enwiki:
                                 links.append(("wikipedia", enwiki, "wikidata"))
                     canon = choose_release(
-                        await mb.releases_of_group(t["mbid"]), rg.get("first-release-date")
+                        await mb.releases_of_group(rg["id"]), rg.get("first-release-date")
                     )
                     claims: list[ClaimSpec] = []
                     if canon is not None:

@@ -11,7 +11,9 @@ API = "https://www.wikidata.org/w/api.php"
 
 class WikidataClient:
     def __init__(self, *, user_agent: str, client: httpx.AsyncClient | None = None) -> None:
-        self._http = client or httpx.AsyncClient(headers={"User-Agent": user_agent}, timeout=30)
+        self._http = client or httpx.AsyncClient(
+            headers={"User-Agent": user_agent}, timeout=30, follow_redirects=True
+        )
         self.requests = 0
 
     async def __aenter__(self) -> WikidataClient:

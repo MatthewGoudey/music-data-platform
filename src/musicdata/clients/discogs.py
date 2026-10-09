@@ -46,7 +46,9 @@ class DiscogsClient:
         headers = {"User-Agent": user_agent}
         if token:
             headers["Authorization"] = f"Discogs token={token}"
-        self._http = client or httpx.AsyncClient(base_url=API, headers=headers, timeout=30)
+        self._http = client or httpx.AsyncClient(
+            base_url=API, headers=headers, timeout=30, follow_redirects=True
+        )
         self._interval = 1.05 if token else 2.5  # 60 or 25 a minute
         self._sleep = sleep
         self._last = 0.0
