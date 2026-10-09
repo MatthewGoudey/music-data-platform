@@ -236,12 +236,20 @@ async def queue_shows(pool: Pool):
         presales=False,
         sale_days=14,
         sort="score",
-        limit=SHOW_CARDS,
+        limit=SHOW_CARDS * 2,  # room for the duplicates dropped below
         format=Format.json,
     )
     from musicdata.shows.travel import travel_line
 
-    items = sorted(json.loads(response.body), key=lambda s: (s["show_date"], s.get("time") or ""))
+    best, seen = [], set()
+    for s in json.loads(response.body):  # best match first
+        # one listing per artist and night: sources sometimes name a venue two ways
+        # ("The Salt Shed" and "The Salt Shed Outdoors (Fairgrounds)")
+        night = (s["show_date"], (s.get("matched_artist") or "").casefold())
+        if night not in seen and len(best) < SHOW_CARDS:
+            seen.add(night)
+            best.append(s)
+    items = sorted(best, key=lambda s: (s["show_date"], s.get("time") or ""))
     for s in items:
         s["travel"] = travel_line(s.get("transit_min"), s.get("walk_min"))
     return render_object({"items": items})
