@@ -189,23 +189,13 @@ async def _drop_temp_show() -> None:
         await conn.close()
 
 
-def test_show_interest_from_the_page_and_the_api(client) -> None:
+def test_show_interest_through_the_api(client) -> None:
     show_id = asyncio.run(_temp_show())
     try:
-        form = client.post(
-            "/queue/interest?t=page-token",
-            data={"show_id": show_id, "status": "going"},
-            follow_redirects=False,
-        )
-        assert form.status_code == 303
         put = client.put(f"/shows/{show_id}/interest", json={"status": "interested"}, headers=AUTH)
         assert put.status_code == 200 and put.json()["status"] == "interested"
-        cleared = client.post(
-            "/queue/interest?t=page-token",
-            data={"show_id": show_id, "status": "none"},
-            follow_redirects=False,
-        )
-        assert cleared.status_code == 303
+        going = client.put(f"/shows/{show_id}/interest", json={"status": "going"}, headers=AUTH)
+        assert going.json()["status"] == "going"
         assert client.delete(f"/shows/{show_id}/interest", headers=AUTH).status_code == 204
         assert client.put("/shows/-1/interest", json={}, headers=AUTH).status_code == 404
     finally:

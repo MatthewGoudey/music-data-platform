@@ -2,8 +2,8 @@
 
 The page asks for a verdict on the albums most recently played through (full sessions,
 newest first, at most VERDICT_CARDS), each with the
-two-tap form: again / later / never and an optional one-line note. Below them, the
-upcoming Chicago shows that best match the listening, with interested / going. The page carries
+two-tap form: again / later / never and an optional one-line note. The page carries albums only:
+shows live in the API (GET /shows). The page carries
 QUEUE_PAGE_TOKEN in its URL (?t=...) so it opens from a phone bookmark without a header.
 The full queue (next ten for a profile, pin, snooze) arrives in Phase 4.
 """
@@ -21,7 +21,6 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from pydantic import BaseModel, Field
 
 from musicdata.api.deps import Pool, require_token
-from musicdata.api.routers.shows import SCORED
 from musicdata.config import Settings
 from musicdata.db import connection
 
@@ -103,24 +102,7 @@ PAGE = """<!doctype html>
 </style></head><body>
 <h1>Just finished: again, later, or never?</h1>
 {cards}
-<h1>Upcoming shows for you</h1>
-{shows}
 </body></html>"""
-
-SHOW_CARD = """<form class="card" method="post" action="/queue/interest?t={token}">
-  <div><strong>{artist}</strong></div>
-  <div>{lineup}</div>
-  <div class="meta">{when} · {venue}{status}</div>
-  <input type="hidden" name="show_id" value="{show_id}">
-  <div class="row">
-    <button name="status" value="interested">Interested</button>
-    <button name="status" value="going">Going</button>
-    <button name="status" value="none">Not for me</button>
-  </div>
-</form>"""
-
-SHOWS_ON_PAGE = 8
-SHOW_DAYS = 60
 
 CARD = """<form class="card" method="post" action="/queue/verdict?t={token}">
   <div><strong>{album}</strong></div>
@@ -186,35 +168,6 @@ async def queue_page(request: Request, pool: Pool, t: Annotated[str, Query()] = 
                                       AND v.created_at > s.started_at)
                  ORDER BY s.release_group_id, s.started_at DESC"""
         )
-        shows = await conn.fetch(
-            f"""SELECT s.show_id, v.name AS venue, best.clean_name AS artist,
-                       to_char(s.starts_at AT TIME ZONE 'America/Chicago',
-                               'Dy Mon FMDD, FMHH12:MI AM') AS starts,
-                       (SELECT string_agg(sa.clean_name, ', ' ORDER BY sa.position)
-                          FROM show_artist sa WHERE sa.show_id = s.show_id) AS lineup,
-                       i.status
-                  FROM show s
-                  JOIN venue v USING (venue_id)
-                  JOIN LATERAL ({SCORED} WHERE sa.show_id = s.show_id AND NOT s.non_artist
-                                ORDER BY score DESC LIMIT 1) best ON true
-                  LEFT JOIN show_interest i ON i.show_id = s.show_id
-                 WHERE s.starts_at > now() AND s.starts_at < now() + interval '{SHOW_DAYS} days'
-                   AND NOT s.cancelled
-                 ORDER BY best.score DESC
-                 LIMIT {SHOWS_ON_PAGE}"""
-        )
-    show_cards = "\n".join(
-        SHOW_CARD.format(
-            token=escape(t, quote=True),
-            artist=escape(r["artist"]),
-            lineup=escape(r["lineup"] or ""),
-            when=escape(r["starts"]),
-            venue=escape(r["venue"]),
-            status=f" · {escape(r['status'])}" if r["status"] else "",
-            show_id=r["show_id"],
-        )
-        for r in shows
-    )
     rows = sorted(rows, key=lambda r: r["started_at"], reverse=True)[:VERDICT_CARDS]
     cards = "\n".join(
         CARD.format(
@@ -236,35 +189,8 @@ async def queue_page(request: Request, pool: Pool, t: Annotated[str, Query()] = 
         for r in rows
     )
     return HTMLResponse(
-        PAGE.format(
-            cards=cards or "<p>No finished albums waiting for a verdict.</p>",
-            shows=show_cards or "<p>No upcoming shows by artists you listen to.</p>",
-        )
+        PAGE.format(cards=cards or "<p>No finished albums waiting for a verdict.</p>")
     )
-
-
-@router.post("/queue/interest")
-async def queue_interest(
-    request: Request,
-    pool: Pool,
-    show_id: Annotated[int, Form()],
-    status: Annotated[Literal["interested", "going", "none"], Form()],
-    t: Annotated[str, Query()] = "",
-):
-    """The shows section's form target: set or clear interest, then back to the page."""
-    _check_page_token(request, t)
-    async with connection(pool) as conn:
-        if status == "none":
-            await conn.execute("DELETE FROM show_interest WHERE show_id = $1", show_id)
-        elif await conn.fetchval("SELECT 1 FROM show WHERE show_id = $1", show_id):
-            await conn.execute(
-                """INSERT INTO show_interest (show_id, status) VALUES ($1, $2)
-                   ON CONFLICT (show_id) DO UPDATE
-                      SET status = EXCLUDED.status, updated_at = now()""",
-                show_id,
-                status,
-            )
-    return RedirectResponse(url=f"/queue?t={quote(t)}", status_code=303)
 
 
 @router.post("/queue/verdict")
