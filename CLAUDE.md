@@ -127,13 +127,17 @@ profile working, and on Matt's go the graph copied to prod with G1–G8 green; t
       `seeds/graph/predicates.csv`; `musicdata graph seed`; integration tests; applied to dev.
       Done 2026-10-09: dev seeded (17 predicates, 54 lanes, 162 lane_parent claims, 8 lists,
       2,838 atlas albums). `predicate."symmetric"` is quoted (a reserved word).
-- [ ] Block B — MusicBrainz, Discogs and Wikidata client methods; `graph import`, `graph link`;
+- [x] Block B — MusicBrainz, Discogs and Wikidata client methods; `graph import`, `graph link`;
       `--slice crazy_horse` in dev; coverage report per facet (milestone M1).
+      Done 2026-10-09: 169 of 181 baselined (12 no match), 3,735 claims; clients follow
+      MusicBrainz redirects (a merged release group answers 301).
 - [ ] Block C — `clients/firecrawl.py`, `graph fetch`, `graph facts`; one-page live test; the
-      slice in dev (estimate first; ask Matt above 1,500 credits).
-- [ ] Block D — `graph verify`, `graph batch …`, `graph report`; T1 fixtures built from
+      slice in dev (estimate first; ask Matt above 1,500 credits). Code done; the live test
+      waits for Matt's go on Firecrawl spend.
+- [x] Block D — `graph verify`, `graph batch …`, `graph report`; T1 fixtures built from
       `data/graph/`; T1 golden and negative tests pass; then `scripts/graph/` deleted; tell Matt
-      the skill can switch to `musicdata graph batch`.
+      the skill can switch to `musicdata graph batch`. Done 2026-10-09: G1–G8 in `dq`; the
+      slice's 3,735 baseline claims verified in dev, all accepted.
 - [ ] Block E — the 181 albums in batches of 25; reading questions to Matt; first-pass reader
       SUPPORTS ≥ 90% per predicate type; G1–G8 green in dev (M2).
 - [ ] Block F — graph API (spec section 10); Project instructions rows.
