@@ -119,16 +119,18 @@ class IdentityIndex:
             [p.norm_title for p in page],
             artist_ids,
             rg_ids,
+            [p.release_key or None for p in page],
         )
         targets = """
             WITH u AS (
                 SELECT DISTINCT *
                   FROM unnest($1::timestamptz[], $2::text[], $3::text[], $4::text[],
-                              $5::int[], $6::int[])
+                              $5::int[], $6::int[], $7::text[])
                        AS u(listened_at, artist_name, track_name, norm_title, artist_id,
-                            release_group_id)
+                            release_group_id, reported_key)
             )
             SELECT l.listen_id, l.listened_at, u.artist_id, u.release_group_id, u.norm_title,
+                   u.reported_key,
                    row_number() OVER (PARTITION BY l.listened_at, u.artist_id, u.norm_title
                                       ORDER BY l.listen_id) AS rn
               FROM u JOIN listen l ON l.listened_at = u.listened_at
@@ -151,12 +153,13 @@ class IdentityIndex:
             f"""WITH t AS ({targets})
                 UPDATE listen l
                    SET artist_id = t.artist_id, release_group_id = t.release_group_id,
-                       norm_title = t.norm_title
+                       norm_title = t.norm_title, reported_key = t.reported_key
                   FROM t
                  WHERE l.listen_id = t.listen_id AND t.rn = 1
                    AND (l.artist_id <> t.artist_id
                         OR l.release_group_id IS DISTINCT FROM t.release_group_id
-                        OR l.norm_title <> t.norm_title)""",
+                        OR l.norm_title <> t.norm_title
+                        OR l.reported_key IS DISTINCT FROM t.reported_key)""",
             *args,
         )
         return int(status.split()[-1])
@@ -358,10 +361,11 @@ class IdentityIndex:
         rows = await conn.fetch(
             """INSERT INTO listen (listened_at, artist_id, release_group_id, track_name, norm_title,
                                    artist_name, release_name, recording_mbid, release_mbid,
-                                   recording_msid, duration_ms, client, inserted_at)
+                                   recording_msid, duration_ms, client, inserted_at,
+                                   reported_key)
                SELECT * FROM unnest($1::timestamptz[], $2::int[], $3::int[], $4::text[], $5::text[],
                                     $6::text[], $7::text[], $8::uuid[], $9::uuid[], $10::uuid[],
-                                    $11::int[], $12::text[], $13::timestamptz[])
+                                    $11::int[], $12::text[], $13::timestamptz[], $14::text[])
                ON CONFLICT (listened_at, artist_id, norm_title) DO NOTHING
                RETURNING 1""",
             [p.listened_at for p in page],
@@ -377,5 +381,6 @@ class IdentityIndex:
             [p.duration_ms for p in page],
             [p.client for p in page],
             [p.inserted_at for p in page],
+            [p.release_key or None for p in page],
         )
         return len(rows)

@@ -54,3 +54,23 @@ switched between two groups with the same title. Three rules close the main caus
 Re-recordings named for their artist ("Red (Taylor's Version)") are different albums,
 so "<name>'s Version" stays in the album key. The acceptance checks report
 `listening_runs_split_across_groups` (not gated) to track what remains.
+
+## Amendment (2026-10-09): the album the player reported
+
+Matt played *At Folsom Prison* front to back on sixteen days, yet it never had a session:
+ListenBrainz maps each track on its own and filed that album's live recordings under
+thirteen groups (Classic Cash, American IV, Silver …). In dev, 830 reported album names
+pointed at groups other than their own. Two rules close it:
+
+- **Reported album first.** Every listen stores `reported_key`, the album key of the
+  release name its player reported (migration 0015). Derive moves a listen whose key
+  differs from its group's key to that album's home: the one group with the reported key
+  by the listen's artist, its current group's artist, or an album artist the name was
+  seen under (exactly one, or exactly one mapped among several). A listen at home is
+  exempt from the stray-track redirect, so the two rules never trade a listen back and
+  forth. Compilation plays now stay on the compilation instead of crediting the albums
+  their tracks came from.
+- **Looser track matching, never stored.** When a played track's exact title key matches
+  no track of the tracklist, sessions try `loose_title_keys`: numbered parts alike
+  ("Pt. I" = "Part 1"), a trailing "live at …" description dropped, and either half of a
+  " / " track. Stored keys do not change, so no rekey is needed.

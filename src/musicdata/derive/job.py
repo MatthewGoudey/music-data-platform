@@ -1,4 +1,5 @@
-"""The derive job: stray tracks moved, album sessions (incremental), the stat tables (rebuilt).
+"""The derive job: listens sent home to the album the player reported, stray tracks moved,
+album sessions (incremental), the stat tables (rebuilt).
 
 A release group is rebuilt when anything under it changed since the last derive run:
 new listens, a new tracklist, or new metadata (a merge bumps `updated_at`). `full`
@@ -14,6 +15,7 @@ import asyncpg
 
 from musicdata.db import connection
 from musicdata.derive.redirects import apply_redirects
+from musicdata.derive.reported import go_home
 from musicdata.derive.sessions import Play, Session, TrackRef, detect_sessions, eligible
 from musicdata.jobs.runs import JobFn, RunContext
 from musicdata.log import get_logger
@@ -113,23 +115,23 @@ async def _rebuild_chunk(conn: asyncpg.Connection, rg_ids: list[int]) -> int:
     ]
     tracks: dict[int, list[TrackRef]] = defaultdict(list)
     for r in await conn.fetch(
-        """SELECT release_group_id, position, recording_mbid::text, norm_title
+        """SELECT release_group_id, position, recording_mbid::text, norm_title, title
              FROM release_group_track WHERE release_group_id = ANY($1::int[])
             ORDER BY release_group_id, position""",
         ok,
     ):
         tracks[r["release_group_id"]].append(
-            TrackRef(r["position"], r["recording_mbid"], r["norm_title"])
+            TrackRef(r["position"], r["recording_mbid"], r["norm_title"], r["title"])
         )
     plays: dict[int, list[Play]] = defaultdict(list)
     for r in await conn.fetch(
-        """SELECT release_group_id, listened_at, recording_mbid::text, norm_title
+        """SELECT release_group_id, listened_at, recording_mbid::text, norm_title, track_name
              FROM listen WHERE release_group_id = ANY($1::int[])
             ORDER BY release_group_id, listened_at""",
         ok,
     ):
         plays[r["release_group_id"]].append(
-            Play(r["listened_at"], r["recording_mbid"], r["norm_title"])
+            Play(r["listened_at"], r["recording_mbid"], r["norm_title"], r["track_name"])
         )
     found: list[tuple[int, Session]] = [
         (rg, s) for rg in ok for s in detect_sessions(plays[rg], tracks[rg])
@@ -165,7 +167,8 @@ def derive(*, full: bool = False) -> JobFn:
     async def _run(ctx: RunContext) -> None:
         async with connection(ctx.pool) as conn:
             since = None if full else await conn.fetchval(LAST_RUN)
-            # Strays move first; the groups they touch count as changed below.
+            # Listens go home, then strays move; the groups they touch count as changed below.
+            home = await go_home(conn)
             moved = await apply_redirects(conn)
             if since is None:
                 rows = await conn.fetch("SELECT release_group_id FROM release_group")
@@ -192,6 +195,7 @@ def derive(*, full: bool = False) -> JobFn:
             sessions_written=written,
             sessions_full=totals["full"],
             sessions_partial=totals["partial"],
+            **home,
             **moved,
         )
 

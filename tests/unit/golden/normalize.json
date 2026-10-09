@@ -1,111 +1,519 @@
 {
   "_comment": "The contract for musicdata.identity. Change this file and the function together, on purpose. Cases come from the April 2026 audits (B2, B3, A1, A2, the tracklist audit) plus the classics.",
   "norm_key": [
-    ["The Beatles", "beatles"],
-    ["Beatles", "beatles"],
-    ["Björk", "bjork"],
-    ["Sigur Rós", "sigur ros"],
-    ["Motörhead", "motorhead"],
-    ["Beyoncé", "beyonce"],
-    ["Café Tacvba", "cafe tacvba"],
-    ["R.E.M.", "rem"],
-    ["REM", "rem"],
-    ["AC/DC", "ac dc"],
-    ["The The", "the"],
-    ["Jay-Z", "jay z"],
-    ["JAY Z", "jay z"],
-    ["!!!", "!!!"],
-    ["@", "@"],
-    ["¥$", "¥$"],
-    ["ぶだら", "ぶだら"],
-    ["艾福傑尼", "艾福傑尼"],
-    ["방탄소년단", "방탄소년단"],
-    ["稲垣次郎とソウル・メディア", "稲垣次郎とソウル メディア"],
-    ["Ms. Lauryn Hill", "ms lauryn hill"],
-    ["Angus & Julia Stone", "angus and julia stone"],
-    ["Angus and Julia Stone", "angus and julia stone"],
-    ["Simon & Garfunkel", "simon and garfunkel"],
-    ["Kendrick Lamar feat. SZA", "kendrick lamar"],
-    ["Kendrick Lamar ft SZA", "kendrick lamar"],
-    ["Kendrick Lamar (feat. SZA)", "kendrick lamar"],
-    ["Kendrick Lamar featuring SZA", "kendrick lamar"],
-    ["Ryan Davis & the Roadhouse Band", "ryan davis and the roadhouse band"],
-    ["$uicideboy$", "uicideboy"],
-    ["MF DOOM", "mf doom"],
-    ["Matchbox Twenty", "matchbox twenty"],
-    ["  Wilco  ", "wilco"],
-    ["Bonnie 'Prince' Billy", "bonnie prince billy"],
-    ["Bonnie ‘Prince’ Billy", "bonnie prince billy"],
-    ["Rage Against The Machine", "rage against the machine"],
-    ["Rage Against the Machine", "rage against the machine"],
-    ["", ""]
+    [
+      "The Beatles",
+      "beatles"
+    ],
+    [
+      "Beatles",
+      "beatles"
+    ],
+    [
+      "Björk",
+      "bjork"
+    ],
+    [
+      "Sigur Rós",
+      "sigur ros"
+    ],
+    [
+      "Motörhead",
+      "motorhead"
+    ],
+    [
+      "Beyoncé",
+      "beyonce"
+    ],
+    [
+      "Café Tacvba",
+      "cafe tacvba"
+    ],
+    [
+      "R.E.M.",
+      "rem"
+    ],
+    [
+      "REM",
+      "rem"
+    ],
+    [
+      "AC/DC",
+      "ac dc"
+    ],
+    [
+      "The The",
+      "the"
+    ],
+    [
+      "Jay-Z",
+      "jay z"
+    ],
+    [
+      "JAY Z",
+      "jay z"
+    ],
+    [
+      "!!!",
+      "!!!"
+    ],
+    [
+      "@",
+      "@"
+    ],
+    [
+      "¥$",
+      "¥$"
+    ],
+    [
+      "ぶだら",
+      "ぶだら"
+    ],
+    [
+      "艾福傑尼",
+      "艾福傑尼"
+    ],
+    [
+      "방탄소년단",
+      "방탄소년단"
+    ],
+    [
+      "稲垣次郎とソウル・メディア",
+      "稲垣次郎とソウル メディア"
+    ],
+    [
+      "Ms. Lauryn Hill",
+      "ms lauryn hill"
+    ],
+    [
+      "Angus & Julia Stone",
+      "angus and julia stone"
+    ],
+    [
+      "Angus and Julia Stone",
+      "angus and julia stone"
+    ],
+    [
+      "Simon & Garfunkel",
+      "simon and garfunkel"
+    ],
+    [
+      "Kendrick Lamar feat. SZA",
+      "kendrick lamar"
+    ],
+    [
+      "Kendrick Lamar ft SZA",
+      "kendrick lamar"
+    ],
+    [
+      "Kendrick Lamar (feat. SZA)",
+      "kendrick lamar"
+    ],
+    [
+      "Kendrick Lamar featuring SZA",
+      "kendrick lamar"
+    ],
+    [
+      "Ryan Davis & the Roadhouse Band",
+      "ryan davis and the roadhouse band"
+    ],
+    [
+      "$uicideboy$",
+      "uicideboy"
+    ],
+    [
+      "MF DOOM",
+      "mf doom"
+    ],
+    [
+      "Matchbox Twenty",
+      "matchbox twenty"
+    ],
+    [
+      "  Wilco  ",
+      "wilco"
+    ],
+    [
+      "Bonnie 'Prince' Billy",
+      "bonnie prince billy"
+    ],
+    [
+      "Bonnie ‘Prince’ Billy",
+      "bonnie prince billy"
+    ],
+    [
+      "Rage Against The Machine",
+      "rage against the machine"
+    ],
+    [
+      "Rage Against the Machine",
+      "rage against the machine"
+    ],
+    [
+      "",
+      ""
+    ]
   ],
   "album_key": [
-    ["London Calling", "london calling"],
-    ["London Calling (Remastered)", "london calling"],
-    ["Give Up", "give up"],
-    ["Give Up (Deluxe 10th Anniversary Edition)", "give up"],
-    ["Dreamland - Real Life Edition", "dreamland"],
-    ["Nevermind (Deluxe Edition)", "nevermind"],
-    ["Kind of Blue (Legacy Edition)", "kind of blue"],
-    ["Acid Rap (10th Anniversary - Complete Edition)", "acid rap"],
-    ["Their Greatest Hits 1971-1975 (2013 Remaster)", "their greatest hits 1971 1975"],
-    ["Cage The Elephant (Expanded Edition)", "cage the elephant"],
-    ["Operation: Doomsday (Complete)", "operation doomsday"],
-    ["\"Awaken, My Love!\"", "awaken my love"],
-    ["good kid, m.A.A.d city", "good kid maad city"],
-    ["good kid m.A.A.d city", "good kid maad city"],
-    ["Hippie Castle EP", "hippie castle ep"],
-    ["Lately EP", "lately ep"],
-    ["Lately", "lately"],
-    ["Blonde on Blonde", "blonde on blonde"],
-    ["The Wall", "wall"],
-    ["EarthBound (Original Soundtrack)", "earthbound original soundtrack"],
-    ["Assassin's Creed 4: Black Flag (Sea Shanty Edition) [Original Game Soundtrack]", "assassins creed 4 black flag original game soundtrack"],
-    ["Beautiful Strangers b/w No Place to Fall", "beautiful strangers b w no place to fall"],
-    ["I'm Wide Awake, It's Morning", "im wide awake its morning"],
-    ["7th or St. Tammany", "7th or st tammany"],
-    ["Red (Taylor's Version)", "red taylors version"],
-    ["Fearless (Taylor’s Version)", "fearless taylors version"],
-    ["Red (Deluxe Version)", "red"],
-    ["", ""]
+    [
+      "London Calling",
+      "london calling"
+    ],
+    [
+      "London Calling (Remastered)",
+      "london calling"
+    ],
+    [
+      "Give Up",
+      "give up"
+    ],
+    [
+      "Give Up (Deluxe 10th Anniversary Edition)",
+      "give up"
+    ],
+    [
+      "Dreamland - Real Life Edition",
+      "dreamland"
+    ],
+    [
+      "Nevermind (Deluxe Edition)",
+      "nevermind"
+    ],
+    [
+      "Kind of Blue (Legacy Edition)",
+      "kind of blue"
+    ],
+    [
+      "Acid Rap (10th Anniversary - Complete Edition)",
+      "acid rap"
+    ],
+    [
+      "Their Greatest Hits 1971-1975 (2013 Remaster)",
+      "their greatest hits 1971 1975"
+    ],
+    [
+      "Cage The Elephant (Expanded Edition)",
+      "cage the elephant"
+    ],
+    [
+      "Operation: Doomsday (Complete)",
+      "operation doomsday"
+    ],
+    [
+      "\"Awaken, My Love!\"",
+      "awaken my love"
+    ],
+    [
+      "good kid, m.A.A.d city",
+      "good kid maad city"
+    ],
+    [
+      "good kid m.A.A.d city",
+      "good kid maad city"
+    ],
+    [
+      "Hippie Castle EP",
+      "hippie castle ep"
+    ],
+    [
+      "Lately EP",
+      "lately ep"
+    ],
+    [
+      "Lately",
+      "lately"
+    ],
+    [
+      "Blonde on Blonde",
+      "blonde on blonde"
+    ],
+    [
+      "The Wall",
+      "wall"
+    ],
+    [
+      "EarthBound (Original Soundtrack)",
+      "earthbound original soundtrack"
+    ],
+    [
+      "Assassin's Creed 4: Black Flag (Sea Shanty Edition) [Original Game Soundtrack]",
+      "assassins creed 4 black flag original game soundtrack"
+    ],
+    [
+      "Beautiful Strangers b/w No Place to Fall",
+      "beautiful strangers b w no place to fall"
+    ],
+    [
+      "I'm Wide Awake, It's Morning",
+      "im wide awake its morning"
+    ],
+    [
+      "7th or St. Tammany",
+      "7th or st tammany"
+    ],
+    [
+      "Red (Taylor's Version)",
+      "red taylors version"
+    ],
+    [
+      "Fearless (Taylor’s Version)",
+      "fearless taylors version"
+    ],
+    [
+      "Red (Deluxe Version)",
+      "red"
+    ],
+    [
+      "",
+      ""
+    ]
   ],
   "title_key": [
-    ["Starálfur", "staralfur"],
-    ["Heroes - 2017 Remaster", "heroes"],
-    ["Wonderwall (Remastered)", "wonderwall"],
-    ["Here Comes the Sun - Remastered 2009", "here comes the sun"],
-    ["Here Comes the Sun - 2019 Mix", "here comes the sun 2019 mix"],
-    ["Love Will Tear Us Apart - Live", "love will tear us apart live"],
-    ["We Are Never Ever Getting Back Together (Taylor's Version)", "we are never ever getting back together taylors version"],
-    ["BLUE AND MOODY MUSIC (WENDY'S VERSION)", "blue and moody music wendys version"],
-    ["Smile (Single Version)", "smile"],
-    ["Kiss Me More (feat. SZA)", "kiss me more"],
-    ["All the Stars (with SZA)", "all the stars with sza"],
-    ["The Times They Are A-Changin'", "times they are a changin"],
-    ["Hey Ya!", "hey ya"],
-    ["Mono", "mono"],
-    ["Doo Wop (That Thing)", "doo wop that thing"],
-    ["Señorita", "senorita"],
-    ["夜に駆ける", "夜に駆ける"],
-    ["!!!", "!!!"]
+    [
+      "Starálfur",
+      "staralfur"
+    ],
+    [
+      "Heroes - 2017 Remaster",
+      "heroes"
+    ],
+    [
+      "Wonderwall (Remastered)",
+      "wonderwall"
+    ],
+    [
+      "Here Comes the Sun - Remastered 2009",
+      "here comes the sun"
+    ],
+    [
+      "Here Comes the Sun - 2019 Mix",
+      "here comes the sun 2019 mix"
+    ],
+    [
+      "Love Will Tear Us Apart - Live",
+      "love will tear us apart live"
+    ],
+    [
+      "We Are Never Ever Getting Back Together (Taylor's Version)",
+      "we are never ever getting back together taylors version"
+    ],
+    [
+      "BLUE AND MOODY MUSIC (WENDY'S VERSION)",
+      "blue and moody music wendys version"
+    ],
+    [
+      "Smile (Single Version)",
+      "smile"
+    ],
+    [
+      "Kiss Me More (feat. SZA)",
+      "kiss me more"
+    ],
+    [
+      "All the Stars (with SZA)",
+      "all the stars with sza"
+    ],
+    [
+      "The Times They Are A-Changin'",
+      "times they are a changin"
+    ],
+    [
+      "Hey Ya!",
+      "hey ya"
+    ],
+    [
+      "Mono",
+      "mono"
+    ],
+    [
+      "Doo Wop (That Thing)",
+      "doo wop that thing"
+    ],
+    [
+      "Señorita",
+      "senorita"
+    ],
+    [
+      "夜に駆ける",
+      "夜に駆ける"
+    ],
+    [
+      "!!!",
+      "!!!"
+    ]
   ],
   "primary_artist": [
-    [["Kendrick Lamar, U2", ["Kendrick Lamar", "U2"], null], "Kendrick Lamar"],
-    [["Kendrick Lamar, U2", null, "Kendrick Lamar"], "Kendrick Lamar"],
-    [["Rav, Kill Bill: The Rapper, Scuare", null, "Rav"], "Rav"],
-    [["Tyler, The Creator", ["Tyler, The Creator"], null], "Tyler, The Creator"],
-    [["Tyler, The Creator", null, "Tyler, The Creator"], "Tyler, The Creator"],
-    [["Earth, Wind & Fire", null, null], "Earth, Wind & Fire"],
-    [["Crosby, Stills, Nash & Young", null, "Crosby, Stills, Nash & Young"], "Crosby, Stills, Nash & Young"],
-    [["Kendrick Lamar feat. SZA", null, null], "Kendrick Lamar"],
-    [["Mello Music Group, Open Mike Eagle", null, "Various Artists"], "Mello Music Group, Open Mike Eagle"],
-    [["Wilco", [], null], "Wilco"]
+    [
+      [
+        "Kendrick Lamar, U2",
+        [
+          "Kendrick Lamar",
+          "U2"
+        ],
+        null
+      ],
+      "Kendrick Lamar"
+    ],
+    [
+      [
+        "Kendrick Lamar, U2",
+        null,
+        "Kendrick Lamar"
+      ],
+      "Kendrick Lamar"
+    ],
+    [
+      [
+        "Rav, Kill Bill: The Rapper, Scuare",
+        null,
+        "Rav"
+      ],
+      "Rav"
+    ],
+    [
+      [
+        "Tyler, The Creator",
+        [
+          "Tyler, The Creator"
+        ],
+        null
+      ],
+      "Tyler, The Creator"
+    ],
+    [
+      [
+        "Tyler, The Creator",
+        null,
+        "Tyler, The Creator"
+      ],
+      "Tyler, The Creator"
+    ],
+    [
+      [
+        "Earth, Wind & Fire",
+        null,
+        null
+      ],
+      "Earth, Wind & Fire"
+    ],
+    [
+      [
+        "Crosby, Stills, Nash & Young",
+        null,
+        "Crosby, Stills, Nash & Young"
+      ],
+      "Crosby, Stills, Nash & Young"
+    ],
+    [
+      [
+        "Kendrick Lamar feat. SZA",
+        null,
+        null
+      ],
+      "Kendrick Lamar"
+    ],
+    [
+      [
+        "Mello Music Group, Open Mike Eagle",
+        null,
+        "Various Artists"
+      ],
+      "Mello Music Group, Open Mike Eagle"
+    ],
+    [
+      [
+        "Wilco",
+        [],
+        null
+      ],
+      "Wilco"
+    ]
   ],
   "split_featured": [
-    ["Kendrick Lamar feat. SZA", ["Kendrick Lamar", ["SZA"]]],
-    ["Kendrick Lamar (feat. SZA & Baby Keem)", ["Kendrick Lamar", ["SZA", "Baby Keem"]]],
-    ["Angus & Julia Stone", ["Angus & Julia Stone", []]],
-    ["Wilco", ["Wilco", []]]
+    [
+      "Kendrick Lamar feat. SZA",
+      [
+        "Kendrick Lamar",
+        [
+          "SZA"
+        ]
+      ]
+    ],
+    [
+      "Kendrick Lamar (feat. SZA & Baby Keem)",
+      [
+        "Kendrick Lamar",
+        [
+          "SZA",
+          "Baby Keem"
+        ]
+      ]
+    ],
+    [
+      "Angus & Julia Stone",
+      [
+        "Angus & Julia Stone",
+        []
+      ]
+    ],
+    [
+      "Wilco",
+      [
+        "Wilco",
+        []
+      ]
+    ]
+  ],
+  "loose_title_keys": [
+    [
+      "A Love Supreme, Pt. I - Acknowledgement",
+      [
+        "a love supreme part 1 acknowledgement"
+      ]
+    ],
+    [
+      "A Love Supreme, Part 1: Acknowledgement",
+      [
+        "a love supreme part 1 acknowledgement"
+      ]
+    ],
+    [
+      "A Love Supreme, Part 3: Pursuance / A Love Supreme, Part 4: Psalm",
+      [
+        "a love supreme part 3 pursuance a love supreme part 4 psalm",
+        "a love supreme part 3 pursuance",
+        "a love supreme part 4 psalm"
+      ]
+    ],
+    [
+      "Folsom Prison Blues (Live at Folsom State Prison, Folsom, CA (1st Show) - January 1968)",
+      [
+        "folsom prison blues live at folsom state prison folsom ca 1st show january 1968",
+        "folsom prison blues"
+      ]
+    ],
+    [
+      "We Live in a Political World",
+      [
+        "we live in a political world",
+        "we"
+      ]
+    ],
+    [
+      "Heroes - 2017 Remaster",
+      [
+        "heroes"
+      ]
+    ],
+    [
+      "Vol. II",
+      [
+        "vol 2"
+      ]
+    ],
+    [
+      "",
+      []
+    ]
   ]
 }

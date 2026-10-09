@@ -3,8 +3,9 @@
 - One release group at a time; listens in time order; a gap over 30 minutes starts a
   new session.
 - A listen counts toward a track of the standard tracklist when its recording MBID or
-  its normalized title matches that track. Bonus tracks match nothing: they stay real
-  listens but never advance completion.
+  its normalized title matches that track, or failing both, one of the loose title keys
+  ("Pt. I" = "Part 1", no trailing "live at …", either half of a " / " track). Bonus
+  tracks match nothing: they stay real listens but never advance completion.
 - completion = distinct tracklist positions heard ÷ track count, capped at 1.0.
 - full at ≥ 0.8; partial at ≥ 0.25 with at least 3 tracks; anything less is no session.
 - Only albums and EPs with a resolved tracklist that are neither compilations nor box
@@ -15,6 +16,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+
+from musicdata.identity import loose_title_keys
 
 GAP = timedelta(minutes=30)
 FULL_AT = 0.8
@@ -28,6 +31,7 @@ class Play:
     listened_at: datetime
     recording_mbid: str | None
     norm_title: str
+    track_name: str | None = None
 
 
 @dataclass(frozen=True)
@@ -35,6 +39,7 @@ class TrackRef:
     position: int
     recording_mbid: str | None
     norm_title: str
+    title: str | None = None
 
 
 @dataclass(frozen=True)
@@ -63,15 +68,26 @@ class _Matcher:
     def __init__(self, tracks: list[TrackRef]) -> None:
         self.by_mbid: dict[str, int] = {}
         self.by_title: dict[str, int] = {}
+        self.by_loose: dict[str, int] = {}
         for t in tracks:
             if t.recording_mbid:
                 self.by_mbid.setdefault(t.recording_mbid, t.position)
             self.by_title.setdefault(t.norm_title, t.position)
+        for t in tracks:  # after every exact title, so a loose key never shadows one
+            for k in loose_title_keys(t.title or t.norm_title):
+                self.by_loose.setdefault(k, t.position)
 
     def position(self, play: Play) -> int | None:
         if play.recording_mbid and play.recording_mbid in self.by_mbid:
             return self.by_mbid[play.recording_mbid]
-        return self.by_title.get(play.norm_title)
+        if play.norm_title in self.by_title:
+            return self.by_title[play.norm_title]
+        for k in sorted(
+            loose_title_keys(play.track_name or play.norm_title), key=len, reverse=True
+        ):
+            if k in self.by_loose:
+                return self.by_loose[k]
+        return None
 
 
 def _session(plays: list[Play], matcher: _Matcher, track_count: int) -> Session | None:

@@ -66,3 +66,40 @@ def test_eligibility() -> None:
     assert not eligible("Album", False, True, 40)
     assert not eligible("Album", False, False, None)
     assert not eligible(None, False, False, 10)
+
+
+def test_live_takes_and_roman_parts_match_the_tracklist() -> None:
+    folsom = [
+        TrackRef(1, "lp-1", "folsom prison blues", "Folsom Prison Blues"),
+        TrackRef(2, "lp-2", "dark as dungeon", "Dark as Dungeon"),
+        TrackRef(3, "lp-3", "cocaine blues", "Cocaine Blues"),
+    ]
+    live = " (Live at Folsom State Prison, Folsom, CA (1st Show) - January 1968)"
+    plays = [
+        Play(T0 + timedelta(minutes=4 * n), f"legacy-{n}", "", title + live)
+        for n, title in enumerate(["Folsom Prison Blues", "Dark as Dungeon", "Cocaine Blues"])
+    ]
+    [s] = detect_sessions(plays, folsom)
+    assert (s.session_type, s.tracks_played) == ("full", 3)
+
+
+def test_a_joined_track_answers_to_either_half() -> None:
+    supreme = [
+        TrackRef(
+            1,
+            None,
+            "a love supreme part 1 acknowledgement",
+            "A Love Supreme, Part 1: Acknowledgement",
+        ),
+        TrackRef(2, None, "a love supreme part 2 resolution", "A Love Supreme, Part 2: Resolution"),
+        TrackRef(3, None, "x", "A Love Supreme, Part 3: Pursuance / A Love Supreme, Part 4: Psalm"),
+    ]
+    names = [
+        "A Love Supreme, Pt. I - Acknowledgement",
+        "A Love Supreme, Pt. II - Resolution",
+        "A Love Supreme, Pt. III - Pursuance",
+        "A Love Supreme, Pt. IV - Psalm",
+    ]
+    plays = [Play(T0 + timedelta(minutes=8 * n), None, "", name) for n, name in enumerate(names)]
+    [s] = detect_sessions(plays, supreme)
+    assert (s.session_type, s.tracks_played, s.completion) == ("full", 3, 1.0)

@@ -10,7 +10,8 @@ are on album D, it is on another group S, and
 
 Each (recording, S) → D is learned once into release_group_redirect, then every listen
 of that recording on S moves to D, including ones that arrive later. Both groups are
-marked changed, so derive rebuilds their sessions.
+marked changed, so derive rebuilds their sessions. A listen on the album its player
+reported (`reported_key` equal to S's key) is at home and never moves (derive/reported.py).
 """
 
 from __future__ import annotations
@@ -32,7 +33,7 @@ ON_TRACKLIST = """
 
 LEARN = f"""
     WITH r AS (
-        SELECT listened_at, release_group_id, recording_mbid, norm_title,
+        SELECT listened_at, release_group_id, recording_mbid, norm_title, reported_key,
                lag(release_group_id) OVER w AS prev_rg,
                lead(release_group_id) OVER w AS next_rg,
                listened_at - lag(listened_at) OVER w AS gap_before,
@@ -44,6 +45,8 @@ LEARN = f"""
                count(*) AS evidence
           FROM r
          WHERE r.recording_mbid IS NOT NULL
+           AND r.reported_key IS DISTINCT FROM
+               (SELECT g.norm_key FROM release_group g WHERE g.release_group_id = r.release_group_id)
            AND r.prev_rg = r.next_rg AND r.prev_rg <> r.release_group_id
            AND r.gap_before < interval '30 minutes' AND r.gap_after < interval '30 minutes'
            AND EXISTS {ELIGIBLE.format(rg="r.prev_rg")}
@@ -66,6 +69,8 @@ APPLY = """
           FROM release_group_redirect d
          WHERE l.recording_mbid = d.recording_mbid
            AND l.release_group_id = d.from_release_group_id
+           AND l.reported_key IS DISTINCT FROM
+               (SELECT g.norm_key FROM release_group g WHERE g.release_group_id = l.release_group_id)
         RETURNING d.from_release_group_id AS a, d.to_release_group_id AS b
     ), touched AS (
         SELECT a AS rg FROM moved UNION SELECT b FROM moved

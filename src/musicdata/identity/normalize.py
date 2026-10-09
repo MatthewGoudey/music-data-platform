@@ -29,6 +29,10 @@ title_key(title): the key for a track title, used when a listen has no recording
   The same edition stripping as album_key ("Heroes - 2017 Remaster" → heroes), then
   the featured-artist cut as in norm_key ("Kiss Me More (feat. SZA)" → kiss me more).
   "with X" stays: it is often part of the official title.
+
+loose_title_keys(title): extra keys tried only when a played track's exact title key
+  matches no track of the tracklist: numbered parts alike ("Pt. I" = "Part 1"), a trailing
+  "live at …" description dropped, and each half of a " / " track. Never stored.
 """
 
 from __future__ import annotations
@@ -145,6 +149,43 @@ def title_key(title: str) -> str:
     if title is None:
         return ""
     return _key(_strip_editions(title), cut_featured=True)
+
+
+_ROMAN = {
+    "i": 1, "ii": 2, "iii": 3, "iv": 4, "v": 5, "vi": 6, "vii": 7, "viii": 8, "ix": 9, "x": 10,
+}  # fmt: skip
+_NUMBERED = re.compile(r"\b(part|pt|vol|volume|chapter|act|movement|no)\s+([ivx]+|\d+)\b")
+_LIVE_TAIL = re.compile(r"\s+live\s+(?:at|in|from|on)\s.*$")
+
+
+def _numbered(match: re.Match[str]) -> str:
+    word = "part" if match.group(1) in ("part", "pt") else match.group(1)
+    n = match.group(2)
+    return f"{word} {_ROMAN.get(n, n)}"
+
+
+def loose_title_keys(title: str) -> set[str]:
+    """Looser keys for matching a played track to a tracklist when the exact title key
+    fails (never stored, never an identity):
+
+    - numbered parts read alike: "Pt. I" = "Part 1" = "part i";
+    - a trailing live-recording description goes: "Folsom Prison Blues (Live at Folsom
+      State Prison, Folsom, CA (1st Show) - January 1968)" → "folsom prison blues";
+    - a track MusicBrainz joins with " / " also answers to each half ("Part 3: Pursuance
+      / Part 4: Psalm").
+    """
+    if not title:
+        return set()
+    parts = [title, *(p for p in str(title).split(" / ") if " / " in str(title))]
+    out: set[str] = set()
+    for part in parts:
+        key = _NUMBERED.sub(_numbered, title_key(part))
+        if not key:
+            continue
+        out.add(key)
+        if stripped := _LIVE_TAIL.sub("", key).strip():
+            out.add(stripped)
+    return out
 
 
 def primary_artist(

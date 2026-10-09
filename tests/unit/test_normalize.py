@@ -11,7 +11,14 @@ from pathlib import Path
 
 import pytest
 
-from musicdata.identity import album_key, norm_key, primary_artist, split_featured, title_key
+from musicdata.identity import (
+    album_key,
+    loose_title_keys,
+    norm_key,
+    primary_artist,
+    split_featured,
+    title_key,
+)
 
 GOLDEN = json.loads((Path(__file__).parent / "golden" / "normalize.json").read_text("utf-8"))
 
@@ -51,3 +58,10 @@ def test_keys_are_idempotent() -> None:
     for raw, _ in GOLDEN["norm_key"]:
         k = norm_key(raw)
         assert norm_key(k) == k or raw == "", raw
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"), GOLDEN["loose_title_keys"], ids=lambda v: repr(v)[:40]
+)
+def test_loose_title_keys(raw: str, expected: list) -> None:
+    assert loose_title_keys(raw) == set(expected)
