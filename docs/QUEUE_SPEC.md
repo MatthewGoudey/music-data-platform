@@ -443,3 +443,6 @@ priority Essential. Matt has played other Ratboys records but no session of this
   section is "Not on sale yet": shows up to a year out by artists he listens to whose public
   on-sale is still ahead (no 30-day window), each with any presale before it and the public
   on-sale time, soonest first. On-sale times come from Ticketmaster.
+- 2026-10-09 v10: Matt asked for more shows in both lists. Ticketmaster is read a year ahead
+  (was 180 days), "Not on sale yet" holds up to 50 shows, and "Shows you might like" up to
+  50 over the next 180 days.

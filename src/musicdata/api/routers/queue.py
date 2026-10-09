@@ -172,8 +172,8 @@ async def check_listens_status(pool: Pool):
 
 RECENT_DAYS = 30
 RECENT_CARDS = 8
-SHOW_DAYS = 90
-SHOW_CARDS = 25
+SHOW_DAYS = 180
+SHOW_CARDS = 50
 
 
 @router.get("/queue/recent", dependencies=[Depends(page_or_bearer)])
@@ -256,7 +256,7 @@ async def queue_shows(pool: Pool):
 
 
 SALE_SHOW_DAYS = 365  # far-out arena dates included
-SALE_CARDS = 25
+SALE_CARDS = 50
 
 
 @router.get("/queue/sales", dependencies=[Depends(page_or_bearer)])

@@ -16,7 +16,7 @@ from musicdata.shows.parse import Show, parse_tm_events
 
 BASE_URL = "https://app.ticketmaster.com"
 WINDOW_DAYS = 30
-HORIZON_DAYS = 180
+HORIZON_DAYS = 365
 PAGE_SIZE = 200
 
 
