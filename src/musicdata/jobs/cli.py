@@ -163,6 +163,23 @@ def lists_load(
     raise typer.Exit(runs.run("lists", load_job(root=Path(root)), trigger=_trigger()))
 
 
+@lists_app.command("copy-resolutions")
+def lists_copy_resolutions(
+    source: str = typer.Option(..., help="Environment to copy from, e.g. dev (.env.<source>)."),
+) -> None:
+    """Settle pending entries from another environment's matches (by MusicBrainz ID).
+    Run from the laptop: `musicdata --env prod lists copy-resolutions --source dev`."""
+    from dotenv import dotenv_values
+
+    from musicdata.jobs import runs
+    from musicdata.lists.copy import lists_copy
+
+    url = dotenv_values(Path(f".env.{source}")).get("DATABASE_URL")
+    if not url:
+        raise typer.BadParameter(f"no DATABASE_URL in .env.{source}")
+    raise typer.Exit(runs.run("lists_copy", lists_copy(url), trigger=_trigger()))
+
+
 @lists_app.command("resolve")
 def lists_resolve(
     limit: int = typer.Option(300, help="Max MusicBrainz searches this run (1 req/s each)."),

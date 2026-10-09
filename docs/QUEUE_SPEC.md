@@ -318,7 +318,7 @@ Add to `musicdata dq` (stored in `dq_result`, shown in `/ops/status`):
 | --- | --- |
 | L1 every list in `_lists.csv` has as many entries as data rows in its file (after in-file duplicates) | exact |
 | L2 `v_atlas` entries resolved | ≥ 95% |
-| L3 each canon list resolved | ≥ 90% |
+| L3 each canon list resolved | ≥ 90% (`claude_canon` ≥ 80%) |
 | L4 heard count from `list_entry_status` equals heard count recomputed from `album_session` | exact |
 | L5 atlas heard share (sanity against the 2026-10-07 name-match estimate of 9%) | between 5% and 40% |
 
@@ -425,3 +425,7 @@ priority Essential. Matt has played other Ratboys records but no session of this
   `unsnooze` and `unhide` reverse the others). The page reads `GET /queue/data` and acts
   through `POST /queue/{release_group_id}/{action}`, with the page token or the API token.
   The Tag button arrives with Block F.
+- 2026-10-09 v6: Matt. Check L3's bar for `claude_canon` is 80%: much of that list was
+  written by an AI for the old pipeline, with some songs named as albums and some names
+  invented for obscure genres, so about a sixth of it cannot resolve (dev: 83.1%). The
+  other canon lists keep 90%.

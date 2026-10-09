@@ -225,14 +225,20 @@ async def _atlas_resolved(conn: asyncpg.Connection) -> Result:
     )
 
 
+CANON_RESOLVED_BAR = 90
+# Lists with a lower bar (QUEUE_SPEC v6): the old pipeline's AI-written canon names some
+# songs as albums and some albums that do not exist, so a tenth of it can never resolve.
+CANON_RESOLVED_BARS = {"claude_canon": 80}
+
+
 async def _canon_resolved(conn: asyncpg.Connection) -> Result:
-    """L3: each canon list resolved; observed is the lowest list's share."""
+    """L3: each canon list resolved to its bar; observed is the lowest list's share."""
     rows = await conn.fetch(RESOLVED_SHARE.format(where="l.goal = 'canon'"))
     if not rows:
         return None, True, {"reason": "no canon list loaded"}
     shares = {r["slug"]: round(100 * r["resolved"] / r["total"], 2) for r in rows}
-    low = min(shares.values())
-    return low, low >= 90, shares
+    below = {s: v for s, v in shares.items() if v < CANON_RESOLVED_BARS.get(s, CANON_RESOLVED_BAR)}
+    return min(shares.values()), not below, {"shares": shares, "below_bar": below}
 
 
 async def _heard_matches_sessions(conn: asyncpg.Connection) -> Result:
@@ -309,7 +315,7 @@ CHECKS = (
     Check("upcoming_headliners_resolved_pct", ">= 95", _headliners_resolved),
     Check("L1_list_entries_match_files", "= 0 mismatched", _lists_match_files),
     Check("L2_atlas_resolved_pct", ">= 95", _atlas_resolved),
-    Check("L3_canon_lists_resolved_min_pct", ">= 90", _canon_resolved),
+    Check("L3_canon_lists_resolved_min_pct", ">= 90 (claude_canon >= 80)", _canon_resolved),
     Check("L4_heard_matches_sessions", "exact", _heard_matches_sessions),
     Check("L5_atlas_heard_pct", "5 to 40", _atlas_heard_share),
 )
