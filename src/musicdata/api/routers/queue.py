@@ -1,11 +1,13 @@
-"""The /queue page (Phase 2 version) and verdicts.
+"""The /queue page (interim) and the dormant verdict endpoint.
 
-The page asks for a verdict on the albums most recently played through (full sessions,
-newest first, at most VERDICT_CARDS), each with the
-two-tap form: again / later / never and an optional one-line note. The page carries albums only:
-shows live in the API (GET /shows). The page carries
-QUEUE_PAGE_TOKEN in its URL (?t=...) so it opens from a phone bookmark without a header.
-The full queue (next ten for a profile, pin, snooze) arrives in Phase 4.
+Until Phase 4 Block E puts "Up next" here (docs/QUEUE_SPEC.md section 13), the page is a
+read-only list of the albums most recently played through (full sessions, newest first,
+at most RECENT_CARDS), each with its history line. It carries albums only; shows live in
+the API. The page carries QUEUE_PAGE_TOKEN in its URL (?t=...) so it opens from a phone
+bookmark without a header.
+
+Verdicts are dormant (QUEUE_SPEC.md section 11): the table, POST /verdicts and the album
+page's verdict list stay, and nothing on the page or in the queue uses them.
 """
 
 from __future__ import annotations
@@ -14,10 +16,9 @@ import secrets
 from datetime import datetime
 from html import escape
 from typing import Annotated, Literal
-from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
 from musicdata.api.deps import Pool, require_token
@@ -28,7 +29,7 @@ router = APIRouter(tags=["queue"])
 
 Verdict = Literal["again", "later", "never"]
 RECENT_DAYS = 30
-VERDICT_CARDS = 10  # the plan asks for a verdict after a full session, newest first
+RECENT_CARDS = 10
 
 
 def _check_page_token(request: Request, t: str) -> None:
@@ -100,24 +101,16 @@ PAGE = """<!doctype html>
                      border-radius: 8px; border: 1px solid var(--line);
                      background: var(--bg); color: var(--fg); }}
 </style></head><body>
-<h1>Just finished: again, later, or never?</h1>
+<h1>Recently played through</h1>
 {cards}
 </body></html>"""
 
-CARD = """<form class="card" method="post" action="/queue/verdict?t={token}">
+CARD = """<div class="card">
   <div><strong>{album}</strong></div>
   <div>{artist}</div>
   <div class="meta">{when} · {kind} · {played}/{count} tracks</div>
   <div class="meta">{history}</div>
-  <input type="hidden" name="release_group_id" value="{rg}">
-  <input type="hidden" name="session_started_at" value="{started}">
-  <input type="text" name="note" maxlength="500" placeholder="Why? A note for later (optional)">
-  <div class="row">
-    <button name="verdict" value="again">Again</button>
-    <button name="verdict" value="later">Later</button>
-    <button name="verdict" value="never">Never</button>
-  </div>
-</form>"""
+</div>"""
 
 
 def history_line(
@@ -144,7 +137,7 @@ def history_line(
 
 @router.get("/queue", response_class=HTMLResponse)
 async def queue_page(request: Request, pool: Pool, t: Annotated[str, Query()] = ""):
-    """Recent sessions without a verdict, newest first, with the verdict form.
+    """The albums most recently played through, newest first, read-only.
     Opening the page also starts a rate-limited catch-up ingest."""
     _check_page_token(request, t)
     from musicdata.api.routers.ingest import start_catch_up
@@ -163,15 +156,11 @@ async def queue_page(request: Request, pool: Pool, t: Annotated[str, Query()] = 
                   LEFT JOIN release_group_stat st USING (release_group_id)
                  WHERE s.started_at > now() - interval '{RECENT_DAYS} days'
                    AND s.session_type = 'full'
-                   AND NOT EXISTS (SELECT 1 FROM verdict v
-                                    WHERE v.release_group_id = s.release_group_id
-                                      AND v.created_at > s.started_at)
                  ORDER BY s.release_group_id, s.started_at DESC"""
         )
-    rows = sorted(rows, key=lambda r: r["started_at"], reverse=True)[:VERDICT_CARDS]
+    rows = sorted(rows, key=lambda r: r["started_at"], reverse=True)[:RECENT_CARDS]
     cards = "\n".join(
         CARD.format(
-            token=escape(t, quote=True),
             album=escape(r["title"]),
             artist=escape(r["artist"]),
             when=r["started_at"].strftime("%b %d"),
@@ -183,27 +172,9 @@ async def queue_page(request: Request, pool: Pool, t: Annotated[str, Query()] = 
                     r["full_sessions"], r["best_completion"], r["tracks_heard"], r["standard_count"]
                 )
             ),
-            rg=r["release_group_id"],
-            started=r["started_at"].isoformat(),
         )
         for r in rows
     )
     return HTMLResponse(
-        PAGE.format(cards=cards or "<p>No finished albums waiting for a verdict.</p>")
+        PAGE.format(cards=cards or "<p>No albums played through in the last 30 days.</p>")
     )
-
-
-@router.post("/queue/verdict")
-async def queue_verdict(
-    request: Request,
-    pool: Pool,
-    release_group_id: Annotated[int, Form()],
-    verdict: Annotated[Verdict, Form()],
-    note: Annotated[str | None, Form(max_length=500)] = None,
-    session_started_at: Annotated[datetime | None, Form()] = None,
-    t: Annotated[str, Query()] = "",
-):
-    """The page's form target: save the verdict and go back to the page."""
-    _check_page_token(request, t)
-    await _save(pool, release_group_id, verdict, note, None, session_started_at)
-    return RedirectResponse(url=f"/queue?t={quote(t)}", status_code=303)

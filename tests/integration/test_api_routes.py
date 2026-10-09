@@ -136,12 +136,13 @@ def test_verdicts_and_manual_sessions_round_trip(client) -> None:
             "/verdicts", json={"release_group_id": rg, "verdict": "again"}, headers=AUTH
         )
         assert v.status_code == 201
-        form = client.post(
-            "/queue/verdict?t=page-token",
-            data={"release_group_id": rg, "verdict": "later", "note": "rainy day"},
-            follow_redirects=False,
+        later = client.post(
+            "/verdicts",
+            json={"release_group_id": rg, "verdict": "later", "note": "rainy day"},
+            headers=AUTH,
         )
-        assert form.status_code == 303
+        assert later.status_code == 201
+        assert client.post("/queue/verdict?t=page-token").status_code in (404, 405)  # gone
         s = client.post(
             "/sessions",
             json={"release_group_id": rg, "listened_at": "2026-10-01T20:00:00Z", "completion": 1},
