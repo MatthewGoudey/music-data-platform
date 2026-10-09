@@ -1,0 +1,210 @@
+"""Show pages → plain records. Pure functions, no I/O; each source's markup stays here.
+
+Oh My Rockness (primary):
+  venue page  → schema.org MusicEvent JSON-LD for every upcoming show: id, url, name.
+  show page   → its own record embedded as JSON (`data-show`): bands in order with
+                slugs, start time with offset, the venue with address and coordinates.
+do312 (secondary):
+  day listing → schema.org microdata per event card: title, venue, start time.
+  event page  → performers as /artists/ links when the site has them; otherwise the
+                title is split by musicdata.identity.split_lineup.
+"""
+
+from __future__ import annotations
+
+import html
+import json
+import re
+from dataclasses import dataclass, field
+from datetime import datetime
+
+
+@dataclass(frozen=True)
+class Venue:
+    source: str
+    slug: str
+    name: str
+    address: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+    website: str | None = None
+
+
+@dataclass(frozen=True)
+class Performer:
+    name: str
+    slug: str | None = None
+
+
+@dataclass
+class Show:
+    source: str
+    source_id: str
+    url: str
+    starts_at: datetime
+    title: str
+    venue: Venue
+    performers: list[Performer] = field(default_factory=list)
+    structured: bool = False  # performers came from the site, not from splitting a title
+    tickets_url: str | None = None
+    on_sale_at: datetime | None = None
+    price: str | None = None
+
+
+def _float(value: object) -> float | None:
+    try:
+        return float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+
+
+def _time(value: str | None) -> datetime | None:
+    """ISO times as both sites write them: "2026-10-30T19:00:00.000-05:00", "…-0500"."""
+    if not value:
+        return None
+    v = re.sub(r"([+-]\d{2})(\d{2})$", r"\1:\2", value.strip())
+    try:
+        return datetime.fromisoformat(v)
+    except ValueError:
+        return None
+
+
+def _text(value: str | None) -> str:
+    return " ".join(html.unescape(value or "").split())
+
+
+# --- Oh My Rockness -------------------------------------------------------------------
+
+OMR_SHOW_ID = re.compile(r"/shows/(\d+)")
+_LD_JSON = re.compile(r'<script type="application/ld\+json">(.*?)</script>', re.S)
+_DATA_SHOWS = re.compile(r'data-shows?="([^"]+)"')  # data-show: the page's own record
+
+
+def parse_omr_venue_page(page: str) -> list[str]:
+    """Ids of the upcoming shows a venue page lists, in page order."""
+    ids: list[str] = []
+    for block in _LD_JSON.findall(page):
+        try:
+            data = json.loads(block)
+        except json.JSONDecodeError:
+            continue
+        for event in data if isinstance(data, list) else [data]:
+            if not isinstance(event, dict) or event.get("@type") != "MusicEvent":
+                continue
+            m = OMR_SHOW_ID.search(event.get("url") or "")
+            if m and m.group(1) not in ids:
+                ids.append(m.group(1))
+    return ids
+
+
+def _omr_records(page: str) -> list[dict]:
+    records: list[dict] = []
+    for block in _DATA_SHOWS.findall(page):
+        try:
+            data = json.loads(html.unescape(block))
+        except json.JSONDecodeError:
+            continue
+        records += [r for r in (data if isinstance(data, list) else [data]) if isinstance(r, dict)]
+    return records
+
+
+def parse_omr_show_page(page: str, show_id: str) -> Show | None:
+    """The show's own embedded record; None when the page does not carry it."""
+    record = next((r for r in _omr_records(page) if str(r.get("id")) == str(show_id)), None)
+    if record is None:
+        return None
+    starts_at = _time(record.get("starts_at"))
+    v = record.get("venue") or {}
+    if starts_at is None or not v.get("slug"):
+        return None
+    performers = [
+        Performer(name=_text(b.get("name")), slug=b.get("slug"))
+        for b in record.get("cached_bands") or []
+        if _text(b.get("name"))
+    ]
+    return Show(
+        source="omr",
+        source_id=str(show_id),
+        url=f"https://chicago.ohmyrockness.com/shows/{show_id}",
+        starts_at=starts_at,
+        title=", ".join(p.name for p in performers),
+        venue=Venue(
+            source="omr",
+            slug=v["slug"],
+            name=_text(v.get("name")),
+            address=_text(v.get("full_address")) or None,
+            latitude=_float(v.get("latitude")),
+            longitude=_float(v.get("longitude")),
+            website=v.get("website") or None,
+        ),
+        performers=performers,
+        structured=True,
+        tickets_url=record.get("tickets_url") or None,
+        on_sale_at=_time(record.get("on_sale_at")),
+        price=record.get("price") or None,
+    )
+
+
+# --- do312 ----------------------------------------------------------------------------
+
+_CARD_SPLIT = re.compile(r'<div class="ds-listing event-card')
+_PERMALINK = re.compile(r'data-permalink="([^"]+)"')
+_TITLE = re.compile(r'class="ds-listing-event-title-text" itemprop="name">([^<]*)<')
+_VENUE = re.compile(r'<a href="/venues/([^"]+)" itemprop="url"><span itemprop="name">([^<]*)<')
+_META = re.compile(r'<meta itemprop="(\w+)"(?: datetime="[^"]*")? content="([^"]*)"')
+_ARTIST_LINK = re.compile(r'href="/artists/([^"]+)"[^>]*>\s*(?:<[^>]+>\s*)*([^<]{1,120})<')
+
+DO312_PAGE_SIZE = 25
+
+
+def parse_do312_day(page: str) -> list[Show]:
+    """Every event card on a do312 listing page (performers not yet split)."""
+    shows: list[Show] = []
+    for card in _CARD_SPLIT.split(page)[1:]:
+        permalink, title, venue = _PERMALINK.search(card), _TITLE.search(card), _VENUE.search(card)
+        if not (permalink and title and venue) or not permalink.group(1).startswith("/events/"):
+            continue
+        meta = dict(_META.findall(card))
+        starts_at = _time(meta.get("startDate"))
+        if starts_at is None:
+            continue
+        address = ", ".join(
+            x
+            for x in (
+                meta.get("streetAddress"),
+                meta.get("addressLocality"),
+                " ".join(filter(None, (meta.get("addressRegion"), meta.get("postalCode")))),
+            )
+            if x
+        )
+        shows.append(
+            Show(
+                source="do312",
+                source_id=permalink.group(1),
+                url="https://do312.com" + permalink.group(1),
+                starts_at=starts_at,
+                title=_text(title.group(1)),
+                venue=Venue(
+                    source="do312",
+                    slug=venue.group(1),
+                    name=_text(venue.group(2)),
+                    address=_text(address) or None,
+                    latitude=_float(meta.get("latitude")),
+                    longitude=_float(meta.get("longitude")),
+                ),
+            )
+        )
+    return shows
+
+
+def parse_do312_event(page: str) -> list[Performer]:
+    """Performers an event page links, headliner first; empty when it links none."""
+    out: list[Performer] = []
+    seen: set[str] = set()
+    for slug, name in _ARTIST_LINK.findall(page):
+        text = _text(name)
+        if not text or text.lower() == "profile" or slug in seen:
+            continue
+        seen.add(slug)
+        out.append(Performer(name=text, slug=slug))
+    return out
