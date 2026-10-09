@@ -42,29 +42,54 @@ Read first: `docs/REDESIGN_PLAN.md` (sections "What this is for", "Data model", 
   No Docker: integration tests run against Neon dev with `--env dev` or `DATABASE_URL` set (ADR 0005).
 - Run any job against an environment from the laptop: `uv run musicdata --env dev --plain-logs <job>`.
 
-## Current state (2026-10-08, Phase 2 gate in progress)
-Phase 2 code (Blocks A–F) is on `main`, tagged `v0.2.1`, and deployed to dev and prod.
-Dev passes all nine acceptance checks on the full history (245,707 listens, equal to
-ListenBrainz; 16,695 resolved albums; 7,022 album sessions). Prod is loading through
-the `full-load` workflow (ingest → resolve ×2 → derive → dq, about 7 hours); when its dq
-job passes, Phase 2 gate step 18 is done.
+## Current state (2026-10-09, Phase 2 gate in progress, Phase 3 started)
+`v0.2.2` is deployed to dev and prod. Dev passes all acceptance checks on the full history
+(listen count equal to ListenBrainz, 97% of listens on an album with a tracklist, 7,196
+album sessions). v0.2.2 added one-album-one-group rules (album-artist keys, local merges,
+stray-track redirects; ADR 0015 amendment) and started Phase 3: shows from Oh My Rockness
+and Ticketmaster (ADR 0006 amendment, ADR 0016), `GET /shows?match=true`, interests, and
+the E1–E3 checks. Prod is running `full-load` in repair mode; when its dq passes, Phase 2
+gate step 18 is done.
 
-Load or reload an environment with `gh workflow run full-load -f env=<dev|prod>`; every
-step resumes, so a re-run is safe. `ingest --rekey` re-applies identity rules to stored
-listens after an identity fix (it repaired 3,484 comma-joined listens in dev).
+Load or reload an environment with `gh workflow run full-load -f env=<dev|prod>`
+(`-f mode=repair` re-applies identity rules: rekey, retry unresolved, full derive).
+`musicdata shows --sweep` reads all ~600 Oh My Rockness venues once (~20 min); nightly
+runs read active venues plus a rotating 85.
 
 Open items that need Matt:
 - Paste `docs/claude-project-instructions.md` into the claude.ai Project (gate step 19).
 - Phase 0: disable the old Task Scheduler task, rotate the old Neon password and Render
-  `API_SECRET`, export the seed CSVs (`seeds/manual_tracklists.csv` feeds resolve).
+  `API_SECRET`, export the seed CSVs (`seeds/manual_tracklists.csv` feeds resolve,
+  `seeds/venues.csv` carries travel times).
 
 Notes for the next session:
+- Never migrate a shared database (dev, prod) ahead of `main`: a cloud job running the
+  older code fails on the unknown revision (it broke a dev derive on 2026-10-08).
+- A key-rule change needs golden cases for every key it touches; a change to the edition
+  rule moved `title_key` too and the rekey then stored 81 duplicates (now fixed and checked).
+- Patches containing backslashes go through Edit/Write or PowerShell, never bash heredocs,
+  which collapse `\b` and `\w` on this machine.
+- Saved web pages used as fixtures are scrubbed of third-party scripts and keys
+  (gitleaks blocks them otherwise).
 - `daily-sync` commits `docs/status/heartbeat.txt` monthly; run `git pull` before pushing.
-- GitHub ran the first scheduled `daily-sync` 7 hours late (15:36 for the 08:17 slot);
-  schedules are best-effort, and `/ingest/catch-up` covers freshness between runs.
-- ListenBrainz drops large pages deep in the history; the client shrinks the page size,
-  and `ingest --full` resumes below the oldest stored listen.
-- Integration tests run against Neon dev; they use made-up MBIDs and clean up their rows.
+- GitHub ran the first scheduled `daily-sync` 7 hours late; schedules are best-effort, and
+  `/ingest/catch-up` covers freshness between runs.
+- ListenBrainz drops large pages deep in the history and has short outages; the client
+  shrinks pages, waits out outages, and `ingest --full` resumes below the oldest listen.
+- Integration tests run against Neon dev; they use made-up MBIDs and coordinates far from
+  Chicago, and clean up their rows.
+
+## Phase 3 checklist — Chicago shows
+Gate (plan): E1 and E3 at 0, E2 ≥ 95%, shows endpoints in prod.
+
+- [x] Schema (migration 0009), Oh My Rockness and Ticketmaster sources, lineup parsing
+      with a golden file, artist resolution, `GET /shows` with match score, interests,
+      E1–E3 checks.
+- [ ] First full sweep in prod: `gh workflow run backfill -f env=prod -f job=shows -f args=--sweep`.
+- [ ] Venue seed with travel times once `seeds/venues.csv` exists (ADR 0008).
+- [ ] Festivals from `seeds/festivals/*.csv`.
+- [ ] Presales (`presales=true`) from Ticketmaster `sales.presales`.
+- [ ] A shows section on the `/queue` page.
 
 ## Phase 2 checklist — listening core; complete in order, report after each block
 Gate: the acceptance suite is green in dev, the dev listen count is within 0.5% of
