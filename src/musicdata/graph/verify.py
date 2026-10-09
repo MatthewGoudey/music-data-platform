@@ -99,6 +99,25 @@ def same_name(a: str | None, b: str | None) -> bool:
     return len(short) >= 5 and short in long_
 
 
+_QUOTE_MARKS = str.maketrans({'"': None, "'": None})
+NOT_PLACES = {"various", "several", "multiple", "unknown", "other"}  # "Various studios"
+_STUDIO_SUFFIX = re.compile(r"\s+(recording\s+)?studios?(\s+\w+)?$")
+
+
+def name_on_page(name: str, page: str, *, place: bool = False) -> bool:
+    """An extracted name is on its (normalised) page, quote marks aside (`"Sneaky" Pete
+    Kleinow`); a place also passes without a trailing "Studio(s)" word ("Wally Heider" for
+    "Wally Heider Studios"), when 5 or more characters remain (spec change v2)."""
+    hay = page.translate(_QUOTE_MARKS)
+    nm = norm(name).translate(_QUOTE_MARKS).strip()
+    if nm and nm in hay:
+        return True
+    if place:
+        short = _STUDIO_SUFFIX.sub("", nm)
+        return short != nm and len(short) >= 5 and short not in NOT_PLACES and short in hay
+    return False
+
+
 @dataclass
 class Lookups:
     pages: dict[str, str] = field(default_factory=dict)  # url -> norm(body)
@@ -169,8 +188,10 @@ def evidence_check(c: dict, k: str, lk: Lookups, chk: dict) -> list[str]:
     fails = []
     url = c.get("source_url") or ""
     if k == "firecrawl_json":  # extraction can invent: the name must be on its page
-        nm = norm(c["object"]["name"] if c["predicate"] == "recorded_at" else c["subject"]["name"])
-        chk["name_on_page"] = "pass" if nm and nm in lk.pages.get(url, "") else "fail"
+        place = c["predicate"] == "recorded_at"
+        name = c["object"]["name"] if place else c["subject"]["name"]
+        found = name_on_page(name, lk.pages.get(url, ""), place=place)
+        chk["name_on_page"] = "pass" if found else "fail"
         if chk["name_on_page"] == "fail":
             fails.append("extracted name not on the cached page")
     if c["evidence"].startswith("field:"):

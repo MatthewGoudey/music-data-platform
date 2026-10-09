@@ -11,7 +11,15 @@ import pytest
 
 from musicdata.graph.facts import facts_claims
 from musicdata.graph.seed import read_predicates
-from musicdata.graph.verify import PRED, Lookups, match_key, norm, same_name, verify
+from musicdata.graph.verify import (
+    PRED,
+    Lookups,
+    match_key,
+    name_on_page,
+    norm,
+    same_name,
+    verify,
+)
 
 T1 = Path(__file__).parent / "fixtures" / "graph" / "T1"
 GOLDEN = Path(__file__).parent / "golden" / "graph_normalize.json"
@@ -226,3 +234,17 @@ def test_same_name_rule() -> None:
 def test_normaliser_golden_file() -> None:
     for case in json.loads(GOLDEN.read_text("utf-8")):
         assert norm(case["in"]) == case["out"], case["in"]
+
+
+def test_name_on_page_ignores_quote_marks_and_a_studio_suffix() -> None:
+    page = norm(
+        '- ["Sneaky" Pete Kleinow](https://en.wikipedia.org/wiki/Sneaky_Pete_Kleinow) – pedal steel'
+        " | Studio | - [Wally Heider](https://en.wikipedia.org/wiki/Wally_Heider_Studios)"
+        " recorded at various places across Los Angeles"
+    )
+    assert name_on_page("Sneaky Pete Kleinow", page)
+    assert name_on_page("Wally Heider Studios", page, place=True)
+    assert name_on_page("Wally Heider Studio 3", page, place=True)
+    assert not name_on_page("Wally Heider Studios", page)  # people keep the strict rule
+    assert not name_on_page("Various studios", page, place=True)
+    assert not name_on_page("Frank Sampedro", page)

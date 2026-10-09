@@ -391,7 +391,7 @@ those entities for the next batch.
 | Check | Passes when | On failure |
 | --- | --- | --- |
 | Structure | the predicate exists; subject and object types fit it; `sounds_like` is `inferred`; `influenced_by` is `reported` or `documented`; every lineage claim from `claude` has `direction = 'subject_newer'` | `rejected` |
-| Evidence | text claims: the quote, split on " … ", appears verbatim in the normalised fetch body or atlas field (normaliser: strip markdown links with titles and nested parentheses, citation markers, emphasis; unify quotes; collapse whitespace; lower-case). `field:` evidence: the value appears on the page. `firecrawl_json`: the person or place name appears on its page | `rejected` |
+| Evidence | text claims: the quote, split on " … ", appears verbatim in the normalised fetch body or atlas field (normaliser: strip markdown links with titles and nested parentheses, citation markers, emphasis; unify quotes; collapse whitespace; lower-case). `field:` evidence: the value appears on the page. `firecrawl_json`: the person or place name appears on its page, quote marks aside; a place also passes without a trailing "Studio(s)" word when 5 or more characters remain ("Wally Heider" for "Wally Heider Studios") | `rejected` |
 | Dates | lineage: the object's year (album first release, recording first release, artist begin; a joint credit's earliest part) is not later than the subject's; passes when either year is unknown | `rejected` |
 | First recording | `covers`: no MusicBrainz recording of the work predates the object's | `rejected` |
 | Databases | MusicBrainz or Discogs records the same credit, membership, label, studio, or cover order (for credits on other albums, fetch that album's baseline) | adds to `support`; a contradiction rejects |
@@ -554,3 +554,9 @@ Tests:
   An independent review before hand-off fixed: prod isolation during the gate week, one entity
   per MusicBrainz artist, claim labels and corrected re-extractions, the edge-view ranks, the walk
   list's entries, checks G2/G4–G6, and the T1 fixture list; the golden set became a record.
+- 2026-10-09: v2 (Matt). The `firecrawl_json` name check ignores quote marks (`"Sneaky" Pete
+  Kleinow`) and lets a place pass without a trailing "Studio(s)" word ("Wally Heider" on the page
+  for "Wally Heider Studios"). The pilot slice's first verify rejected 28 such names. Also from
+  that run: `graph fetch` reads an atlas-cited Wikipedia page in facts mode only when its title
+  names the album (ten artist and discography pages had credited their people to the album;
+  Matt approved deleting those 82 claims).
