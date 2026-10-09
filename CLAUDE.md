@@ -81,6 +81,9 @@ Open items that need Matt:
 Notes for the next session:
 - Never migrate a shared database (dev, prod) ahead of `main`: a cloud job running the
   older code fails on the unknown revision (it broke a dev derive on 2026-10-08).
+- After `ingest --rekey`, always run resolve with the unmapped tail and retries before
+  derive (`full-load -f mode=repair` does all three): a rekey alone re-creates unmapped
+  duplicates ("DAMN. COLLECTORS EDITION.") that resolve had merged into the real album.
 - A key-rule change needs golden cases for every key it touches; a change to the edition
   rule moved `title_key` too and the rekey then stored 81 duplicates (now fixed and checked).
 - Patches containing backslashes go through Edit/Write or PowerShell, never bash heredocs,

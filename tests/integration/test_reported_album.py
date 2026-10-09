@@ -117,3 +117,21 @@ async def test_an_expanded_edition_and_an_unmapped_namesake_are_not_homes(conn) 
         "SELECT release_group_id FROM listen WHERE listen_id = ANY($1)", [expanded, namesake]
     )
     assert {r["release_group_id"] for r in rows} == {album}
+
+
+async def test_among_namesakes_the_one_holding_the_album_wins(conn) -> None:
+    artist = await conn.fetchval(
+        """INSERT INTO artist (name, norm_key, mbid)
+           VALUES ('Zz Home Artist', 'zz home artist', '00000000-0000-4000-b000-0000000000ad')
+           RETURNING artist_id"""
+    )
+    white = await _group(conn, artist, "Zz Self", "zz self", 8)
+    await _group(conn, artist, "Zz Self", "zz self", 9)  # a later release with the same title
+    reunion = await _group(conn, artist, "Zz Reunions", "zz reunions", 10)
+    await _listen(conn, artist, white, 40, "Zz Self (Remastered)")
+    stray = await _listen(conn, artist, reunion, 41, "Zz Self (Remastered)")
+    await go_home(conn)
+    assert (
+        await conn.fetchval("SELECT release_group_id FROM listen WHERE listen_id = $1", stray)
+        == white
+    )

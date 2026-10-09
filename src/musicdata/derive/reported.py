@@ -8,8 +8,10 @@ to the group that is that album's home, when all of these hold:
 
 - the home is a MusicBrainz release group (mapped) with the reported key, by the
   listen's artist, its current group's artist, or the album artist recorded for this
-  very listen (release_group_alias); exactly one such group (Weezer's two self-titled
-  albums stay where they are);
+  very listen (release_group_alias); exactly one such group, or else the one group among
+  them already holding listens reported under that name (the White Album, not a 1994
+  release also titled "The Beatles"); otherwise the listen stays (Weezer's two
+  self-titled albums with no history);
 - the reported album is not an expanded form of the current one ("Play & Play: The B
   Sides" on Play, "Transistor … Extended" on Transistor stay on the album);
 - the move does not take a listen off a session-eligible album or EP onto a
@@ -53,16 +55,29 @@ GO_HOME = f"""
                                      AND ra.release_group_id = a.from_rg
           JOIN release_group h ON h.artist_id = ra.artist_id AND h.norm_key = a.reported_key
                               AND h.mbid IS NOT NULL
-    ), pick AS (
-        SELECT c.listen_id, c.from_rg, min(c.to_rg) AS to_rg
-          FROM cand c JOIN release_group g ON g.release_group_id = c.to_rg
+    ), allowed AS (
+        SELECT c.listen_id, c.from_rg, c.to_rg, a.reported_key
+          FROM cand c
+          JOIN away a USING (listen_id)
+          JOIN release_group g ON g.release_group_id = c.to_rg
          WHERE NOT c.cur_eligible OR NOT (g.is_compilation OR g.is_box_set)
-         GROUP BY c.listen_id, c.from_rg
-        HAVING count(DISTINCT c.to_rg) = 1
+    ), held AS (  -- candidates already holding listens reported under the same name
+        SELECT DISTINCT x.to_rg, x.reported_key
+          FROM (SELECT DISTINCT to_rg, reported_key FROM allowed) x
+         WHERE EXISTS (SELECT 1 FROM listen h
+                        WHERE h.release_group_id = x.to_rg AND h.reported_key = x.reported_key)
+    ), pick AS (
+        SELECT al.listen_id, al.from_rg,
+               CASE WHEN count(DISTINCT al.to_rg) = 1 THEN min(al.to_rg)
+                    WHEN count(DISTINCT h.to_rg) = 1 THEN min(h.to_rg)
+               END AS to_rg
+          FROM allowed al
+          LEFT JOIN held h ON h.to_rg = al.to_rg AND h.reported_key = al.reported_key
+         GROUP BY al.listen_id, al.from_rg
     ), moved AS (
         UPDATE listen l SET release_group_id = p.to_rg
           FROM pick p
-         WHERE l.listen_id = p.listen_id
+         WHERE l.listen_id = p.listen_id AND p.to_rg IS NOT NULL
         RETURNING p.from_rg AS a, p.to_rg AS b
     ), touched AS (
         SELECT a AS rg FROM moved UNION SELECT b FROM moved
