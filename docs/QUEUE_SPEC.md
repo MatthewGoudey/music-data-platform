@@ -419,3 +419,9 @@ priority Essential. Matt has played other Ratboys records but no session of this
   he likes, each press drawing a fresh set: the weighted sample comes from the top 200
   candidates (was the top `3 × new slots`), and `exclude` keeps albums already shown out
   until the pool runs low (section 8 steps 6–7, section 12, section 13).
+- 2026-10-09 v5: Block E built by Claude Code while Matt was away; he can reverse any of it.
+  "Mark played", "Not for me" and "Snooze" remove the card at once and show Undo for a few
+  seconds (`POST /queue/sessions/{id}/undo` takes back a manual session within an hour;
+  `unsnooze` and `unhide` reverse the others). The page reads `GET /queue/data` and acts
+  through `POST /queue/{release_group_id}/{action}`, with the page token or the API token.
+  The Tag button arrives with Block F.

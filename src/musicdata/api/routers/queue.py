@@ -1,10 +1,11 @@
-"""The /queue page (interim) and the dormant verdict endpoint.
+"""The /queue page: Up next (docs/QUEUE_SPEC.md sections 11 and 13), and the dormant
+verdict endpoint.
 
-Until Phase 4 Block E puts "Up next" here (docs/QUEUE_SPEC.md section 13), the page is a
-read-only list of the albums most recently played through (full sessions, newest first,
-at most RECENT_CARDS), each with its history line. It carries albums only; shows live in
-the API. The page carries QUEUE_PAGE_TOKEN in its URL (?t=...) so it opens from a phone
-bookmark without a header.
+The page is a phone-width shell (api/static/queue.html) that reads `GET /queue/data` and
+acts through `POST /queue/{release_group_id}/{action}`. It carries QUEUE_PAGE_TOKEN in its
+URL (?t=...) so it opens from a phone bookmark without a header; the data and action
+endpoints accept that token or the API bearer token. Opening the page also starts a
+rate-limited catch-up ingest, so an album finished an hour ago has already left.
 
 Verdicts are dormant (QUEUE_SPEC.md section 11): the table, POST /verdicts and the album
 page's verdict list stay, and nothing on the page or in the queue uses them.
@@ -13,29 +14,47 @@ page's verdict list stay, and nothing on the page or in the queue uses them.
 from __future__ import annotations
 
 import secrets
-from datetime import datetime
-from html import escape
+from datetime import UTC, datetime
+from pathlib import Path
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
+from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 
-from musicdata.api.deps import Pool, require_token
+from musicdata.api.deps import Pool, bearer, render_object, require_token
+from musicdata.api.routers.next_queue import parse_ids
 from musicdata.config import Settings
 from musicdata.db import connection
+from musicdata.lists.progress import progress
+from musicdata.queue import config
+from musicdata.queue.engine import UnknownProfileError, next_queue
 
 router = APIRouter(tags=["queue"])
 
 Verdict = Literal["again", "later", "never"]
-RECENT_DAYS = 30
-RECENT_CARDS = 10
+Action = Literal["pin", "unpin", "bump", "snooze", "unsnooze", "hide", "unhide", "played"]
+PAGE = (Path(__file__).parents[1] / "static" / "queue.html").read_text(encoding="utf-8")
+UNDO_MINUTES = 60  # a manual session can be taken back this long after it was recorded
 
 
 def _check_page_token(request: Request, t: str) -> None:
     settings: Settings = request.app.state.settings
     if not secrets.compare_digest(t, settings.queue_page_token.get_secret_value()):
         raise HTTPException(status_code=401, detail="bad or missing page token")
+
+
+def page_or_bearer(
+    request: Request,
+    creds: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)],
+    t: Annotated[str, Query()] = "",
+) -> None:
+    """The page token in the URL, or the API bearer token."""
+    if t:
+        _check_page_token(request, t)
+    else:
+        require_token(request, creds)
 
 
 async def _save(
@@ -79,40 +98,6 @@ async def add_verdict(body: VerdictIn, pool: Pool):
     return {"verdict_id": verdict_id}
 
 
-PAGE = """<!doctype html>
-<html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>musicdata queue</title>
-<style>
-  :root {{ --bg: #fafaf9; --fg: #1c1917; --muted: #78716c; --card: #fff; --line: #e7e5e4; }}
-  @media (prefers-color-scheme: dark) {{
-    :root {{ --bg: #1c1917; --fg: #f5f5f4; --muted: #a8a29e; --card: #292524; --line: #44403c; }}
-  }}
-  body {{ margin: 0; padding: 16px; background: var(--bg); color: var(--fg);
-         font: 16px/1.4 system-ui, sans-serif; }}
-  h1 {{ font-size: 1.2rem; margin: 0 0 12px; }}
-  .card {{ background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-          padding: 12px; margin-bottom: 12px; }}
-  .meta {{ color: var(--muted); font-size: .85rem; }}
-  .row {{ display: flex; gap: 8px; margin-top: 8px; }}
-  button {{ flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--line);
-           background: var(--bg); color: var(--fg); font-size: 1rem; }}
-  input[type=text] {{ width: 100%; box-sizing: border-box; margin-top: 8px; padding: 8px;
-                     border-radius: 8px; border: 1px solid var(--line);
-                     background: var(--bg); color: var(--fg); }}
-</style></head><body>
-<h1>Recently played through</h1>
-{cards}
-</body></html>"""
-
-CARD = """<div class="card">
-  <div><strong>{album}</strong></div>
-  <div>{artist}</div>
-  <div class="meta">{when} · {kind} · {played}/{count} tracks</div>
-  <div class="meta">{history}</div>
-</div>"""
-
-
 def history_line(
     full_sessions: int | None,
     best_completion: float | None,
@@ -137,44 +122,149 @@ def history_line(
 
 @router.get("/queue", response_class=HTMLResponse)
 async def queue_page(request: Request, pool: Pool, t: Annotated[str, Query()] = ""):
-    """The albums most recently played through, newest first, read-only.
-    Opening the page also starts a rate-limited catch-up ingest."""
+    """Up next: the queue for a profile, its actions, and progress through the lists."""
     _check_page_token(request, t)
     from musicdata.api.routers.ingest import start_catch_up
 
     await start_catch_up(pool)
+    return HTMLResponse(PAGE)
+
+
+@router.get("/queue/data", dependencies=[Depends(page_or_bearer)])
+async def queue_data(
+    pool: Pool,
+    profile: str = "default",
+    shuffle: bool = False,
+    seed: Annotated[int | None, Query(ge=0)] = None,
+    exclude: str | None = None,
+):
+    """Everything the page shows: the queue with a history line per album, the profiles,
+    and heard / total per list and for the atlas's Core zone."""
     async with connection(pool) as conn:
-        rows = await conn.fetch(
-            f"""SELECT DISTINCT ON (s.release_group_id)
-                       s.release_group_id, s.started_at, s.session_type, s.tracks_played,
-                       s.track_count, rg.title, a.name AS artist,
-                       st.full_sessions, st.best_completion, st.tracks_heard,
-                       st.track_count AS standard_count
-                  FROM album_session s
-                  JOIN release_group rg USING (release_group_id)
-                  JOIN artist a ON a.artist_id = rg.artist_id
-                  LEFT JOIN release_group_stat st USING (release_group_id)
-                 WHERE s.started_at > now() - interval '{RECENT_DAYS} days'
-                   AND s.session_type = 'full'
-                 ORDER BY s.release_group_id, s.started_at DESC"""
+        try:
+            q = await next_queue(
+                conn, profile, shuffle=shuffle, seed=seed, exclude=parse_ids(exclude)
+            )
+        except UnknownProfileError as exc:
+            raise HTTPException(status_code=404, detail=f"no profile {exc}") from exc
+        ids = [i["release_group_id"] for i in q["items"]]
+        stats = {
+            r["release_group_id"]: r
+            for r in await conn.fetch(
+                """SELECT release_group_id, full_sessions, best_completion, tracks_heard,
+                          track_count
+                     FROM release_group_stat WHERE release_group_id = ANY($1::int[])""",
+                ids,
+            )
+        }
+        pinned = {
+            r[0]
+            for r in await conn.fetch(
+                """SELECT release_group_id FROM queue_state
+                    WHERE pinned_at IS NOT NULL AND release_group_id = ANY($1::int[])""",
+                ids,
+            )
+        }
+        profiles = [
+            dict(r)
+            for r in await conn.fetch(
+                "SELECT name, description FROM queue_profile ORDER BY name <> 'default', name"
+            )
+        ]
+        lists = await progress(conn, "list")
+        core = await progress(conn, "zone", slug="v_atlas", zone="Core")
+    for item in q["items"]:
+        s = stats.get(item["release_group_id"])
+        item["history"] = (
+            history_line(
+                s["full_sessions"], s["best_completion"], s["tracks_heard"], s["track_count"]
+            )
+            if s
+            else "Never played"
         )
-    rows = sorted(rows, key=lambda r: r["started_at"], reverse=True)[:RECENT_CARDS]
-    cards = "\n".join(
-        CARD.format(
-            album=escape(r["title"]),
-            artist=escape(r["artist"]),
-            when=r["started_at"].strftime("%b %d"),
-            kind=r["session_type"],
-            played=r["tracks_played"],
-            count=r["track_count"],
-            history=escape(
-                history_line(
-                    r["full_sessions"], r["best_completion"], r["tracks_heard"], r["standard_count"]
+        item["pinned"] = item["release_group_id"] in pinned
+    labels = config.LIST_LABELS
+    strip = [
+        {"label": labels.get(r["list"], r["name"]), "heard": r["heard"], "total": r["total"]}
+        for r in lists
+    ]
+    strip += [{"label": "V Atlas · Core", "heard": r["heard"], "total": r["total"]} for r in core]
+    return render_object(
+        q | {"profiles": profiles, "progress": strip, "shuffle_pool": config.SHUFFLE_POOL}
+    )
+
+
+STATE = {
+    "pin": "pinned_at = now()",
+    "unpin": "pinned_at = NULL",
+    "bump": f"bumped_until = now() + interval '{config.BUMP_DAYS} days'",
+    "snooze": "snoozed_until = now() + make_interval(days => $2)",
+    "unsnooze": "snoozed_until = NULL",
+    "hide": "hidden_at = now(), pinned_at = NULL",
+    "unhide": "hidden_at = NULL",
+}
+
+
+@router.post("/queue/{release_group_id}/{action}", dependencies=[Depends(page_or_bearer)])
+async def queue_action(
+    release_group_id: int,
+    action: Action,
+    pool: Pool,
+    days: Annotated[int, Query(ge=1, le=365)] = 30,
+):
+    """Pin, unpin, bump (score × 2 for 14 days), snooze (`days`), unsnooze, hide ("not for
+    me"), unhide, or played: a manual full session now, for vinyl or a show."""
+    async with connection(pool) as conn:
+        if not await conn.fetchval(
+            "SELECT 1 FROM release_group WHERE release_group_id = $1", release_group_id
+        ):
+            raise HTTPException(status_code=404, detail="no such album")
+        if action == "played":
+            count = (
+                await conn.fetchval(
+                    """SELECT track_count FROM release_group_tracklist
+                        WHERE release_group_id = $1 AND source <> 'unresolved'""",
+                    release_group_id,
                 )
-            ),
+                or 1
+            )
+            session_id = await conn.fetchval(
+                """INSERT INTO album_session (release_group_id, started_at, ended_at,
+                                              tracks_played, track_count, completion,
+                                              session_type, source, note)
+                   VALUES ($1, $2, $2, $3, $3, 1.0, 'full', 'manual', 'marked played on the page')
+                   RETURNING session_id""",
+                release_group_id,
+                datetime.now(UTC),
+                count,
+            )
+            return {"action": action, "session_id": session_id}
+        sql = STATE[action]
+        args: list[object] = [release_group_id]
+        if "$2" in sql:
+            args.append(days)
+        await conn.execute(
+            "INSERT INTO queue_state (release_group_id) VALUES ($1) ON CONFLICT DO NOTHING",
+            release_group_id,
         )
-        for r in rows
-    )
-    return HTMLResponse(
-        PAGE.format(cards=cards or "<p>No albums played through in the last 30 days.</p>")
-    )
+        await conn.execute(
+            f"UPDATE queue_state SET {sql}, updated_at = now() WHERE release_group_id = $1",
+            *args,
+        )
+    return {"action": action, "release_group_id": release_group_id}
+
+
+@router.post("/queue/sessions/{session_id}/undo", dependencies=[Depends(page_or_bearer)])
+async def undo_played(session_id: int, pool: Pool):
+    """Take back a "Mark played" made in the last hour (a mis-tap)."""
+    async with connection(pool) as conn:
+        gone = await conn.fetchval(
+            f"""DELETE FROM album_session
+                 WHERE session_id = $1 AND source = 'manual'
+                   AND created_at > now() - interval '{UNDO_MINUTES} minutes'
+                RETURNING session_id""",
+            session_id,
+        )
+    if gone is None:
+        raise HTTPException(status_code=404, detail="no recent manual session with that id")
+    return {"undone": session_id}

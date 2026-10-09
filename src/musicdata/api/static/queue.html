@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Up next</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* One phone-width column; cards stack; actions wrap under each card. */
+:root {
+  --bg: #eef0ec; --surface: #fbfcfa; --ink: #1b221f; --muted: #5d6a64; --line: #d5dbd6;
+  --accent: #2c55c9; --accent-ink: #ffffff; --revisit: #8a5a12; --revisit-bg: #f6ead2;
+  --wild: #6b3fa0; --wild-bg: #ece3f6; --pin: #1f6b4f; --pin-bg: #dcefe5; --toast: #1b221f; --toast-ink: #fbfcfa;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --bg: #141917; --surface: #1c2320; --ink: #e6ebe8; --muted: #9aa8a1; --line: #2e3833;
+  --accent: #7f9cf5; --accent-ink: #0f1420; --revisit: #e8b864; --revisit-bg: #3a2e18;
+  --wild: #c4a2ee; --wild-bg: #2f2440; --pin: #7fd1ad; --pin-bg: #1d3a2e; --toast: #e6ebe8; --toast-ink: #141917;
+  color-scheme: dark } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.45; }
+.wrap { max-width: 34rem; margin: 0 auto; padding-inline: 16px; padding-block: max(18px, env(safe-area-inset-top)) 96px; display: grid; gap: 18px; }
+header { display: grid; gap: 10px; }
+h1 { font-family: var(--display); font-weight: 700; font-size: 30px; letter-spacing: -0.02em; margin: 0; }
+.sub { color: var(--muted); font-size: 13px; min-height: 1.4em; }
+.profiles { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip { font: 600 13px var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.spacer { flex: 1; }
+.list { display: grid; gap: 10px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid;
+  grid-template-columns: 56px minmax(0, 1fr); gap: 4px 12px; }
+.sleeve { grid-row: span 3; width: 56px; height: 56px; border-radius: 4px; display: grid; place-items: center;
+  font: 700 18px var(--display); color: #fff; letter-spacing: -0.02em; }
+.top { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; min-width: 0; }
+.slot { font: 600 10.5px var(--mono); letter-spacing: .06em; text-transform: uppercase; border-radius: 4px; padding: 2px 6px; }
+.slot.new { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+.slot.revisit { background: var(--revisit-bg); color: var(--revisit); }
+.slot.wildcard { background: var(--wild-bg); color: var(--wild); }
+.slot.pinned { background: var(--pin-bg); color: var(--pin); }
+.title { font-family: var(--display); font-weight: 700; font-size: 17px; line-height: 1.2; min-width: 0; overflow-wrap: anywhere; }
+.title .artist { font-weight: 500; color: var(--muted); }
+.meta { font-size: 12.5px; color: var(--muted); }
+.why { font-size: 13px; min-width: 0; grid-column: 2; overflow-wrap: anywhere; }
+.actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+.btn { font: 600 13px var(--body); border: 1px solid var(--line); background: transparent; color: var(--ink);
+  border-radius: 7px; padding: 7px 10px; cursor: pointer; text-decoration: none; }
+.btn.play { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.on { background: var(--pin-bg); color: var(--pin); border-color: var(--pin); }
+.btn[disabled] { opacity: .5; }
+h2 { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 6px 0 0; }
+.progress { display: grid; gap: 8px; }
+.row { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr) 7.5rem; gap: 10px; align-items: center; font-size: 13px; }
+.bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); }
+.count { font: 400 12px var(--mono); color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+@media (max-width: 420px) { .row { grid-template-columns: 6.5rem minmax(0, 1fr) 6.2rem; } }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  background: var(--toast); color: var(--toast-ink); border-radius: 10px; padding: 10px 14px; display: flex; gap: 14px;
+  align-items: center; font-size: 14px; max-width: calc(100% - 32px); box-shadow: 0 6px 24px rgb(0 0 0 / .25); }
+.toast button { font: 700 14px var(--body); background: none; border: 0; color: inherit; text-decoration: underline; cursor: pointer; }
+.error { color: #b42318; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Up next</h1>
+    <div class="profiles" id="profiles"></div>
+    <div class="sub" id="sub">Loading…</div>
+  </header>
+  <section class="list" id="list" aria-label="Queue" aria-live="polite"></section>
+  <section class="progress" aria-label="Progress">
+    <h2>Heard so far</h2>
+    <div id="progress"></div>
+  </section>
+</div>
+<div class="toast" id="toast" hidden><span id="toast-text"></span><button id="toast-undo" type="button">Undo</button></div>
+
+<script>
+const T = new URLSearchParams(location.search).get("t") || "";
+let profile = "default";
+try { profile = localStorage.getItem("queue.profile") || "default"; } catch (e) {}
+let shuffled = false, presses = 0, seen = new Set(), data = null, toastTimer = null, lastParams = null;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function hue(s) { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) % 360; return h; }
+function initials(s) { return s.replace(/^the\s+/i, "").split(/\s+/).slice(0, 2).map(w => w[0] || "").join("").toUpperCase(); }
+function url(path, params = {}) {
+  const q = new URLSearchParams({ t: T, ...params });
+  return `${path}?${q}`;
+}
+
+async function load(opts = {}) {
+  $("sub").textContent = "Loading…";
+  let params = { profile };
+  if (opts.again && lastParams) {
+    params = { ...lastParams };  // the same draw again (same seed), minus what just left
+  } else if (opts.shuffle) {
+    params.shuffle = "true";
+    if (seen.size) params.exclude = [...seen].join(",");
+  }
+  try {
+    const r = await fetch(url("/queue/data", params));
+    if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
+    data = await r.json();
+  } catch (e) {
+    $("sub").innerHTML = `<span class="error">Couldn't load the queue: ${esc(e.message)}. Pull to refresh to try again.</span>`;
+    return;
+  }
+  lastParams = { ...params };
+  if (data.shuffle && !params.seed) lastParams.seed = String(data.seed);
+  if (opts.shuffle) {
+    const fresh = data.items.filter(i => i.slot === "new").map(i => i.release_group_id);
+    const expected = data.items.length - data.items.filter(i => i.slot !== "new").length;
+    if (fresh.some(id => seen.has(id)) || fresh.length < expected) seen = new Set();  // went through the pool: start over
+    fresh.forEach(id => seen.add(id));
+  }
+  render();
+}
+
+function card(a, i) {
+  const h = hue(a.artist);
+  const meta = [a.year, a.primary_type, a.history].filter(Boolean).map(esc).join(" · ");
+  const pinBtn = a.pinned
+    ? `<button class="btn on" data-act="unpin" data-id="${a.release_group_id}">Pinned</button>`
+    : `<button class="btn" data-act="pin" data-id="${a.release_group_id}">Pin</button>`;
+  return `<article class="card" id="card-${a.release_group_id}">
+    <div class="sleeve" style="background:linear-gradient(135deg,hsl(${h} 45% 38%),hsl(${(h + 40) % 360} 50% 28%))" aria-hidden="true">${esc(initials(a.album))}</div>
+    <div class="top"><span class="slot ${a.slot}">${a.slot}</span></div>
+    <div class="title">${esc(a.album)} <span class="artist">· ${esc(a.artist)}</span></div>
+    <div class="meta">${meta}</div>
+    <div class="why">${esc(a.why_line)}</div>
+    <div class="actions">
+      <a class="btn play" href="${esc(a.play_url)}" target="_blank" rel="noopener">Play</a>
+      ${pinBtn}
+      <button class="btn" data-act="snooze" data-days="30" data-id="${a.release_group_id}">Snooze 30</button>
+      <button class="btn" data-act="snooze" data-days="90" data-id="${a.release_group_id}">Snooze 90</button>
+      <button class="btn" data-act="played" data-id="${a.release_group_id}">Mark played</button>
+      <button class="btn" data-act="hide" data-id="${a.release_group_id}">Not for me</button>
+    </div>
+  </article>`;
+}
+
+function render() {
+  $("profiles").innerHTML = data.profiles.map(p =>
+    `<button class="chip" aria-pressed="${p.name === profile}" data-profile="${esc(p.name)}" title="${esc(p.description || "")}">${esc(p.name)}</button>`).join("") +
+    `<span class="spacer"></span>` +
+    (shuffled ? `<button class="chip" id="top">Top picks</button>` : "") +
+    `<button class="btn play" id="shuffle">Shuffle</button>`;
+  const n = s => data.items.filter(i => i.slot === s).length;
+  const mix = [`${n("new")} new`, n("revisit") && `${n("revisit")} revisit`, n("wildcard") && `${n("wildcard")} wildcard`, n("pinned") && `${n("pinned")} pinned`].filter(Boolean).join(", ");
+  $("sub").textContent = shuffled
+    ? `Shuffle ${presses} · ${mix} · drawn from your top ${data.shuffle_pool}, no repeats until you've seen them all`
+    : `Top picks · ${mix}`;
+  $("list").innerHTML = data.items.length ? data.items.map(card).join("")
+    : `<p class="meta">Nothing to suggest for this profile yet. Lists may still be matching to albums.</p>`;
+  $("progress").innerHTML = data.progress.map(g =>
+    `<div class="row"><span>${esc(g.label)}</span><span class="bar"><i style="width:${g.total ? (100 * g.heard / g.total).toFixed(1) : 0}%"></i></span><span class="count">${g.heard.toLocaleString()} / ${g.total.toLocaleString()}</span></div>`).join("");
+}
+
+function toast(text, undo) {
+  clearTimeout(toastTimer);
+  $("toast-text").textContent = text;
+  $("toast-undo").hidden = !undo;
+  $("toast-undo").onclick = async () => { $("toast").hidden = true; await undo(); await load({ again: true }); };
+  $("toast").hidden = false;
+  toastTimer = setTimeout(() => { $("toast").hidden = true; }, 7000);
+}
+
+async function act(id, action, params = {}) {
+  const r = await fetch(url(`/queue/${id}/${action}`, params), { method: "POST" });
+  if (!r.ok) throw new Error(`${r.status}`);
+  return r.json();
+}
+
+document.addEventListener("click", async e => {
+  const b = e.target.closest("button");
+  if (!b || !data) return;
+  if (b.dataset.profile) {
+    profile = b.dataset.profile; shuffled = false; presses = 0; seen = new Set();
+    try { localStorage.setItem("queue.profile", profile); } catch (err) {}
+    return load();
+  }
+  if (b.id === "shuffle") { shuffled = true; presses++; return load({ shuffle: true }); }
+  if (b.id === "top") { shuffled = false; presses = 0; seen = new Set(); return load(); }
+  const id = b.dataset.id, action = b.dataset.act;
+  if (!id || !action) return;
+  const item = data.items.find(i => String(i.release_group_id) === id);
+  const name = item ? `${item.album}` : "Album";
+  b.disabled = true;
+  try {
+    if (action === "played") {
+      const res = await act(id, "played");
+      $(`card-${id}`)?.remove();
+      toast(`Marked played: ${name}`, () => fetch(url(`/queue/sessions/${res.session_id}/undo`), { method: "POST" }));
+    } else if (action === "hide") {
+      await act(id, "hide");
+      $(`card-${id}`)?.remove();
+      toast(`Not for me: ${name}`, () => act(id, "unhide"));
+    } else if (action === "snooze") {
+      await act(id, "snooze", { days: b.dataset.days });
+      $(`card-${id}`)?.remove();
+      toast(`Snoozed ${b.dataset.days} days: ${name}`, () => act(id, "unsnooze"));
+    } else {
+      await act(id, action);
+    }
+    // refill the list, keeping the current shuffle's albums
+    setTimeout(() => load({ again: true }), action === "pin" || action === "unpin" ? 0 : 400);
+  } catch (err) {
+    b.disabled = false;
+    toast(`That didn't save (${err.message}). Try again.`);
+  }
+});
+load();
+</script>
+</body>
+</html>

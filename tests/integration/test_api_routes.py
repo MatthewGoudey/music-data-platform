@@ -201,3 +201,40 @@ def test_show_interest_through_the_api(client) -> None:
         assert client.put("/shows/-1/interest", json={}, headers=AUTH).status_code == 404
     finally:
         asyncio.run(_drop_temp_show())
+
+
+def test_queue_data_and_actions_round_trip(client) -> None:
+    rg = asyncio.run(_temp_album())
+    try:
+        assert client.get("/queue/data").status_code == 401
+        data = client.get("/queue/data?t=page-token")
+        assert data.status_code == 200
+        body = data.json()
+        assert {"items", "profiles", "progress", "seed"} <= set(body)
+        assert client.get("/queue/data", headers=AUTH).status_code == 200
+        assert client.post(f"/queue/{rg}/pin?t=page-token").status_code == 200
+        pinned = client.get("/next?format=json", headers=AUTH).json()["items"]
+        assert pinned[0]["release_group_id"] == rg and pinned[0]["slot"] == "pinned"
+        assert client.post(f"/queue/{rg}/unpin?t=page-token").status_code == 200
+        assert client.post(f"/queue/{rg}/snooze?t=page-token&days=30").status_code == 200
+        assert client.post(f"/queue/{rg}/unsnooze?t=page-token").status_code == 200
+        assert client.post(f"/queue/{rg}/hide?t=page-token").status_code == 200
+        assert client.post(f"/queue/{rg}/unhide?t=page-token").status_code == 200
+        played = client.post(f"/queue/{rg}/played?t=page-token")
+        assert played.status_code == 200
+        sid = played.json()["session_id"]
+        assert client.post(f"/queue/sessions/{sid}/undo?t=page-token").status_code == 200
+        assert client.post(f"/queue/sessions/{sid}/undo?t=page-token").status_code == 404
+        assert client.post(f"/queue/{rg}/dance?t=page-token").status_code == 422
+    finally:
+        asyncio.run(_cleanup_queue_state(rg))
+        asyncio.run(_cleanup())
+
+
+async def _cleanup_queue_state(rg: int) -> None:
+    conn = await asyncpg.connect(os.environ["DATABASE_URL"])
+    try:
+        await conn.execute("DELETE FROM queue_state WHERE release_group_id = $1", rg)
+        await conn.execute("DELETE FROM album_session WHERE release_group_id = $1", rg)
+    finally:
+        await conn.close()
