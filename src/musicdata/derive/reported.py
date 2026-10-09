@@ -4,12 +4,16 @@ ListenBrainz maps each track on its own, so a live album played front to back ca
 on a dozen compilations that share its recordings (At Folsom Prison: thirteen groups),
 and no group ever holds enough of it for a session. The player's reported release name
 is the better witness. A listen whose `reported_key` differs from its group's key moves
-to the group that is that album's home:
+to the group that is that album's home, when all of these hold:
 
-- a group with the reported key, by the listen's artist, its current group's artist, or
-  an album artist the reported name was seen under (release_group_alias);
-- exactly one such group, or exactly one mapped one among several (Weezer's two
-  self-titled albums stay where they are).
+- the home is a MusicBrainz release group (mapped) with the reported key, by the
+  listen's artist, its current group's artist, or the album artist recorded for this
+  very listen (release_group_alias); exactly one such group (Weezer's two self-titled
+  albums stay where they are);
+- the reported album is not an expanded form of the current one ("Play & Play: The B
+  Sides" on Play, "Transistor … Extended" on Transistor stay on the album);
+- the move does not take a listen off a session-eligible album or EP onto a
+  compilation or box set (Cap'n Jazz EPs played from the anthology keep their EPs).
 
 Both groups are marked changed, so derive rebuilds their sessions. Listens at home are
 never moved again by the stray-track redirect (derive/redirects.py).
@@ -23,33 +27,42 @@ from musicdata.identity import album_key
 
 FILL_BATCH = 5000
 
-GO_HOME = """
-    WITH cand AS (
-        SELECT l.listen_id, l.release_group_id AS from_rg, h.release_group_id AS to_rg,
-               h.mbid IS NOT NULL AS mapped
+ELIGIBLE = """(g.primary_type IN ('Album', 'EP') AND NOT g.is_compilation AND NOT g.is_box_set
+                AND EXISTS (SELECT 1 FROM release_group_tracklist t
+                             WHERE t.release_group_id = g.release_group_id
+                               AND t.source <> 'unresolved'))"""
+
+GO_HOME = f"""
+    WITH away AS (
+        SELECT l.listen_id, l.release_group_id AS from_rg, l.artist_id, l.release_name,
+               l.reported_key, cur.artist_id AS cur_artist, cur.norm_key AS cur_key,
+               {ELIGIBLE.replace("g.", "cur.")} AS cur_eligible
           FROM listen l
           JOIN release_group cur ON cur.release_group_id = l.release_group_id
-          JOIN release_group h ON h.norm_key = l.reported_key
-                              AND h.artist_id IN (l.artist_id, cur.artist_id)
          WHERE l.reported_key IS NOT NULL AND cur.norm_key <> l.reported_key
+           AND l.reported_key NOT LIKE cur.norm_key || ' %'
+    ), cand AS (
+        SELECT a.listen_id, a.from_rg, a.cur_eligible, h.release_group_id AS to_rg
+          FROM away a
+          JOIN release_group h ON h.norm_key = a.reported_key AND h.mbid IS NOT NULL
+                              AND h.artist_id IN (a.artist_id, a.cur_artist)
         UNION
-        SELECT l.listen_id, l.release_group_id, h.release_group_id, h.mbid IS NOT NULL
-          FROM listen l
-          JOIN release_group cur ON cur.release_group_id = l.release_group_id
-          JOIN release_group_alias ra ON ra.raw_album = l.release_name
-          JOIN release_group h ON h.artist_id = ra.artist_id AND h.norm_key = l.reported_key
-         WHERE l.reported_key IS NOT NULL AND cur.norm_key <> l.reported_key
+        SELECT a.listen_id, a.from_rg, a.cur_eligible, h.release_group_id
+          FROM away a
+          JOIN release_group_alias ra ON ra.raw_album = a.release_name
+                                     AND ra.release_group_id = a.from_rg
+          JOIN release_group h ON h.artist_id = ra.artist_id AND h.norm_key = a.reported_key
+                              AND h.mbid IS NOT NULL
     ), pick AS (
-        SELECT listen_id, from_rg,
-               CASE WHEN count(DISTINCT to_rg) = 1 THEN min(to_rg)
-                    WHEN count(DISTINCT to_rg) FILTER (WHERE mapped) = 1
-                         THEN min(to_rg) FILTER (WHERE mapped)
-               END AS to_rg
-          FROM cand GROUP BY listen_id, from_rg
+        SELECT c.listen_id, c.from_rg, min(c.to_rg) AS to_rg
+          FROM cand c JOIN release_group g ON g.release_group_id = c.to_rg
+         WHERE NOT c.cur_eligible OR NOT (g.is_compilation OR g.is_box_set)
+         GROUP BY c.listen_id, c.from_rg
+        HAVING count(DISTINCT c.to_rg) = 1
     ), moved AS (
         UPDATE listen l SET release_group_id = p.to_rg
           FROM pick p
-         WHERE l.listen_id = p.listen_id AND p.to_rg IS NOT NULL
+         WHERE l.listen_id = p.listen_id
         RETURNING p.from_rg AS a, p.to_rg AS b
     ), touched AS (
         SELECT a AS rg FROM moved UNION SELECT b FROM moved
