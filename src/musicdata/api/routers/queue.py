@@ -124,15 +124,38 @@ CARD = """<form class="card" method="post" action="/queue/verdict?t={token}">
   <div><strong>{album}</strong></div>
   <div>{artist}</div>
   <div class="meta">{when} · {kind} · {played}/{count} tracks</div>
+  <div class="meta">{history}</div>
   <input type="hidden" name="release_group_id" value="{rg}">
   <input type="hidden" name="session_started_at" value="{started}">
-  <input type="text" name="note" maxlength="500" placeholder="One line (optional)">
+  <input type="text" name="note" maxlength="500" placeholder="Why? A note for later (optional)">
   <div class="row">
     <button name="verdict" value="again">Again</button>
     <button name="verdict" value="later">Later</button>
     <button name="verdict" value="never">Never</button>
   </div>
 </form>"""
+
+
+def history_line(
+    full_sessions: int | None,
+    best_completion: float | None,
+    tracks_heard: int | None,
+    track_count: int | None,
+) -> str:
+    """The album's whole history in one line: finished or not, and how much of the
+    standard tracklist has ever been heard across every play."""
+    heard = ""
+    if track_count:
+        heard = (
+            "every track heard"
+            if (tracks_heard or 0) >= track_count
+            else f"{tracks_heard or 0} of {track_count} tracks ever heard"
+        )
+    if full_sessions:
+        times = "once" if full_sessions == 1 else f"{full_sessions}×"
+        return " · ".join(x for x in (f"Finished {times}", heard) if x)
+    best = f"best {round(float(best_completion or 0) * 100)}%"
+    return " · ".join(x for x in ("Not finished yet", best, heard) if x)
 
 
 @router.get("/queue", response_class=HTMLResponse)
@@ -147,10 +170,13 @@ async def queue_page(request: Request, pool: Pool, t: Annotated[str, Query()] = 
         rows = await conn.fetch(
             f"""SELECT DISTINCT ON (s.release_group_id)
                        s.release_group_id, s.started_at, s.session_type, s.tracks_played,
-                       s.track_count, rg.title, a.name AS artist
+                       s.track_count, rg.title, a.name AS artist,
+                       st.full_sessions, st.best_completion, st.tracks_heard,
+                       st.track_count AS standard_count
                   FROM album_session s
                   JOIN release_group rg USING (release_group_id)
                   JOIN artist a ON a.artist_id = rg.artist_id
+                  LEFT JOIN release_group_stat st USING (release_group_id)
                  WHERE s.started_at > now() - interval '{RECENT_DAYS} days'
                    AND NOT EXISTS (SELECT 1 FROM verdict v
                                     WHERE v.release_group_id = s.release_group_id
@@ -196,6 +222,11 @@ async def queue_page(request: Request, pool: Pool, t: Annotated[str, Query()] = 
             kind=r["session_type"],
             played=r["tracks_played"],
             count=r["track_count"],
+            history=escape(
+                history_line(
+                    r["full_sessions"], r["best_completion"], r["tracks_heard"], r["standard_count"]
+                )
+            ),
             rg=r["release_group_id"],
             started=r["started_at"].isoformat(),
         )
