@@ -144,10 +144,10 @@ async function load(opts = {}) {
   lastParams = { ...params };
   if (data.shuffle && !params.seed) lastParams.seed = String(data.seed);
   if (opts.shuffle) {
-    const fresh = data.items.filter(i => i.slot === "new").map(i => i.release_group_id);
-    const expected = data.items.length - data.items.filter(i => i.slot !== "new").length;
-    if (fresh.some(id => seen.has(id)) || fresh.length < expected) seen = new Set();  // went through the pool: start over
-    fresh.forEach(id => seen.add(id));
+    // every shuffled card (new, revisit, wildcard) counts as seen; pins stay put
+    const shown = data.items.filter(i => i.slot !== "pinned").map(i => i.release_group_id);
+    if (shown.some(id => seen.has(id))) seen = new Set();  // went through the pool: start over
+    shown.forEach(id => seen.add(id));
   }
   render();
 }

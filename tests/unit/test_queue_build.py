@@ -188,3 +188,15 @@ def test_why_line_reads_like_the_spec() -> None:
     }
     assert why_line([atlas]) == "V Atlas · C1 Indie twang · Essential · start here"
     assert why_line([rs]) == "Rolling Stone #2"
+
+
+def test_shuffle_redraws_revisits_and_the_wildcard_too() -> None:
+    pools = {"spaced": [_item(9000 + i, pool="spaced", status="heard") for i in range(12)]}
+    seen = set()
+    for seed in range(1, 4):
+        items = _build(shuffle=True, seed=seed, pools=pools, exclude=seen)
+        shown = {i.release_group_id for i in items if i.slot != "pinned"}
+        assert not shown & seen  # nothing repeats across presses
+        seen |= shown
+    ranked = _build(pools=pools)
+    assert [i.release_group_id for i in ranked if i.slot == "revisit"] == [9000, 9001]

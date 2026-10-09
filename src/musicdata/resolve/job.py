@@ -29,7 +29,10 @@ PENDING = f"""
    WHERE rg.mbid IS NOT NULL
      AND EXISTS (SELECT 1 FROM listen l WHERE l.release_group_id = rg.release_group_id)
      AND (t.release_group_id IS NULL
-          OR (t.source = 'unresolved' AND t.resolved_at < now() - interval '{RETRY_AFTER}'))
+          OR (t.source = 'unresolved' AND t.resolved_at < now() - interval '{RETRY_AFTER}')
+          -- marked unresolved while unmapped, then given an MBID: resolve it now, not in
+          -- 30 days (Ray Charles's Modern Sounds sat untracked with 63 listens)
+          OR (t.source = 'unresolved' AND t.note LIKE 'no MusicBrainz %'))
 """
 
 

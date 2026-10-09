@@ -101,13 +101,24 @@ def build(
         q.add(item, "pinned", artist_rule=False)  # pins never block another album
     open_slots = n - len(q.items)
 
+    skip = set(exclude) if shuffle else set()
+    if shuffle:
+        # Shuffle re-draws every slot but the pins: each pool in random order (not most
+        # overdue first), leaving out what this round of shuffles already showed.
+        pools = {
+            name: rng.sample(
+                [i for i in items if i.release_group_id not in skip],
+                len([i for i in items if i.release_group_id not in skip]),
+            )
+            for name, items in pools.items()
+        }
     revisits = _revisits(q, pools, min(round(n * revisit_share), open_slots))
     open_slots -= len(revisits)
 
     wild: list[Item] = []
     if wildcard and not pins and open_slots > 0:
         lo, hi = config.WILDCARD_RANKS
-        deep = [i for i in candidates[lo - 1 : hi] if q.fits(i)]
+        deep = [i for i in candidates[lo - 1 : hi] if q.fits(i) and i.release_group_id not in skip]
         for _ in range(min(wildcard, open_slots)):
             deep = [i for i in deep if q.fits(i)]
             if not deep:
@@ -120,7 +131,6 @@ def build(
 
     fresh: list[Item] = []
     if shuffle:
-        skip = set(exclude)
         pool = [i for i in candidates[: config.SHUFFLE_POOL] if i.release_group_id not in skip]
         fresh = _weighted(pool, open_slots, q, rng)
     for item in candidates:  # in rank order: all of them without shuffle, the rest with it

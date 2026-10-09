@@ -446,3 +446,6 @@ priority Essential. Matt has played other Ratboys records but no session of this
 - 2026-10-09 v10: Matt asked for more shows in both lists. Ticketmaster is read a year ahead
   (was 180 days), "Not on sale yet" holds up to 50 shows, and "Shows you might like" up to
   50 over the next 180 days.
+- 2026-10-09 v11: Matt asked that Shuffle re-draw every card but the pins: revisits come from the
+  due pools in random order and the wildcard is drawn again, and `exclude` (every card shown
+  since Top picks) keeps revisits and wildcards from repeating too.
