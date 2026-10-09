@@ -34,6 +34,10 @@ def configure_logging(json_lines: bool = True, level: int = logging.INFO) -> Non
         handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
     root.addHandler(handler)
     root.setLevel(level)
+    # httpx logs every request URL at INFO; some carry API keys as query parameters, and
+    # Actions logs are public. Failures still surface through the callers' own logs.
+    for noisy in ("httpx", "httpcore"):
+        logging.getLogger(noisy).setLevel(logging.WARNING)
 
 
 def get_logger(name: str) -> logging.LoggerAdapter:
