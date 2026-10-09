@@ -19,3 +19,15 @@ def test_secrets_do_not_leak_in_repr(monkeypatch) -> None:
 def test_env_defaults_to_local(monkeypatch) -> None:
     monkeypatch.delenv("MUSICDATA_ENV", raising=False)
     assert Settings(_env_file=None).musicdata_env == "local"
+
+
+def test_graph_keys_are_optional_and_never_in_repr(monkeypatch) -> None:
+    for name in ("FIRECRAWL_API_KEY", "DISCOGS_TOKEN", "GRAPH_MONTHLY_CREDITS"):
+        monkeypatch.delenv(name, raising=False)
+    s = Settings(_env_file=None)
+    assert s.firecrawl_api_key is None and s.discogs_token is None
+    assert s.graph_monthly_credits == 15000
+    monkeypatch.setenv("FIRECRAWL_API_KEY", "fc-" + "0" * 32)
+    s = Settings(_env_file=None)
+    assert s.firecrawl_api_key.get_secret_value().startswith("fc-")
+    assert "fc-000" not in repr(s)

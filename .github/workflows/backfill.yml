@@ -30,6 +30,8 @@ jobs:
       MUSICBRAINZ_USER_AGENT: ${{ vars.MUSICBRAINZ_USER_AGENT }}
       LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
       TICKETMASTER_API_KEY: ${{ secrets.TICKETMASTER_API_KEY }}
+      FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
+      DISCOGS_TOKEN: ${{ secrets.DISCOGS_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v3

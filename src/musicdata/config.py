@@ -55,6 +55,15 @@ class Settings(BaseSettings):
     home_address: SecretStr | None = Field(
         default=None, description="Where travel times start from; kept out of the public repo."
     )
+    firecrawl_api_key: SecretStr | None = Field(
+        default=None, description="Firecrawl key for graph page fetches (GRAPH_SPEC 7.2)."
+    )
+    discogs_token: SecretStr | None = Field(
+        default=None, description="Optional Discogs token: 60 requests/minute instead of 25."
+    )
+    graph_monthly_credits: int = Field(
+        default=15000, description="Firecrawl credits the graph may spend in a calendar month."
+    )
 
     ntfy_topic: str | None = Field(default=None, description="ntfy.sh topic for failure pushes.")
     log_json: bool = Field(default=True)

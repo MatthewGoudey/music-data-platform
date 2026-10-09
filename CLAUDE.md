@@ -120,8 +120,9 @@ Gate (milestone M3): the pilot slice verified in dev (Block E), the API live, th
 profile working, and on Matt's go the graph copied to prod with G1–G8 green; then Matt uses
 `walk-back` for a week. The prototype is `scripts/graph/`; run T1 is in `data/graph/runs/T1/`.
 
-- [ ] Block 0 — ADR 0017 (the claims graph); `FIRECRAWL_API_KEY` and `DISCOGS_TOKEN` as optional
-      settings, GitHub Environment secrets (dev, prod) and backfill workflow env.
+- [x] Block 0 — ADR 0017 (the claims graph); `FIRECRAWL_API_KEY` and `DISCOGS_TOKEN` as optional
+      settings, GitHub Environment secrets (dev, prod) and backfill workflow env. Done
+      2026-10-09: `FIRECRAWL_API_KEY` set in dev and prod; no `DISCOGS_TOKEN` exists yet.
 - [ ] Block A — migrations 0018–0019 (empty tables may ride along to prod with any queue fix);
       `seeds/graph/predicates.csv`; `musicdata graph seed`; integration tests; applied to dev.
 - [ ] Block B — MusicBrainz, Discogs and Wikidata client methods; `graph import`, `graph link`;
