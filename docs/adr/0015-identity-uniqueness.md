@@ -83,3 +83,8 @@ Prison 12, Chet Baker Sings 9, Sgt. Pepper 6, Endtroducing 3 …), full sessions
 3,106 to 3,214, heard list entries from 1,625 to 1,689, every listening check stayed
 green, and one album lost its only session (Etta James, At Last!: 8 of 10 became 7 of 10
 when a track its player reported under another album stopped being pulled in).
+
+A group whose tracklist cannot be resolved holds no session, so derive also folds its listens
+into the one mapped namesake (same album key, same artist or the credit's lead artist) whose
+tracklist is resolved or not yet fetched (`derive/fold.py`). In prod this covered 15 albums and
+203 listens, RAM among them (98 listens, then 5 full sessions in dev).

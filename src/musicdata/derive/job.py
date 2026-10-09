@@ -14,6 +14,7 @@ from collections import defaultdict
 import asyncpg
 
 from musicdata.db import connection
+from musicdata.derive.fold import fold_untracked
 from musicdata.derive.redirects import apply_redirects
 from musicdata.derive.reported import go_home
 from musicdata.derive.sessions import Play, Session, TrackRef, detect_sessions, eligible
@@ -170,6 +171,7 @@ def derive(*, full: bool = False) -> JobFn:
             # Listens go home, then strays move; the groups they touch count as changed below.
             home = await go_home(conn)
             moved = await apply_redirects(conn)
+            folded = await fold_untracked(conn)
             if since is None:
                 rows = await conn.fetch("SELECT release_group_id FROM release_group")
             else:
@@ -197,6 +199,7 @@ def derive(*, full: bool = False) -> JobFn:
             sessions_partial=totals["partial"],
             **home,
             **moved,
+            **folded,
         )
 
     return _run
