@@ -16,6 +16,13 @@ the queue's new albums always come from `list_entry` (the lists in `seeds/`); li
 only marks entries heard / started / unheard, fills the revisit slice, and adds a small affinity
 boost. Always ask Matt before changing a rule in that spec, and log the change at its bottom.
 
+**The music graph: always read `docs/graph/GRAPH_SPEC.md` and `docs/graph/edge-vocabulary.md`
+first and follow them exactly.** The vocabulary says what a claim is; the spec says how the graph
+is built. Their core rule: the graph stores claims with a source and verbatim evidence, the
+checks decide whether the source says it, and Matt answers only reading questions. Graph work runs
+in dev until Matt gives the go for prod (spec Block G). Always ask Matt before changing a rule in
+either file, and log the change at its bottom.
+
 ## Working conventions
 - Always run commands through uv: `uv run <cmd>`; always run `uv lock` after editing `pyproject.toml`.
 - Always run `uv run ruff check . ; uv run ruff format . ; uv run pytest -q` before committing.
@@ -75,8 +82,9 @@ Load or reload an environment with `gh workflow run full-load -f env=<dev|prod>`
 `musicdata shows --sweep` reads all ~600 Oh My Rockness venues once (~20 min); nightly
 runs read active venues plus a rotating 85.
 
-Current priority (Matt, 2026-10-09): the queue. Follow `docs/QUEUE_SPEC.md` section 0:
-Step 0 cleanup, then Phase 4 Blocks A–G. Shows and verdict work waits until the Phase 4 gate.
+Current priority (Matt, 2026-10-09): the queue's gate week continues untouched, and the music
+graph starts now in dev: Phase 5, `docs/graph/GRAPH_SPEC.md` section 13, Blocks 0 and A–G.
+Shows, venues and verdict work wait until the Phase 4 gate.
 
 Open items that need Matt:
 - Done: `docs/claude-project-instructions.md` pasted into the claude.ai Project (gate step 19).
@@ -88,15 +96,15 @@ Open items that need Matt:
 - A fresh BestEverAlbums download converts with `scripts/convert_besteveralbums.py`.
 
 Notes for the next session:
-- Never migrate a shared database (dev, prod) ahead of `main`: a cloud job running the
+- Always migrate a shared database (dev, prod) only from code already on `main`: a cloud job running the
   older code fails on the unknown revision (it broke a dev derive on 2026-10-08).
 - After `ingest --rekey`, always run resolve with the unmapped tail and retries before
   derive (`full-load -f mode=repair` does all three): a rekey alone re-creates unmapped
   duplicates ("DAMN. COLLECTORS EDITION.") that resolve had merged into the real album.
 - A key-rule change needs golden cases for every key it touches; a change to the edition
   rule moved `title_key` too and the rekey then stored 81 duplicates (now fixed and checked).
-- Patches containing backslashes go through Edit/Write or PowerShell, never bash heredocs,
-  which collapse `\b` and `\w` on this machine.
+- Always apply patches containing backslashes through Edit/Write or PowerShell; bash heredocs
+  on this machine collapse `\b` and `\w`.
 - Saved web pages used as fixtures are scrubbed of third-party scripts and keys
   (gitleaks blocks them otherwise).
 - `daily-sync` commits `docs/status/heartbeat.txt` monthly; run `git pull` before pushing.
@@ -106,6 +114,29 @@ Notes for the next session:
   shrinks pages, waits out outages, and `ingest --full` resumes below the oldest listen.
 - Integration tests run against Neon dev; they use made-up MBIDs and coordinates far from
   Chicago, and clean up their rows.
+
+## Phase 5 checklist — the music graph (spec: `docs/graph/GRAPH_SPEC.md`)
+Gate (milestone M3): the pilot slice verified in dev (Block E), the API live, the walk-back
+profile working, and on Matt's go the graph copied to prod with G1–G8 green; then Matt uses
+`walk-back` for a week. The prototype is `scripts/graph/`; run T1 is in `data/graph/runs/T1/`.
+
+- [ ] Block 0 — ADR 0017 (the claims graph); `FIRECRAWL_API_KEY` and `DISCOGS_TOKEN` as optional
+      settings, GitHub Environment secrets (dev, prod) and backfill workflow env.
+- [ ] Block A — migrations 0018–0019 (empty tables may ride along to prod with any queue fix);
+      `seeds/graph/predicates.csv`; `musicdata graph seed`; integration tests; applied to dev.
+- [ ] Block B — MusicBrainz, Discogs and Wikidata client methods; `graph import`, `graph link`;
+      `--slice crazy_horse` in dev; coverage report per facet (milestone M1).
+- [ ] Block C — `clients/firecrawl.py`, `graph fetch`, `graph facts`; one-page live test; the
+      slice in dev (estimate first; ask Matt above 1,500 credits).
+- [ ] Block D — `graph verify`, `graph batch …`, `graph report`; T1 fixtures built from
+      `data/graph/`; T1 golden and negative tests pass; then `scripts/graph/` deleted; tell Matt
+      the skill can switch to `musicdata graph batch`.
+- [ ] Block E — the 181 albums in batches of 25; reading questions to Matt; first-pass reader
+      SUPPORTS ≥ 90% per predicate type; G1–G8 green in dev (M2).
+- [ ] Block F — graph API (spec section 10); Project instructions rows.
+- [ ] Block G — migration 0020, walk-back list, profile and card control; tag; on Matt's go:
+      prod migrations, `graph copy --source dev`, `graph link` in `daily-sync`, G1–G8 green in
+      prod (M3).
 
 ## Phase 4 checklist — lists, the atlas and the queue (spec: `docs/QUEUE_SPEC.md`)
 Gate: dev green on checks L1–L5 and tests Q1–Q5, the version tagged and live in prod with

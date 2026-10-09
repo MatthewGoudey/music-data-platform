@@ -1,8 +1,8 @@
 # Music graph: edge vocabulary, sources and the Crazy Horse pilot
 
 - Status: **Proposed** — Matt marks this up; the checks in section 13 test claims without needing
-  Matt to know the music. The research procedure is the `music-graph-research` skill, with its tools
-  in `scripts/graph/`.
+  Matt to know the music. The research procedure is the `music-graph-research` skill; the build
+  (schema, jobs, checks, API) is `docs/graph/GRAPH_SPEC.md`.
 - Date: 2026-10-09. Scope: the claims graph that can map any album, starting with the Crazy
   Horse line of the V atlas. Sequencing: the pilot starts after the Phase 4 queue gate; this
   document and the golden set can be worked on meanwhile.
@@ -50,7 +50,7 @@ Every claim carries:
 | `basis` | `documented` (a credit, a database, the artist's own statement), `reported` (a critic or publication says so), `inferred` (resemblance judged by a curator or extractor) |
 | `confidence` | 0.0–1.0 |
 | `evidence` | the exact supporting sentence (≤ 300 characters) or the database field, plus the source URL |
-| `status` | `proposed`, `accepted`, `rejected`, `superseded` |
+| `status` | `proposed` (loaded, unchecked), `unread` (checked, waiting for the reader), `accepted`, `rejected`, `ask_matt` (a reading question), `superseded` |
 | `asserted_by`, `asserted_at`, `run_id` | who or what made the claim, when, in which job run |
 
 **Precedence** for the current view of an edge: `matt` > `map:*` > documented database
@@ -156,7 +156,8 @@ MusicBrainz, Wikidata and Discogs cost nothing.
 Two different callers, two rule sets:
 
 **The pipeline (code in `musicdata`, run by GitHub Actions or Fly):**
-- Always read the key from the `FIRECRAWL_API_KEY` secret in each GitHub Environment and Fly app.
+- Always read the key from the `FIRECRAWL_API_KEY` secret in each GitHub Environment (the Fly API
+  fetches nothing, so it needs no key).
 - Always scrape registered links only (section 5); batch jobs run no web searches.
 - Always cache each result by `(url, schema_version)` in a `source_fetch` table (URL, schema
   version, fetched_at, credits_used, JSON result), and reuse it: the pipeline pays for a page once
@@ -239,7 +240,7 @@ album costs almost nothing.
 | --- | --- | --- |
 | M0 | this vocabulary marked up by Matt; the skill and `scripts/graph/` tested on three albums (run T1) | Matt has read sections 3–4 and agreed or changed them |
 | M1 | schema (`entity`, `predicate`, `assertion`, `map_membership`, `entity_link`); MusicBrainz and Discogs baseline and links for the 181 | a coverage report per facet |
-| M2 | the skill run over the slice in batches: fetch, facts, Claude reading, checks, independent reader; the golden set re-judged by the same checks | every predicate type at ≥ 90% reader SUPPORTS on its text claims; Matt has answered the reading questions |
+| M2 | the skill run over the slice in batches: fetch, facts, Claude reading, checks, independent reader | every predicate type with ≥ 10 text claims at ≥ 90% SUPPORTS on the reader's first verdict; Matt has answered the reading questions |
 | M3 | `/entities/{id}`, `/neighbors`, `/paths`, `/albums/{id}/brief`; a "walk back from here" profile in the queue (a generated list `graph_walk:<album>`) | Matt uses it for a week |
 
 **Run T1** (2026-10-09; Boat Songs, Crazy Horse (1971), Keeper): 126 claims, 125 accepted and 1
@@ -278,19 +279,17 @@ Wikipedia extraction (credited on 5, recorded at 2, associated with 2, released 
 covers). Some are wrong on purpose of the extractor, not of the sampling: they show where each
 extractor fails.
 
-In M2 the checks above judge it, in place of Matt: each row's claim goes through `verify.py` and the
-independent reader, and the result fills `verdict`. The original instructions, kept for anyone who
-does know the music:
+It is now a record of the first extractor test (atlas matcher against Firecrawl JSON). The
+first-pass reader measure in `docs/graph/GRAPH_SPEC.md` (Block E) replaces it as the quality bar.
+The original judging instructions, kept for anyone who does know the music:
 - `verdict`: `correct`, `wrong_predicate`, `wrong_object`, `wrong_direction`, `not_a_claim`, or `unsure`.
 - `fix`: when it is wrong, the right predicate or object (e.g. `on_list`, `Neil Young member_of Buffalo Springfield`).
 - `note`: anything else.
 - Missed claims: add a row with `extractor` = `matt` for any claim the sentence makes that no row
   caught. These rows measure recall.
 
-The scores that come out: precision per extractor and per predicate, and recall on the sentences
-judged. In M2, Claude's lineage extraction runs over the same 50 sentences and pages and is scored
-the same way, so the three extractors are compared on one yardstick. M2 accepts a predicate type automatically only above 90% precision; everything else goes
-to review.
+Judged that way, the set gives precision per extractor and per predicate, and recall on the
+sentences judged.
 
 ## Changes to this document
 
@@ -302,6 +301,9 @@ to review.
 - 2026-10-09: the `music-graph-research` skill and `scripts/graph/` tested on three albums (run T1);
   Discogs added as a free credits source; checks that need no music knowledge replace Matt judging
   the golden set (section 13); milestones M0 and M2 updated; budget re-estimated (section 6).
+- 2026-10-09: statuses `unread` and `ask_matt` added (section 3), as used by the checks; the build
+  moved to `docs/graph/GRAPH_SPEC.md`; the golden set became a record, replaced by the first-pass
+  reader measure; Firecrawl secrets live in GitHub Environments only.
 - Proposed, for Matt: a predicate for a band's earlier name or predecessor band (Crazy Horse
   recorded in 1968 as The Rockets), e.g. `continues` (artist → artist, `from` year). Until agreed,
   such sentences go to the skipped log.
