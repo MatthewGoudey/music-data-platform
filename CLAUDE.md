@@ -122,9 +122,11 @@ profile working, and on Matt's go the graph copied to prod with G1–G8 green; t
 
 - [x] Block 0 — ADR 0017 (the claims graph); `FIRECRAWL_API_KEY` and `DISCOGS_TOKEN` as optional
       settings, GitHub Environment secrets (dev, prod) and backfill workflow env. Done
-      2026-10-09: `FIRECRAWL_API_KEY` set in dev and prod; no `DISCOGS_TOKEN` exists yet.
-- [ ] Block A — migrations 0018–0019 (empty tables may ride along to prod with any queue fix);
+      2026-10-09: `FIRECRAWL_API_KEY` and `DISCOGS_TOKEN` set in dev and prod and in `.env`.
+- [x] Block A — migrations 0018–0019 (empty tables may ride along to prod with any queue fix);
       `seeds/graph/predicates.csv`; `musicdata graph seed`; integration tests; applied to dev.
+      Done 2026-10-09: dev seeded (17 predicates, 54 lanes, 162 lane_parent claims, 8 lists,
+      2,838 atlas albums). `predicate."symmetric"` is quoted (a reserved word).
 - [ ] Block B — MusicBrainz, Discogs and Wikidata client methods; `graph import`, `graph link`;
       `--slice crazy_horse` in dev; coverage report per facet (milestone M1).
 - [ ] Block C — `clients/firecrawl.py`, `graph fetch`, `graph facts`; one-page live test; the
