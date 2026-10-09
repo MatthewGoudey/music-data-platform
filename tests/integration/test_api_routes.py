@@ -21,6 +21,8 @@ GETS = [
     "/artists?limit=5",
     "/albums?limit=5&sort=recent",
     "/sessions?days=30",
+    "/shows?days=30",
+    "/shows?match=true&limit=5",
 ]
 
 
