@@ -562,7 +562,7 @@ def graph_batch_reader_input(*, label: str, root: Path = Path(".")) -> JobFn:
                 reader_line(c, album_names.get(c["album"], c["album"]))
                 for c in claims
                 if needs_reader(c) and c["status"] not in ("rejected",)
-                and not c["fails"]
+                and not c["fails"] and c["reader"] is None  # judged claims are not sent again
             ]  # fmt: skip
             await conn.execute(
                 """UPDATE graph_batch SET status = 'reader_exported',
