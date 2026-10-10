@@ -76,8 +76,94 @@ def order_key(t: asyncpg.Record) -> tuple:
     return (tier, t["atlas_id"] or "")
 
 
-async def slice_targets(conn: asyncpg.Connection, slice_name: str) -> list[asyncpg.Record]:
-    """A slice's atlas entries in research order (GRAPH_SPEC 6), resolved or not."""
+def label_id(t) -> str:
+    """The album part of a claim label: its atlas id, else rg<release_group_id> (spec 3.2)."""
+    return t["atlas_id"] or f"rg{t['release_group_id']}"
+
+
+def slice_label(slice_name: str) -> str:
+    return "rg" if slice_name.startswith("rg:") else slice_name
+
+
+async def ensure_album(conn: asyncpg.Connection, release_group_id: int) -> dict | None:
+    """The album entity for a release group, created when missing (companion spec 3.2), as a
+    target row; None when the release group does not exist."""
+    rg = await conn.fetchrow(
+        """SELECT rg.release_group_id, rg.mbid::text AS mbid, rg.title, rg.norm_key,
+                  rg.first_release_year, a.name AS artist, a.norm_key AS artist_key
+             FROM release_group rg JOIN artist a ON a.artist_id = rg.artist_id
+            WHERE rg.release_group_id = $1""",
+        release_group_id,
+    )
+    if rg is None:
+        return None
+    eid = await conn.fetchval(
+        "SELECT entity_id FROM entity WHERE release_group_id = $1", release_group_id
+    )
+    if eid is None and rg["mbid"]:
+        eid = await conn.fetchval(
+            """UPDATE entity SET release_group_id = $1
+                WHERE type = 'album' AND mbid = $2::uuid AND release_group_id IS NULL
+            RETURNING entity_id""",
+            release_group_id,
+            rg["mbid"],
+        )
+    if eid is None:
+        eid = await conn.fetchval(
+            """INSERT INTO entity (type, name, norm_key, context_key, mbid, release_group_id, attrs)
+               VALUES ('album', $1, $2, $3, $4::uuid, $5, $6::jsonb) RETURNING entity_id""",
+            rg["title"],
+            rg["norm_key"] or norm_key(rg["title"]) or rg["title"].casefold(),
+            rg["artist_key"] or "",
+            rg["mbid"],
+            release_group_id,
+            json.dumps({"year": rg["first_release_year"], "artist": rg["artist"]}),
+        )
+    atlas_id = await conn.fetchval(
+        "SELECT coords ->> 'atlas_id' FROM map_membership WHERE entity_id = $1 AND map = $2",
+        eid,
+        MAP,
+    )
+    priority = await conn.fetchval("SELECT priority FROM graph_album WHERE entity_id = $1", eid)
+    return {
+        "atlas_id": atlas_id, "raw_artist": rg["artist"], "raw_album": rg["title"],
+        "resolve_status": "resolved", "priority": priority, "start_here": False, "lane_id": None,
+        "source_urls": None, "on_path": False, "entity_id": eid, "mbid": rg["mbid"],
+        "first_release_year": rg["first_release_year"], "release_group_id": release_group_id,
+    }  # fmt: skip
+
+
+async def scope_targets(conn: asyncpg.Connection, scope: str) -> list[dict]:
+    """Companion spec 3.2: `rg:<id>[,<id>…]` or `opened` (pages opened without a baseline).
+    The `default` scope (3.3) arrives with Block C, on Matt's go."""
+    if scope == "default":
+        raise ValueError("the default scope arrives with Phase 6 Block C, on Matt's go")
+    if scope == "opened":
+        rgs = [
+            r[0]
+            for r in await conn.fetch(
+                """SELECT e.release_group_id FROM graph_album g JOIN entity e USING (entity_id)
+                    WHERE 'opened' = ANY(g.slices) AND g.baseline_at IS NULL
+                      AND e.release_group_id IS NOT NULL ORDER BY g.entity_id"""
+            )
+        ]
+    elif scope.startswith("rg:"):
+        rgs = [int(x) for x in scope[3:].split(",") if x.strip()]
+    else:
+        raise ValueError(f"unknown scope {scope}")
+    out = []
+    for rg in rgs:
+        t = await ensure_album(conn, rg)
+        if t is not None:
+            out.append(t)
+    return out
+
+
+async def slice_targets(conn: asyncpg.Connection, slice_name: str) -> list:
+    """A slice's atlas entries in research order (GRAPH_SPEC 6), resolved or not; or a scope's
+    release groups (`rg:<ids>`, `opened`; companion spec 3.2)."""
+    if slice_name in ("opened", "default") or slice_name.startswith("rg:"):
+        return await scope_targets(conn, slice_name)
     lanes, rg, path_ids = None, None, []
     if slice_name.startswith("album:"):
         rg = int(slice_name.split(":", 1)[1])
@@ -217,7 +303,7 @@ def graph_import(*, slice_name: str, limit: int | None = None, refresh: bool = F
                                             ELSE graph_album.slices || $2::text END,
                               priority = EXCLUDED.priority""",
                     t["entity_id"],
-                    slice_name,
+                    slice_label(slice_name),
                     t["priority"],
                 )
             done = {
@@ -286,7 +372,7 @@ def graph_import(*, slice_name: str, limit: int | None = None, refresh: bool = F
                     notes, claims, links = {"gap": "release group not in MusicBrainz"}, [], []
                 async with connection(ctx.pool) as conn, conn.transaction():
                     n = await write_album(
-                        conn, t["entity_id"], t["atlas_id"], claims, links, notes, ctx.run_id
+                        conn, t["entity_id"], label_id(t), claims, links, notes, ctx.run_id
                     )
                 counts["albums"] += 1
                 counts["claims"] += n

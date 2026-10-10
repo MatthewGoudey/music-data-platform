@@ -1,0 +1,65 @@
+name: graph-nightly
+
+# Companion spec 3.7. Prod runs after daily-sync completes, on the latest v* tag; dev runs by
+# workflow_dispatch only. Until Matt's go for Phase 6 Block C, the steps are link and
+# verify --pending only (no default-scope import or fetch); dq records the graph checks.
+on:
+  workflow_run:
+    workflows: ["daily-sync"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      env:
+        description: "dev or prod"
+        required: true
+        default: "dev"
+
+jobs:
+  graph:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    environment: ${{ github.event_name == 'workflow_run' && 'prod' || github.event.inputs.env }}
+    env:
+      MUSICDATA_ENV: ${{ github.event_name == 'workflow_run' && 'prod' || github.event.inputs.env }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      MUSICBRAINZ_USER_AGENT: ${{ vars.MUSICBRAINZ_USER_AGENT }}
+      DISCOGS_TOKEN: ${{ secrets.DISCOGS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: prod runs the latest v* tag; dev runs main
+        if: env.MUSICDATA_ENV == 'prod'
+        run: |
+          tag="$(git tag -l 'v*' --sort=-v:refname | head -n 1)"
+          if [ -z "$tag" ]; then echo "no v* tag yet: prod has nothing to run"; exit 1; fi
+          echo "checking out $tag"
+          git checkout --quiet "$tag"
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - run: uv sync --frozen --no-dev
+      - name: link
+        id: link
+        run: uv run musicdata graph link
+      - name: verify pending
+        id: verify
+        if: always()
+        run: uv run musicdata graph verify --pending
+      - name: dq
+        id: dq
+        if: always()
+        run: uv run musicdata dq
+
+      - name: notify on failure
+        if: failure()
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          if [ -n "$NTFY_TOPIC" ]; then
+            curl -fsS -H "Title: musicdata ${{ env.MUSICDATA_ENV }} graph-nightly failed" \
+                 -H "Priority: high" \
+                 -d "link=${{ steps.link.outcome }} verify=${{ steps.verify.outcome }} dq=${{ steps.dq.outcome }}
+          ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+                 "https://ntfy.sh/$NTFY_TOPIC" || true
+          fi

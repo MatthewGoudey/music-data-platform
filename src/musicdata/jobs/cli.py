@@ -181,10 +181,14 @@ def graph_import_cmd(
     slice_: str = typer.Option(
         "crazy_horse", "--slice", help="crazy_horse, v_atlas or album:<id>."
     ),
+    scope: str | None = typer.Option(
+        None, "--scope", help="rg:<id>[,<id>…] or opened (companion spec 3.2); replaces --slice."
+    ),
     limit: int | None = typer.Option(None, help="Max albums this run."),
     refresh: bool = typer.Option(False, "--refresh", help="Baseline albums already done again."),
 ) -> None:
     """The free baseline (MusicBrainz, Wikidata, Discogs) for a slice's albums. Resumable."""
+    slice_ = scope or slice_
     from musicdata.graph.importer import graph_import
     from musicdata.jobs import runs
 
@@ -202,6 +206,9 @@ def graph_fetch_cmd(
     slice_: str = typer.Option(
         "crazy_horse", "--slice", help="crazy_horse, v_atlas or album:<id>."
     ),
+    scope: str | None = typer.Option(
+        None, "--scope", help="rg:<id>[,<id>…] or opened (companion spec 3.2); replaces --slice."
+    ),
     limit: int | None = typer.Option(None, help="Max albums this run."),
     max_credits: int = typer.Option(
         500, "--max-credits", help="Firecrawl credits this run may spend."
@@ -209,6 +216,7 @@ def graph_fetch_cmd(
     refresh: bool = typer.Option(False, "--refresh", help="Fetch for albums already fetched."),
 ) -> None:
     """Firecrawl pages (registered links only) for a slice's baselined albums. Costs credits."""
+    slice_ = scope or slice_
     from musicdata.graph.fetch import graph_fetch
     from musicdata.jobs import runs
 
@@ -226,9 +234,13 @@ def graph_facts_cmd(
     slice_: str = typer.Option(
         "crazy_horse", "--slice", help="crazy_horse, v_atlas or album:<id>."
     ),
+    scope: str | None = typer.Option(
+        None, "--scope", help="rg:<id>[,<id>…] or opened (companion spec 3.2); replaces --slice."
+    ),
     refresh: bool = typer.Option(False, "--refresh", help="Re-read albums already done."),
 ) -> None:
     """Claims from each Firecrawl facts fetch (Wikipedia personnel and recording places)."""
+    slice_ = scope or slice_
     from musicdata.graph.facts import graph_facts
     from musicdata.jobs import runs
 
@@ -284,6 +296,23 @@ def graph_verify_cmd(
     raise typer.Exit(
         runs.run("graph_verify", graph_verify(batch=batch, slice_name=slice_), trigger=_trigger())
     )
+
+
+@graph_app.command("copy")
+def graph_copy_cmd(
+    source: str = typer.Option(..., help="Environment to copy from, e.g. dev (.env.<source>)."),
+) -> None:
+    """Copy the graph tables, ids and all, into this environment's empty graph tables
+    (graph spec 7.6). Run from the laptop: `musicdata --env prod graph copy --source dev`."""
+    from dotenv import dotenv_values
+
+    from musicdata.graph.copy import graph_copy
+    from musicdata.jobs import runs
+
+    url = dotenv_values(Path(f".env.{source}")).get("DATABASE_URL")
+    if not url:
+        raise typer.BadParameter(f"no DATABASE_URL in .env.{source}")
+    raise typer.Exit(runs.run("graph_copy", graph_copy(url), trigger=_trigger()))
 
 
 @graph_app.command("unmerge")

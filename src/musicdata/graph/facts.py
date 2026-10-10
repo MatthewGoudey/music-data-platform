@@ -15,7 +15,7 @@ from collections import defaultdict
 from musicdata.db import connection
 from musicdata.graph.baseline import ALBUM, ClaimSpec, Ent, musical_roles
 from musicdata.graph.claims import claim_key
-from musicdata.graph.importer import EVIDENCE_MAX, ensure_entity, slice_targets
+from musicdata.graph.importer import EVIDENCE_MAX, ensure_entity, label_id, slice_targets
 from musicdata.jobs.runs import JobFn, RunContext
 
 CONFIDENCE = 0.75
@@ -108,7 +108,7 @@ def graph_facts(*, slice_name: str, refresh: bool = False) -> JobFn:
                                        'graph facts', $12)
                                ON CONFLICT DO NOTHING""",
                             claim_key(s, c.predicate, o, c.source, c.source_url, evidence),
-                            f"R{ctx.run_id}-{t['atlas_id']}-W{n:03d}",
+                            f"R{ctx.run_id}-{label_id(t)}-W{n:03d}",
                             s,
                             c.predicate,
                             o,
