@@ -324,6 +324,6 @@ sentences judged.
   (person → stage name or solo project), `renamed_from` (newer name → earlier name) and
   `interpolates` (lineage: a song borrowing an older song's melody or lyric). Matt: "add whatever
   vocab you need".
-- 2026-10-10 (Matt, graph spec v8): a source's language matches the artist's world; the
-  English-language pilot reads English pages only. A future non-English slice reads sources in its
-  own language and translates reading questions for Matt.
+- 2026-10-10 (Matt, graph spec v8): English sources are always accepted; another language only for
+  artists tied to it (a future non-English slice reads English plus its own language and translates
+  reading questions for Matt). The English-language pilot reads English pages only.

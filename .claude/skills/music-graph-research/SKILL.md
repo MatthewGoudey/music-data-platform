@@ -117,9 +117,10 @@ Put the publication or critic a source cites in `qualifiers.via`. A corrected cl
 `"replaces": "OLD_CLAIM_ID"` and a new claim id.
 
 **Evidence**
-- Read pages in the artist's own language world (spec v8): for English-language artists, English pages
-  only; skip any other page and log it as a skip. (A slice of non-English music reads its own
-  language, and its reading questions carry an English translation for Matt.)
+- English pages are always accepted (spec v8). Read another language only for artists tied to it: for
+  English-language artists, skip any non-English page and log it as a skip. (A slice of non-English
+  music reads English plus its own language, and its non-English reading questions carry an English
+  translation for Matt.)
 - Always copy evidence verbatim from the cached page, at most 300 characters.
 - Always quote the clause that names both ends of the claim. When they sit in two sentences of one source,
   join the passages with " … ". On a Wikipedia album article, "the album" and "the band" may stand for the
