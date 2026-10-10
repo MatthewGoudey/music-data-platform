@@ -10,10 +10,12 @@ page already gives the facts, so the deep dive is the one document). The spec is
 sections 7 and 8; this skill is how to carry it out. The model for a good deep dive is the Boat Songs
 document (dev, `/albums/96/documents/deep_dive`): Matt called it "an excellent write up".
 
-Everything goes through the API with the bearer token: `API` is `https://musicdata-prod.fly.dev`
-(prod; dev is `https://musicdata-dev.fly.dev` for tests) and the token is `API_TOKEN` from the
-environment (`.env.prod` / `.env.dev` in the repo, or the task's settings). Send
-`Authorization: Bearer $API_TOKEN` on every call. Never print the token.
+Everything goes through the API. `API` is the base URL the run names: `https://musicdata-dev.fly.dev`
+(dev) or `https://musicdata-prod.fly.dev` (prod). Authentication comes one of two ways:
+- In a routine (the worker, `docs/graph/WORKER_ROUTINE.md`), the environment's network secret adds the
+  bearer token to every call to the API host: call it with `curl` and no Authorization header.
+- In a session on the laptop, send `Authorization: Bearer $API_TOKEN`, with the token from the
+  repo's `.env.dev` or `.env.prod`. Never print it.
 
 ## 1. Pick up the work
 
