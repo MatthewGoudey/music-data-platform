@@ -169,10 +169,12 @@ green. Blocks F and G moved to Phase 6 (2026-10-10). The prototype (`scripts/gra
       slice's 3,735 baseline claims verified in dev, all accepted.
 - [ ] Block E — the 181 albums in batches of 25; reading questions to Matt; first-pass reader
       SUPPORTS ≥ 90% per predicate type; G1–G8 green in dev (M2).
-      In progress: P01 (25 albums) verified 2026-10-09 (first-pass SUPPORTS 96%; Matt's answers
-      recorded with `musicdata graph answer`). Spec v5: the atlas is scope only, and claims come from
-      pages and databases; credits are work on the music only. The skill lives in
-      `.claude/skills/music-graph-research/`. Next: P02.
+      In progress: P01–P04 verified (100 of 169 albums; first-pass SUPPORTS 96.2% over 916
+      claims, every kind ≥ 90% except covers at 84%; no open questions). Matt's answers recorded
+      with `musicdata graph answer`. Spec v5–v8: the atlas is scope only, credits are work on the
+      music only, touring is not working together (v7), English sources only for English-language
+      artists (v8). The skill lives in `.claude/skills/music-graph-research/`; batch status in
+      `docs/graph/PILOT_STATUS.md`. Next: P05–P07, alongside Phase 6.
 - [x] Blocks F and G — moved to Phase 6 (API → Block A; prod copy → Block B; walk → Block H).
 
 ## Phase 4 checklist — lists, the atlas and the queue (spec: `docs/QUEUE_SPEC.md`)
