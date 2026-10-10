@@ -584,36 +584,41 @@ def graph_batch_reader_input(*, label: str, root: Path = Path(".")) -> JobFn:
 VERDICTS = ("SUPPORTS", "PARTIAL", "DOES_NOT_SUPPORT", "WRONG_DIRECTION", "NOT_A_CLAIM")
 
 
+async def store_reader_verdicts(conn: asyncpg.Connection, label: str, verdicts: list[dict]) -> int:
+    """The reader's verdicts by claim label, for claims of batch `label` only; the first verdict
+    stays in `reader_first` (the M2 measure). Used by `load-reader` and the worker's API."""
+    bad = [v for v in verdicts if v.get("verdict") not in VERDICTS]
+    if bad:
+        raise ValueError(f"unknown verdicts: {[v.get('claim_id') for v in bad][:5]}")
+    async with conn.transaction():
+        batch = await batch_row(conn, label)
+        labels = sorted({v["claim_id"] for v in verdicts})
+        known = await conn.fetchval(
+            "SELECT count(*) FROM assertion WHERE claim_label = ANY($1::text[]) AND batch_id = $2",
+            labels,
+            batch["batch_id"],
+        )
+        if known != len(labels):
+            raise ValueError(f"{len(labels) - known} verdicts name claims outside batch {label}")
+        await conn.executemany(
+            """UPDATE assertion SET reader_verdict = $2, reader_reason = $3,
+                      reader_first = coalesce(reader_first, $2), updated_at = now()
+                WHERE claim_label = $1 AND batch_id = $4""",
+            [(v["claim_id"], v["verdict"], v.get("reason"), batch["batch_id"])
+             for v in verdicts],
+        )  # fmt: skip
+        await conn.execute(
+            "UPDATE graph_batch SET status = 'reader_loaded' WHERE batch_id = $1",
+            batch["batch_id"],
+        )
+    return len(verdicts)
+
+
 def graph_batch_load_reader(*, label: str, file: Path) -> JobFn:
     async def _run(ctx: RunContext) -> None:
         verdicts = read_claims([file])
-        bad = [v for v in verdicts if v.get("verdict") not in VERDICTS]
-        if bad:
-            raise ValueError(f"unknown verdicts: {[v.get('claim_id') for v in bad][:5]}")
-        async with connection(ctx.pool) as conn, conn.transaction():
-            batch = await batch_row(conn, label)
-            labels = sorted({v["claim_id"] for v in verdicts})
-            known = await conn.fetchval(
-                "SELECT count(*) FROM assertion WHERE claim_label = ANY($1::text[]) AND batch_id = $2",
-                labels,
-                batch["batch_id"],
-            )
-            if known != len(labels):
-                raise ValueError(
-                    f"{len(labels) - known} verdicts name claims outside batch {label}"
-                )
-            await conn.executemany(
-                """UPDATE assertion SET reader_verdict = $2, reader_reason = $3,
-                          reader_first = coalesce(reader_first, $2), updated_at = now()
-                    WHERE claim_label = $1 AND batch_id = $4""",
-                [(v["claim_id"], v["verdict"], v.get("reason"), batch["batch_id"])
-                 for v in verdicts],
-            )  # fmt: skip
-            await conn.execute(
-                "UPDATE graph_batch SET status = 'reader_loaded' WHERE batch_id = $1",
-                batch["batch_id"],
-            )
-        ctx.rows = len(verdicts)
+        async with connection(ctx.pool) as conn:
+            ctx.rows = await store_reader_verdicts(conn, label, verdicts)
         ctx.notes.update(batch=label, verdicts=len(verdicts))
 
     return _run

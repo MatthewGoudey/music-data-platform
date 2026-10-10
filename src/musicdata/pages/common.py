@@ -97,6 +97,7 @@ a { color: var(--accent); }
 .tab { font: 600 13px var(--body); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; text-decoration: none; color: var(--ink); background: var(--surface); }
 .tab[aria-current="page"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .tab.off { color: var(--muted); border-style: dashed; }
+.tab.ask { cursor: pointer; color: var(--accent); border-color: var(--accent); background: transparent; }
 .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .btn { font: 600 13px var(--body); border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 7px; padding: 7px 11px; text-decoration: none; cursor: pointer; }
 .btn.play { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }

@@ -17,6 +17,7 @@ from musicdata.graph.importer import ensure_album
 from musicdata.graph.queries import album_brief
 from musicdata.identity import title_key
 from musicdata.pages.common import esc, link, play_url, shell, site, src_tag
+from musicdata.worker import document_states
 
 PRODUCER = re.compile(r"produc", re.IGNORECASE)
 LINEAGE_OUT = {
@@ -55,18 +56,6 @@ async def open_album(conn: asyncpg.Connection, release_group_id: int) -> bool:
         t["entity_id"],
     )
     return True
-
-
-async def _documents(conn: asyncpg.Connection, release_group_id: int) -> dict[str, str]:
-    if not await conn.fetchval("SELECT to_regclass('album_document') IS NOT NULL"):
-        return {}
-    rows = await conn.fetch(
-        """SELECT DISTINCT ON (kind) kind, status FROM album_document
-            WHERE release_group_id = $1 AND status <> 'superseded'
-            ORDER BY kind, version DESC""",
-        release_group_id,
-    )
-    return {r["kind"]: r["status"] for r in rows}
 
 
 async def _connections(conn: asyncpg.Connection, release_group_id: int) -> list[dict]:
@@ -111,7 +100,14 @@ def _roles(roles) -> str:
     return ", ".join(dict.fromkeys(str(r).lower() for r in items if r))
 
 
-NOW_SCRIPT = """<script>
+NOW_SCRIPT = r"""<script>
+document.querySelectorAll("[data-request]").forEach(b => b.addEventListener("click", async () => {
+  const t = new URLSearchParams(location.search).get("t") || "";
+  b.disabled = true; b.textContent = "Requesting…";
+  const r = await fetch(`${location.pathname.replace(/\/page$/, "/documents")}?t=${encodeURIComponent(t)}`,
+    {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({kind: b.dataset.request})});
+  if (r.ok) location.reload(); else { b.disabled = false; b.textContent = "Request failed — try again"; }
+}));
 document.getElementById("walk")?.addEventListener("click", async e => {
   const b = e.currentTarget, t = new URLSearchParams(location.search).get("t") || "";
   b.disabled = true; b.textContent = "Walking back…";
@@ -153,7 +149,7 @@ async def album_page(conn: asyncpg.Connection, release_group_id: int, t: str) ->
         return None
     ident, ctx = b["identity"], b["context"]
     edges = b["edges"]
-    docs = await _documents(conn, release_group_id)
+    docs = {k: v["status"] for k, v in (await document_states(conn, release_group_id)).items()}
     artist_hub = await conn.fetchval(
         """SELECT e.entity_id FROM entity e JOIN release_group rg ON rg.artist_id = e.artist_id
             WHERE rg.release_group_id = $1 AND e.type IN ('artist', 'person')
@@ -177,14 +173,22 @@ async def album_page(conn: asyncpg.Connection, release_group_id: int, t: str) ->
     )  # fmt: skip
 
     def tab(kind: str, label: str) -> str:
+        """8.1 and 7.6: read it, or ask for it, or see where the request stands."""
         state = docs.get(kind)
+        href = link(f"/albums/{release_group_id}/documents/{kind}", t)
+        ask = (f'<button class="tab ask" type="button" data-request="{kind}">'
+               f'{"Rewrite" if state == "out_of_date" else "Request"} {label.lower()}</button>')  # fmt: skip
         if state == "ready":
-            href = link(f"/albums/{release_group_id}/documents/{kind}", t)
             return f'<a class="tab" href="{esc(href)}">{label}</a>'
-        word = {"requested": "requested", "writing": "writing", "failed": "failed"}.get(
-            state, "not written"
-        )
-        return f'<span class="tab off" title="{word}">{label} · {word}</span>'
+        if state == "out_of_date":
+            return f'<a class="tab" href="{esc(href)}">{label} · out of date</a>{ask}'
+        if state == "requested":
+            return f'<span class="tab off">{label} · requested, usually ready within a few hours</span>'
+        if state == "writing":
+            return f'<span class="tab off">{label} · being written</span>'
+        if state == "failed":
+            return f'<span class="tab off">{label} · failed</span>{ask}'
+        return ask
 
     parts = [
         f"""<header class="box">
@@ -352,8 +356,8 @@ async def album_page(conn: asyncpg.Connection, release_group_id: int, t: str) ->
     if lacks:
         tail = (
             ""
-            if docs.get("deep_dive") == "ready"
-            else " A deep dive (coming soon as a Request button) fills these in."
+            if docs.get("deep_dive") in ("ready", "requested", "writing")
+            else " Requesting a deep dive fills these in."
         )
         parts.append(
             f'<section><h2>What the graph lacks</h2><p class="lack">{" ".join(esc(x) for x in lacks)}{esc(tail)}</p></section>'

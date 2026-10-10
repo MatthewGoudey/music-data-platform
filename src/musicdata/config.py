@@ -64,6 +64,9 @@ class Settings(BaseSettings):
     graph_monthly_credits: int = Field(
         default=100000, description="Firecrawl credits the graph may spend in a calendar month."
     )
+    document_credits: int = Field(
+        default=100, description="Firecrawl credits one deep dive's page fetches may spend."
+    )
 
     ntfy_topic: str | None = Field(default=None, description="ntfy.sh topic for failure pushes.")
     log_json: bool = Field(default=True)

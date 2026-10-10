@@ -278,6 +278,21 @@ def graph_connections_cmd() -> None:
     raise typer.Exit(runs.run("graph_connections", graph_connections(), trigger=_trigger()))
 
 
+@graph_app.command("documents-sweep")
+def graph_documents_sweep_cmd() -> None:
+    """Return documents whose writing lease lapsed to requested, or fail them at the second try."""
+    from musicdata.jobs import runs
+
+    async def job(ctx) -> None:
+        from musicdata.db import connection
+        from musicdata.worker import sweep
+
+        async with connection(ctx.pool) as conn:
+            ctx.rows = await sweep(conn)
+
+    raise typer.Exit(runs.run("graph_documents_sweep", job, trigger=_trigger()))
+
+
 @graph_app.command("follow-lists")
 def graph_follow_lists_cmd() -> None:
     """Rewrite the `following` list from what Matt follows (companion spec 5.5)."""

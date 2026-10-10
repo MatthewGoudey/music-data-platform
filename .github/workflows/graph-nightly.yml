@@ -68,6 +68,10 @@ jobs:
         id: connections
         if: always()
         run: uv run musicdata graph connections
+      - name: documents sweep
+        id: sweep
+        if: always()
+        run: uv run musicdata graph documents-sweep
       - name: follow lists
         id: follow
         if: always()
