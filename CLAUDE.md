@@ -141,7 +141,7 @@ profile working, and on Matt's go the graph copied to prod with G1–G8 green; t
 - [ ] Block E — the 181 albums in batches of 25; reading questions to Matt; first-pass reader
       SUPPORTS ≥ 90% per predicate type; G1–G8 green in dev (M2).
 - [ ] Block F — graph API (spec section 10); Project instructions rows.
-- [ ] Block G — migration 0020, walk-back list, profile and card control; tag; on Matt's go:
+- [ ] Block G — migration 0021, walk-back list, profile and card control; tag; on Matt's go:
       prod migrations, `graph copy --source dev`, `graph link` in `daily-sync`, G1–G8 green in
       prod (M3).
 

@@ -82,13 +82,21 @@ def test_t1_golden_statuses(t1) -> None:
     assert statuses["T1-A2184-L027"] == "ask_matt"
 
 
+def _expected_confidence(e: dict) -> float:
+    """The prototype's confidence, less 0.1 for an atlas comparison below the cap: spec v4
+    starts `map:*` inferred claims at 0.5, a critic's level (the atlas is AI-written)."""
+    if e["source"].startswith("map:") and e["basis"] == "inferred" and e["confidence"] < 0.95:
+        return round(e["confidence"] - 0.1, 2)
+    return e["confidence"]
+
+
 def test_t1_golden_matches_the_prototype_claim_by_claim(t1) -> None:
     got, expected = t1
     for c in got:
         e = expected[c["claim_id"]]
         assert (c["suggested_status"], c["confidence"], c["fails"]) == (
             e["suggested_status"],
-            e["confidence"],
+            _expected_confidence(e),
             e["fails"],
         ), c["claim_id"]
         assert c["independent_support"] == e["independent_support"], c["claim_id"]

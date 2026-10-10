@@ -4,8 +4,9 @@ Loads the 17 predicates from `seeds/graph/predicates.csv`; one `map` entity (`v_
 atlas lane as a `lane` entity with its `lane_parent` claims; every list as a `list` entity; and
 for each resolved `v_atlas` entry an `album` entity with its `map_membership` coordinates.
 
-`lane_parent` claims come from Matt's own map: source `map:v_atlas`, extractor `matt` (the
-extractor list has no map value), basis `documented`, confidence 1.0, accepted.
+`lane_parent` claims are the atlas's statements, and the atlas is AI-written (spec v4): source
+`map:v_atlas`, extractor `claude`, basis `reported`, confidence 0.7, accepted. A second run
+brings rows from an earlier rule to these values.
 """
 
 from __future__ import annotations
@@ -136,9 +137,12 @@ async def seed(conn: asyncpg.Connection, run_id: int | None, root: Path = Path("
             """INSERT INTO assertion (claim_key, claim_label, subject_id, predicate, object_id,
                                       source, extractor, basis, evidence, status, confidence,
                                       asserted_by, pipeline_run_id)
-               VALUES ($1, $2, $3, 'lane_parent', $4, $5, 'matt', 'documented', $6,
-                       'accepted', 1.0, 'graph seed', $7)
-               ON CONFLICT (claim_key) DO NOTHING""",
+               VALUES ($1, $2, $3, 'lane_parent', $4, $5, 'claude', 'reported', $6,
+                       'accepted', 0.7, 'graph seed', $7)
+               ON CONFLICT (claim_key) DO UPDATE
+                  SET extractor = 'claude', basis = 'reported', confidence = 0.7,
+                      updated_at = now()
+                WHERE assertion.extractor = 'matt'""",
             rows,
         )
         claims_after = await conn.fetchval(

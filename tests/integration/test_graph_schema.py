@@ -126,6 +126,22 @@ async def test_the_edge_view_picks_by_precedence(conn) -> None:
     assert edge["best_assertion_id"] == matt and text != matt
 
 
+async def test_the_atlas_ranks_below_a_page(conn) -> None:
+    """Spec v4: the atlas is AI-written; a page's reported claim beats the atlas's, even when
+    the atlas claim carries the higher confidence."""
+    await seed(conn, None)
+    a = await _entity(conn, "album", "Zz Newer", MBID.format(7))
+    b = await _entity(conn, "album", "Zz Older", MBID.format(8))
+    await _claim(conn, a, b, source="map:v_atlas", extractor="claude", basis="reported",
+                 conf=0.9, label="ZZ-4", predicate="influenced_by")  # fmt: skip
+    page = await _claim(conn, a, b, source="wikipedia", extractor="claude", basis="reported",
+                        conf=0.7, label="ZZ-5", predicate="influenced_by")  # fmt: skip
+    best = await conn.fetchval(
+        "SELECT best_assertion_id FROM edge WHERE subject_id = $1 AND object_id = $2", a, b
+    )
+    assert best == page
+
+
 async def test_seeding_twice_adds_nothing(conn) -> None:
     first = await seed(conn, None)
     second = await seed(conn, None)

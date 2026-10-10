@@ -496,7 +496,7 @@ def reader_line(c: dict, album_name: str) -> str:
     if "wikipedia.org" in u:
         src = "Wikipedia article '" + u.split("#")[0].rsplit("/", 1)[1].replace("_", " ") + "'"
     elif u.startswith("atlas"):
-        src = f"Matt's atlas note about {album_name}"
+        src = f"an AI-written atlas note about {album_name}"
     else:
         src = f"web page {u.split('#')[0]} (about {album_name})"
     return f'{c["claim_id"]} | CLAIM: {sent} | EVIDENCE: "{c["evidence"]}" | SOURCE: {src}'

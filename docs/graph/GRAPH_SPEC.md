@@ -211,17 +211,17 @@ SELECT subject_id, predicate, object_id, object_value,
        array_agg(DISTINCT source)              AS sources,
        (array_agg(assertion_id ORDER BY
            CASE WHEN extractor = 'matt'                                   THEN 1
-                WHEN source LIKE 'map:%' AND basis <> 'inferred'          THEN 2
-                WHEN extractor IN ('musicbrainz','discogs','wikidata')    THEN 3
-                WHEN basis IN ('documented','reported')                   THEN 4  -- text, Firecrawl JSON, page fields
-                WHEN source LIKE 'map:%'                                  THEN 5  -- inferred by a map
-                ELSE 6 END,                                                       -- inferred by an extractor
+                WHEN extractor IN ('musicbrainz','discogs','wikidata')    THEN 2
+                WHEN basis IN ('documented','reported')
+                     AND source NOT LIKE 'map:%'                          THEN 3  -- text, Firecrawl JSON, page fields
+                WHEN basis IN ('documented','reported')                   THEN 4  -- the atlas's own statements
+                ELSE 5 END,                                                       -- inferred, by a map or an extractor
            confidence DESC))[1]                AS best_assertion_id
 FROM assertion WHERE status = 'accepted'
 GROUP BY subject_id, predicate, object_id, object_value;
 ```
 
-The ranks follow edge-vocabulary section 3. Symmetric predicates (`associated_with`) are stored
+The ranks follow edge-vocabulary section 3 (migration 0020 since spec v4: the atlas is AI-written). Symmetric predicates (`associated_with`) are stored
 once with the lower `entity_id` as subject.
 
 **0019_graph_fetch**
@@ -269,7 +269,8 @@ A failed fetch is a row with `ok = false` and the error: that is the gaps log.
   `sounds_like`, `covers`, `samples`). `person` counts as an `artist` subtype everywhere a
   predicate allows `artist`.
 - `musicdata graph seed` loads predicates, one `map` entity (`v_atlas`), the atlas lanes as `lane`
-  entities (`local_key` = lane id) with `lane_parent` claims, the lists as `list` entities, and
+  entities (`local_key` = lane id) with `lane_parent` claims (extractor `claude`, basis `reported`,
+  confidence 0.7: the atlas is AI-written), the lists as `list` entities, and
   `map_membership` for every resolved `v_atlas` list entry (coords from `list_entry`: atlas_id
   from `facets`, lane, zone, layer, priority, start_here). Idempotent.
 
@@ -406,7 +407,7 @@ those entities for the next batch.
 | Firecrawl JSON from a Wikipedia personnel list | 0.75 |
 | a page's own statement (`documented`, e.g. a Bandcamp field) | 0.8 |
 | `reported` text; `map:*` `reported` | 0.7 |
-| `map:*` `inferred` | 0.6 |
+| `map:*` `inferred` | 0.5 |
 | a critic's comparison (`inferred` text) | 0.5 |
 
 For measures, a reader `PARTIAL` counts as not `SUPPORTS`.
@@ -466,7 +467,7 @@ Add `GET /albums/{id}/brief`, `GET /entities/{id}/neighbors` and the two questio
   `resolve_status = 'resolved'`, `review_status = 'accepted'`, `added_by = 'graph:<release_group_id>'`.
   Only albums that resolve to a release group become entries, so `list_entry_status` and `/next`
   read them exactly as they read any list.
-- Migration 0020 seeds the `graph_walk` list (goal `depth`, weight 1.0, ranked, `source =
+- Migration 0021 seeds the `graph_walk` list (goal `depth`, weight 1.0, ranked, `source =
   'generated:graph'`, `file_rows` NULL) and the `walk-back` profile (filters
   `{"lists": ["graph_walk"]}`, goal weights `{"depth": 1}`, composition n 10, revisit 0,
   wildcard 0, affinity 0.1). Confirm that check L1 and `lists load` skip generated lists (no row
@@ -515,7 +516,7 @@ Tests:
 - **Block 0 — setup.** ADR 0017 (the claims graph: storage in Postgres, page bodies in
   `source_fetch`, Claude reading via batches, dev-first). Settings and secrets (section 9);
   `FIRECRAWL_API_KEY` and `DISCOGS_TOKEN` added to the backfill workflow's `env`.
-- **Block A — schema and seeds.** Migrations 0018–0019 (0020 comes in Block G); `seeds/graph/predicates.csv`;
+- **Block A — schema and seeds.** Migrations 0018–0019 (0020 is the spec v4 edge ranks; 0021 comes in Block G); `seeds/graph/predicates.csv`;
   `musicdata graph seed`; integration tests for the constraints; apply to dev.
 - **Block B — the free baseline (milestone M1).** Client methods (MusicBrainz, Discogs,
   Wikidata); `graph import`, `graph link`; run `--slice crazy_horse` in dev; report coverage per
@@ -535,7 +536,7 @@ Tests:
   Matt. (`docs/graph/golden_set_crazy_horse.csv` is a record of the first extractor test; the
   first-pass reader measure replaces it.)
 - **Block F — API.** Section 10; tests; the Project instructions rows.
-- **Block G — the walk and the gate (milestone M3).** Section 11 with migration 0020; a version
+- **Block G — the walk and the gate (milestone M3).** Section 11 with migration 0021; a version
   tag; on Matt's go: migrations to prod, `graph copy --source dev`, `graph link` added to
   `daily-sync` after `derive`, G1–G8 green in prod; Matt uses `walk-back` for a week.
 
@@ -564,3 +565,10 @@ Tests:
   limit (15,000 was a guess). October has about 80,000 left after other Firecrawl use, which the
   graph's ledger (`source_fetch`) does not see. The per-run cap of 500 and "ask Matt above 1,500
   for a slice" stay.
+- 2026-10-09: v4 (Matt). The atlas is AI-written: it picks the pilot's albums, and its notes
+  count as one ordinary source. The edge view ranks it below databases and documented or reported
+  pages, and its inferred claims level with an extractor's (migration 0020); a `map:*` inferred
+  claim's base confidence drops from 0.6 to 0.5; `lane_parent` claims become extractor `claude`,
+  basis `reported`, confidence 0.7 (they were `matt`, 1.0); the reader sees "an AI-written atlas
+  note". Where the atlas conflicts with another source, both claims stay and the evidence decides.
+  The walk list's migration becomes 0021.

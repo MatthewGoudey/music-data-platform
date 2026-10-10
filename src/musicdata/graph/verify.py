@@ -50,7 +50,7 @@ BASE = {
     ("wikidata", "documented"): 0.9,
     ("firecrawl_json", "documented"): 0.75,
     ("map", "reported"): 0.7,
-    ("map", "inferred"): 0.6,
+    ("map", "inferred"): 0.5,  # the atlas is AI-written (spec v4)
     ("text", "documented"): 0.8,
     ("text", "reported"): 0.7,
     ("text", "inferred"): 0.5,

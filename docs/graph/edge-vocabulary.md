@@ -53,9 +53,14 @@ Every claim carries:
 | `status` | `proposed` (loaded, unchecked), `unread` (checked, waiting for the reader), `accepted`, `rejected`, `ask_matt` (a reading question), `superseded` |
 | `asserted_by`, `asserted_at`, `run_id` | who or what made the claim, when, in which job run |
 
-**Precedence** for the current view of an edge: `matt` > `map:*` > documented database
-(`musicbrainz`, `wikidata`, `discogs`) > `reported` text sources > `inferred` from a map >
-`inferred` from an extractor.
+**Precedence** for the current view of an edge: `matt` > documented database
+(`musicbrainz`, `wikidata`, `discogs`) > documented or `reported` text sources > the atlas's own
+statements (`map:*`) > `inferred` from a map or an extractor alike; by confidence within a rank.
+
+**The atlas is AI-written** (Matt, 2026-10-09). It chooses the pilot's albums and supplies notes
+to read, and its notes count as one ordinary source: never as Matt's word, never as a tiebreak.
+Where the atlas is unclear, ambiguous or contradicted by another source, record what each source
+says and let the evidence decide.
 
 **Rules**
 - Always point lineage from the newer subject to the older object (the descendant is the subject).
