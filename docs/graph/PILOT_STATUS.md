@@ -81,7 +81,6 @@ graph API) and Block B (the prod copy and the nightly graph workflow), released 
 | Accepted claims | 6,315 |
 | Rejected (a check failed, or Matt said no) | 29 |
 | Superseded (replaced by a correction or an answer) | 53 |
-| Open reading questions | 3 |
 | Entities (people, bands, albums, recordings, places, labels) | 5,112 |
 | Pilot albums with accepted lineage or connection claims | 88 of 169 |
 | Claims under Matt's name (his answers) | 13 |
@@ -120,7 +119,7 @@ mistake: a page names a song's writer or an earlier version without saying who r
 (Ratboys' "Spiderweb", the Byrds' "See the Sky About to Rain", Jimmy Reed's "Bright Lights, Big
 City"). The checks caught each one; none was accepted on a wrong reading.
 
-All eight graph data checks (G1–G8) pass in prod. Three reading questions are open.
+All eight graph data checks (G1–G8) pass in prod. No reading questions are open.
 
 ## 7. Known problems and fixes
 
@@ -176,8 +175,7 @@ Other commands: `graph critic --site noexpectations` (refresh the critic's posts
 
 ## 11. Decisions waiting for Matt
 
-- Three reading questions: *Trans* recorded in Hawaii (skipped once; still open), Arbouretum
-  described as alternative rock (the reader misread the band's start year as an album), and *Arc*
-  sounding like Lou Reed's *Metal Machine Music* ("a similar concept").
+- No reading questions are open (Matt answered the last three on 2026-10-10: *Arc* and
+  *Metal Machine Music* no; Arbouretum alternative rock yes; *Trans* in Hawaii no, the quote is unclear).
 - Gaps still left out as not music relations: a band-name lawsuit, MTV as an influence, a book
   mentioning an album, an album about a political figure.
