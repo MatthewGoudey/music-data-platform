@@ -159,7 +159,14 @@ async def thread_choices(
 
 
 async def load_profile(conn: asyncpg.Connection, name: str) -> Profile:
-    r = await conn.fetchrow("SELECT * FROM queue_profile WHERE name = $1", name)
+    # Named columns, not *: a pooled server keeps a prepared plan per query text, and a plan
+    # for * breaks when a migration adds a column ("cached statement plan is invalid").
+    r = await conn.fetchrow(
+        """SELECT name, filters, goal_weights, zone_weights, composition, affinity_weight,
+                  graph_weight
+             FROM queue_profile WHERE name = $1""",
+        name,
+    )
     if r is None:
         raise UnknownProfileError(name)
     return Profile(
@@ -169,7 +176,7 @@ async def load_profile(conn: asyncpg.Connection, name: str) -> Profile:
         zone_weights=json.loads(r["zone_weights"]),
         composition=json.loads(r["composition"]),
         affinity_weight=float(r["affinity_weight"]),
-        graph_weight=float(r["graph_weight"]) if "graph_weight" in r.keys() else 0.0,
+        graph_weight=float(r["graph_weight"]),
     )
 
 
