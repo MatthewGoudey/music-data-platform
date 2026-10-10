@@ -379,6 +379,9 @@ def graph_verify(*, batch: str | None = None, slice_name: str | None = None) -> 
     return _run
 
 
+VERIFY_CHUNK = 25  # albums verified per database connection
+
+
 def graph_verify_pending(*, name_limit: int = 200) -> JobFn:
     """Companion spec 3.4: resolve names posted as written, merge duplicates by the graph spec
     v10 rule (logged, undoable), then verify every proposed or unread claim in any batch or
@@ -388,40 +391,55 @@ def graph_verify_pending(*, name_limit: int = 200) -> JobFn:
         settings = get_settings()
         token = settings.discogs_token.get_secret_value() if settings.discogs_token else None
         ua = settings.musicbrainz_user_agent
+        statuses: Counter = Counter()
         async with (
-            connection(ctx.pool) as conn,
             MusicBrainzClient(user_agent=ua) as mb,
             DiscogsClient(user_agent=ua, token=token) as dg,
         ):
-            named = await resolve_posted_names(conn, mb, name_limit)
-            merges, apart = await candidates(conn)
-            merged, touched = [], set()
-            for m in merges:
-                entry = await merge(conn, m["loose"], m["firm"], ctx.run_id)
-                if entry:
-                    claim_ids = sorted(set(entry["subject_of"]) | set(entry["object_of"]))
-                    touched |= {
-                        r[0]
-                        for r in await conn.fetch(
-                            """SELECT DISTINCT album_context FROM assertion
-                                WHERE assertion_id = ANY($1::bigint[]) AND album_context IS NOT NULL""",
-                            claim_ids,
+            async with connection(ctx.pool) as conn:
+                named = await resolve_posted_names(conn, mb, name_limit)
+                merges, apart = await candidates(conn)
+                merged, touched = [], set()
+                for m in merges:
+                    entry = await merge(conn, m["loose"], m["firm"], ctx.run_id)
+                    if entry:
+                        claim_ids = sorted(set(entry["subject_of"]) | set(entry["object_of"]))
+                        touched |= {
+                            r[0]
+                            for r in await conn.fetch(
+                                """SELECT DISTINCT album_context FROM assertion
+                                    WHERE assertion_id = ANY($1::bigint[])
+                                      AND album_context IS NOT NULL""",
+                                claim_ids,
+                            )
+                        }
+                        merged.append(
+                            {"kept": m["firm"], "merged": m["loose"], "name": m["firm_name"],
+                             "claims": len(set(entry["subject_of"]) | set(entry["object_of"]))}
+                        )  # fmt: skip
+                claims = await load_claims(conn, pending=True, also_albums=sorted(touched))
+            # A night can bring thousands of claims and hours of MusicBrainz lookups: verify an
+            # album's claims together, a chunk of albums at a time, each on a fresh connection,
+            # so a dropped idle connection costs one chunk, not the run.
+            by_album: dict[object, list[dict]] = {}
+            for c in claims:
+                by_album.setdefault(c["album_context"], []).append(c)
+            albums = list(by_album)
+            for i in range(0, len(albums), VERIFY_CHUNK):
+                chunk = [c for a in albums[i : i + VERIFY_CHUNK] for c in by_album[a]]
+                async with connection(ctx.pool) as conn:
+                    lk = await lookups(conn, chunk, mb, dg)
+                    verify(chunk, lk)
+                    async with conn.transaction():
+                        statuses.update(await write_results(conn, chunk))
+                        ids = sorted({c["album_context"] for c in chunk if c["album_context"]})
+                        await conn.execute(
+                            "UPDATE graph_album SET verified_at = now() WHERE entity_id = ANY($1::bigint[])",
+                            ids,
                         )
-                    }
-                    merged.append(
-                        {"kept": m["firm"], "merged": m["loose"], "name": m["firm_name"],
-                         "claims": len(set(entry["subject_of"]) | set(entry["object_of"]))}
-                    )  # fmt: skip
-            claims = await load_claims(conn, pending=True, also_albums=sorted(touched))
-            lk = await lookups(conn, claims, mb, dg)
-            verify(claims, lk)
-            async with conn.transaction():
-                statuses = await write_results(conn, claims)
-                ids = sorted({c["album_context"] for c in claims if c["album_context"]})
-                await conn.execute(
-                    "UPDATE graph_album SET verified_at = now() WHERE entity_id = ANY($1::bigint[])",
-                    ids,
-                )
+                log.info("graph verify --pending progress",
+                         extra={"albums": min(i + VERIFY_CHUNK, len(albums)), "of": len(albums)})  # fmt: skip
+            async with connection(ctx.pool) as conn:
                 await conn.execute(
                     """UPDATE graph_batch b SET status = 'verified'
                         WHERE status <> 'verified' AND NOT EXISTS (
