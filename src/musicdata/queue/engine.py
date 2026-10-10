@@ -16,7 +16,7 @@ import asyncpg
 from musicdata.queue import config
 from musicdata.queue.build import build, day_seed
 from musicdata.queue.pools import due
-from musicdata.queue.score import Item, Profile, passes, score_candidates, why_line
+from musicdata.queue.score import Item, Profile, passes, score_candidates, why_line, why_part
 
 CHICAGO = ZoneInfo("America/Chicago")
 
@@ -217,5 +217,6 @@ def render_item(i: Item) -> dict[str, object]:
     d = asdict(i)
     d.pop("artist_id")
     d["why_line"] = f"{i.pool} · {i.reason}" if i.pool else why_line(i.why) if i.why else "pinned"
+    d["why_lines"] = [] if i.pool else [why_part(w) for w in i.why]
     d["play_url"] = play_url(i)
     return d

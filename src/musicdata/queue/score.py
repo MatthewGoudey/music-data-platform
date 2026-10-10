@@ -123,19 +123,19 @@ def why_of(e: Mapping[str, object]) -> dict[str, object]:
     }
 
 
-def why_line(why: list[dict[str, object]], limit: int = 3) -> str:
-    """`V Atlas · C1 Indie twang · Essential · start here` or `Rolling Stone #2 · 1001 Albums`."""
-    parts = []
-    for w in why[:limit]:
-        if w["lane"]:
-            bits = [w["label"], f"{w['lane']} {w['lane_name'] or ''}".strip(), w["priority"]]
-            bits.append("start here" if w["start_here"] else None)
-            parts.append(" · ".join(str(b) for b in bits if b))
-        else:
-            parts.append(f"{w['label']} #{w['position']}" if w["position"] else str(w["label"]))
-    if len(why) > limit:
-        parts.append(f"+{len(why) - limit} more")
-    return " · ".join(parts)
+def why_part(w: Mapping[str, object]) -> str:
+    """One list's part of the why line: `V Atlas · C1 Indie twang · Essential · start here`,
+    `Rolling Stone #2` or `1001 Albums`."""
+    if w["lane"]:
+        bits = [w["label"], f"{w['lane']} {w['lane_name'] or ''}".strip(), w["priority"]]
+        bits.append("start here" if w["start_here"] else None)
+        return " · ".join(str(b) for b in bits if b)
+    return f"{w['label']} #{w['position']}" if w["position"] else str(w["label"])
+
+
+def why_line(why: list[dict[str, object]]) -> str:
+    """Every list the album is on (spec v15): `Rolling Stone #2 · 1001 Albums`."""
+    return " · ".join(why_part(w) for w in why)
 
 
 def score_candidates(

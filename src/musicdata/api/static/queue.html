@@ -163,7 +163,8 @@ function card(a, i) {
     <div class="top"><span class="slot ${a.slot}">${a.slot}</span></div>
     <div class="title">${esc(a.album)} <span class="artist">· ${esc(a.artist)}</span></div>
     <div class="meta">${meta}</div>
-    <div class="why">${esc(a.why_line)}</div>
+    <div class="why">${a.why_lines && a.why_lines.length > 1
+      ? a.why_lines.map(l => `<div>${esc(l)}</div>`).join("") : esc(a.why_line)}</div>
     <div class="actions">
       <a class="btn play" href="${esc(a.play_url)}" target="_blank" rel="noopener">Play</a>
       ${pinBtn}

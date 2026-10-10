@@ -188,6 +188,8 @@ def test_why_line_reads_like_the_spec() -> None:
     }
     assert why_line([atlas]) == "V Atlas · C1 Indie twang · Essential · start here"
     assert why_line([rs]) == "Rolling Stone #2"
+    lists = [{**rs, "label": f"List {n}", "position": n} for n in range(1, 7)]
+    assert why_line(lists) == " · ".join(f"List {n} #{n}" for n in range(1, 7))  # no "+3 more"
 
 
 def test_shuffle_redraws_revisits_and_the_wildcard_too() -> None:

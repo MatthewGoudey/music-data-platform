@@ -303,8 +303,8 @@ One phone-width column, albums only:
 1. **Profile switcher**: links for each profile; the current one highlighted; a Shuffle
    button that draws a fresh set on every press, and "Top picks" after a shuffle (section 8).
 2. **Up next**: the `/next` items for the profile. Each card: artist — album (year · type);
-   a *why* line (`V Atlas · C1 Indie twang · Essential · start here` or
-   `Rolling Stone #2 · 1001 Albums`); for revisits, the pool and reason
+   a *why* line naming every list the album is on, one line per list when there are several
+   (`V Atlas · C1 Indie twang · Essential · start here`, `Rolling Stone #2`, `1001 Albums`); for revisits, the pool and reason
    (`spaced · 2nd listen due, last full play 61 days ago`); the existing history line; buttons
    Play · Pin · Snooze 30 · Snooze 90 · Mark played · Not for me · Tag.
 3. **Progress strip** at the foot: heard / total for each list and for the atlas's Core zone,
@@ -467,3 +467,6 @@ priority Essential. Matt has played other Ratboys records but no session of this
   album, generated lists read only by profiles that name them, and the `following` and `walk-back`
   profiles. Phase 6 Block H builds them and writes their rules into sections 7, 8, 10, 12 and 13
   here as the next version. Until then this spec describes the queue as it runs.
+- 2026-10-10 v15: Matt asked that a card's why line name every list the album is on: the
+  "+3 more" ending gave him nothing to expand. `GET /next` items carry `why_lines` (one per
+  list) beside `why_line` (all of them), and the page shows one list per line.
