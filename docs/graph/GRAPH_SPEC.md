@@ -594,3 +594,9 @@ Tests:
   became `toured_with`, a player in another artist's band stayed `associated_with` (kind `backing`),
   and every re-filed claim went back to a reader. The walk (section 11) does not follow
   `toured_with`.
+- 2026-10-10: v8 (Matt). English pages only: `graph fetch` skips non-English Wikipedias and
+  country domains (`.de`, `.fr`, `.it` and others), extractors skip any non-English page, and the
+  18 claims quoting German pages (laut.de, plattentests.de, rollingstone.de) were deleted with
+  Matt's go; 35 links to non-English sites were marked dead. Also from the P04 run: Rate Your
+  Music links are dead (their cached pages often held the wrong album), and the normaliser reads
+  link titles with escaped quotes.

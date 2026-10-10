@@ -117,6 +117,7 @@ Put the publication or critic a source cites in `qualifiers.via`. A corrected cl
 `"replaces": "OLD_CLAIM_ID"` and a new claim id.
 
 **Evidence**
+- Read English pages only (spec v8): skip a page in another language, and log it as a skip.
 - Always copy evidence verbatim from the cached page, at most 300 characters.
 - Always quote the clause that names both ends of the claim. When they sit in two sentences of one source,
   join the passages with " … ". On a Wikipedia album article, "the album" and "the band" may stand for the

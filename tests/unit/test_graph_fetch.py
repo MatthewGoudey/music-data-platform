@@ -101,3 +101,16 @@ def test_facts_merge_roles_per_person_and_name_places() -> None:
     assert place.obj.name == "Wally Heider Studios"
     assert place.qualifiers == {"dates": "January 1969", "city": "Los Angeles"}
     assert place.evidence == "Wikipedia: recorded at Wally Heider Studios, Los Angeles"
+
+
+def test_pages_in_other_languages_are_not_planned() -> None:
+    from musicdata.graph.fetch import is_english_page
+
+    assert is_english_page("https://pitchfork.com/reviews/x")
+    assert not is_english_page("https://www.laut.de/Neil-Young")
+    assert not is_english_page("https://de.wikipedia.org/wiki/Zuma")
+    links = [
+        _link("review", "https://www.plattentests.de/rezi.php?show=1"),
+        _link("review", "https://www.bbc.co.uk/music/reviews/x"),
+    ]
+    assert plan(links, 0) == [("https://www.bbc.co.uk/music/reviews/x", "plain")]

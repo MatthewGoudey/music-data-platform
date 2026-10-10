@@ -324,3 +324,5 @@ sentences judged.
   (person → stage name or solo project), `renamed_from` (newer name → earlier name) and
   `interpolates` (lineage: a song borrowing an older song's melody or lyric). Matt: "add whatever
   vocab you need".
+- 2026-10-10 (Matt, graph spec v8): claims come from English pages only, so every quote and every
+  reading question is one Matt can read.

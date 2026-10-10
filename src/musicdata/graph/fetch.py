@@ -43,6 +43,19 @@ def is_english_wikipedia(url: str) -> bool:
     return (urlparse(url).hostname or "").lower() == "en.wikipedia.org"
 
 
+# Matt reads English only (spec v8): pages on these country domains, and Wikipedias other than
+# English, are not fetched or read.
+NON_ENGLISH_TLDS = (".de", ".fr", ".es", ".it", ".nl", ".se", ".no", ".dk", ".fi", ".pl", ".pt",
+                    ".br", ".jp", ".ru", ".at", ".ch", ".cz", ".hu")  # fmt: skip
+
+
+def is_english_page(url: str) -> bool:
+    host = (urlparse(url).hostname or "").lower()
+    if host.endswith(".wikipedia.org"):
+        return host == "en.wikipedia.org"
+    return not host.endswith(NON_ENGLISH_TLDS)
+
+
 def about_album(url: str, album: str) -> bool:
     """The page's title names the album ("Boat_Songs", "Crazy_Horse_(album)")."""
     title = match_key(unquote(urlparse(url).path.rsplit("/", 1)[-1]).replace("_", " "))
@@ -68,7 +81,9 @@ def plan(links: list[asyncpg.Record], tier: int, album: str = "") -> list[tuple[
     )
     wiki = wikis[0]["url"] if wikis else None
     others = sorted(
-        {x["url"]: x for x in links if x["kind"] not in SKIP_KINDS}.values(),
+        {
+            x["url"]: x for x in links if x["kind"] not in SKIP_KINDS and is_english_page(x["url"])
+        }.values(),
         key=lambda x: (OTHER_ORDER.get(x["kind"], 9), x["url"]),
     )
     pages = [(wiki, "facts")] if wiki else []
