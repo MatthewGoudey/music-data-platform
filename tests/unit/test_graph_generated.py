@@ -82,3 +82,15 @@ def test_the_start_artist_is_never_a_step() -> None:
     g.add(Link(101, 2, "member", 1.0, "guitar", 0.9, 3))
     g.add(Link(101, 3, "person", 0.6, "drums", 0.9, 4))
     assert set(walk_scores(g, start)) == {20}
+
+
+def test_the_walk_takes_heard_albums_too() -> None:
+    heard, fresh = entry(1, "graph_walk", True), entry(2, "graph_walk", True)
+    heard["status"] = "heard"
+    kw = dict(list_sizes={1: 2}, lane_shares={}, tags={}, now=datetime(2026, 10, 10, tzinfo=UTC))
+    walk = Profile(
+        "walk-back", filters={"lists": ["graph_walk"]}, composition={"include_heard": True}
+    )
+    assert {i.release_group_id for i in score_candidates([heard, fresh], walk, **kw)} == {1, 2}
+    plain = Profile("walk-back", filters={"lists": ["graph_walk"]})
+    assert {i.release_group_id for i in score_candidates([heard, fresh], plain, **kw)} == {2}

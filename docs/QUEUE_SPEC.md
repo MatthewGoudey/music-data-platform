@@ -494,3 +494,9 @@ priority Essential. Matt has played other Ratboys records but no session of this
   thread slots in default and home-genre (migration 0023), taken in turn from the albums finished
   in the last 14 days (the newest 10; were 7 days and 5); Shuffle re-draws them like the other
   slots, and the page counts them as shown.
+- 2026-10-10 v18 (Matt: "The walk back should not be limited just to new albums, it should be a
+  mix of both heard and unheard"): a profile whose composition sets `include_heard` takes heard
+  albums into its new slots, in score order with the rest; only `walk-back` sets it (migration
+  0027). Heard albums there carry a "heard" slot tag. Everywhere else heard albums stay out of new
+  and wildcard slots (section 7). Also from Matt the same day: the Walk back chip shows only while
+  on a walk and leads back to its album; any other chip leaves the walk.

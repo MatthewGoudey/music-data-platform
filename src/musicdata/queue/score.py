@@ -167,7 +167,8 @@ def score_candidates(
     meta: dict[int, Mapping[str, object]] = {}
     for e in entries:
         rg = int(e["release_group_id"])
-        if e["status"] == "heard" or e["hidden"] or e["pinned"]:
+        heard_ok = bool(p.composition.get("include_heard"))  # the walk mixes heard and unheard
+        if (e["status"] == "heard" and not heard_ok) or e["hidden"] or e["pinned"]:
             continue
         if e["snoozed_until"] is not None and e["snoozed_until"] > now:
             continue

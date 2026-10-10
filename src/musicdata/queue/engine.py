@@ -290,6 +290,8 @@ async def next_queue(
 def render_item(i: Item) -> dict[str, object]:
     d = asdict(i)
     d.pop("artist_id")
+    if i.slot == "new" and i.status == "heard":
+        d["slot"] = "heard"  # a heard album in a walk back, not a new one
     d["why_line"] = (
         i.because if i.because
         else f"{i.pool} · {i.reason}" if i.pool
