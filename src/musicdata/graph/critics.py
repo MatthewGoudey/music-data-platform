@@ -34,6 +34,15 @@ SITES = {
     }
 }
 MIN_TITLE = 4  # shorter album titles ("III") match too much prose
+NEAR = 150  # characters between the artist's name and the album title
+
+
+def _spans(text: str, needle: str) -> list[tuple[int, int]]:
+    spans, start = [], text.find(needle)
+    while start >= 0:
+        spans.append((start, start + len(needle)))
+        start = text.find(needle, start + 1)
+    return spans
 
 
 def post_urls(sitemap: str, pattern: re.Pattern) -> list[str]:
@@ -42,9 +51,17 @@ def post_urls(sitemap: str, pattern: re.Pattern) -> list[str]:
 
 
 def mentions(body: str, artist: str, album: str) -> bool:
-    """The normalised post names both the artist and the album title."""
+    """The normalised post names the album title within NEAR characters of the artist's name,
+    the title being a separate mention (a self-titled album needs "self-titled" nearby), so a
+    common word ("Lucky", "Freedom") elsewhere in the post does not count."""
     a, t = norm(artist), norm(album)
-    return len(t) >= MIN_TITLE and bool(a) and a in body and t in body
+    if len(t) < MIN_TITLE or not a:
+        return False
+    names = _spans(body, a)
+    titles = [s for s in _spans(body, t) if not any(s[0] < e and n < s[1] for n, e in names)]
+    if t == a:
+        titles = _spans(body, "self-titled")
+    return any(abs(ts - ns) <= NEAR for ns, _ in names for ts, _ in titles)
 
 
 def graph_critic(*, site: str, slice_name: str, max_credits: int = 500) -> JobFn:
@@ -114,7 +131,13 @@ def graph_critic(*, site: str, slice_name: str, max_credits: int = 500) -> JobFn
             for url, body in bodies.items():
                 if mentions(body, t["raw_artist"] or "", t["raw_album"] or ""):
                     links.append((t["entity_id"], url, spec["source"]))
-        async with connection(ctx.pool) as conn:
+        async with connection(ctx.pool) as conn, conn.transaction():
+            # each run replaces this site's links to the slice's albums
+            await conn.execute(
+                "DELETE FROM entity_link WHERE source = $1 AND entity_id = ANY($2::bigint[])",
+                spec["source"],
+                [t["entity_id"] for t in targets],
+            )
             await conn.executemany(
                 """INSERT INTO entity_link (entity_id, kind, url, source)
                    VALUES ($1, 'review', $2, $3) ON CONFLICT (entity_id, url) DO NOTHING""",
