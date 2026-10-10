@@ -13,7 +13,7 @@ import json
 from collections import defaultdict
 
 from musicdata.db import connection
-from musicdata.graph.baseline import ALBUM, ClaimSpec, Ent
+from musicdata.graph.baseline import ALBUM, ClaimSpec, Ent, musical_roles
 from musicdata.graph.claims import claim_key
 from musicdata.graph.importer import EVIDENCE_MAX, ensure_entity, slice_targets
 from musicdata.jobs.runs import JobFn, RunContext
@@ -36,7 +36,9 @@ def facts_claims(facts: dict, url: str) -> list[ClaimSpec]:
             people.setdefault(m["name"], set()).update(m.get("roles") or [])
     out = []
     for name, roles in people.items():
-        r = sorted(roles)
+        r = musical_roles(roles)
+        if not r:  # cover art, layout and the like are not work on the music (spec v5)
+            continue
         out.append(
             ClaimSpec(
                 Ent("person", name), "credited_on", ALBUM, {"role": r}, "wikipedia",

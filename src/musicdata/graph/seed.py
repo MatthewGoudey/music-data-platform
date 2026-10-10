@@ -1,12 +1,11 @@
 """`musicdata graph seed` (GRAPH_SPEC section 5). Idempotent.
 
 Loads the 17 predicates from `seeds/graph/predicates.csv`; one `map` entity (`v_atlas`); every
-atlas lane as a `lane` entity with its `lane_parent` claims; every list as a `list` entity; and
-for each resolved `v_atlas` entry an `album` entity with its `map_membership` coordinates.
+atlas lane as a `lane` entity; every list as a `list` entity; and for each resolved `v_atlas`
+entry an `album` entity with its `map_membership` coordinates.
 
-`lane_parent` claims are the atlas's statements, and the atlas is AI-written (spec v4): source
-`map:v_atlas`, extractor `claude`, basis `reported`, confidence 0.7, accepted. A second run
-brings rows from an earlier rule to these values.
+The atlas is AI-written, so it sets the pilot's scope and never makes a claim (spec v5): the
+seed writes no `lane_parent` claims, and a run removes any an earlier rule wrote.
 """
 
 from __future__ import annotations
@@ -18,7 +17,6 @@ from pathlib import Path
 import asyncpg
 
 from musicdata.db import connection
-from musicdata.graph.claims import claim_key
 from musicdata.identity import norm_key
 from musicdata.jobs.runs import JobFn, RunContext
 
@@ -109,44 +107,8 @@ async def seed(conn: asyncpg.Connection, run_id: int | None, root: Path = Path("
                 r["lane_id"],
                 json.dumps({"map": MAP, "zone": r["zone"], "era_span": r["era_span"]}),
             )
-        parents = await conn.fetch(
-            "SELECT lane_id, parent_lane_id FROM atlas_lane_parent ORDER BY 1, 2"
-        )
-        rows = []
-        for p in parents:
-            subject, obj = lanes[p["lane_id"]], lanes[p["parent_lane_id"]]
-            evidence = (
-                f"atlas lanes.csv: {p['lane_id']} parent_lanes includes {p['parent_lane_id']}"
-            )
-            source = f"map:{MAP}"
-            rows.append(
-                (
-                    claim_key(subject, "lane_parent", obj, source, None, evidence),
-                    f"MAP-{p['lane_id']}-{p['parent_lane_id']}",
-                    subject,
-                    obj,
-                    source,
-                    evidence,
-                    run_id,
-                )
-            )
-        claims_before = await conn.fetchval(
-            "SELECT count(*) FROM assertion WHERE predicate = 'lane_parent'"
-        )
-        await conn.executemany(
-            """INSERT INTO assertion (claim_key, claim_label, subject_id, predicate, object_id,
-                                      source, extractor, basis, evidence, status, confidence,
-                                      asserted_by, pipeline_run_id)
-               VALUES ($1, $2, $3, 'lane_parent', $4, $5, 'claude', 'reported', $6,
-                       'accepted', 0.7, 'graph seed', $7)
-               ON CONFLICT (claim_key) DO UPDATE
-                  SET extractor = 'claude', basis = 'reported', confidence = 0.7,
-                      updated_at = now()
-                WHERE assertion.extractor = 'matt'""",
-            rows,
-        )
-        claims_after = await conn.fetchval(
-            "SELECT count(*) FROM assertion WHERE predicate = 'lane_parent'"
+        removed = await conn.execute(
+            "DELETE FROM assertion WHERE predicate = 'lane_parent' AND source LIKE 'map:%'"
         )
 
         for r in await conn.fetch("SELECT slug, name FROM list ORDER BY slug"):
@@ -165,10 +127,7 @@ async def seed(conn: asyncpg.Connection, run_id: int | None, root: Path = Path("
                       (SELECT count(*) FROM map_membership WHERE map = $1) AS memberships""",
             MAP,
         )
-    return dict(counts) | {
-        "lane_parent_claims": claims_after,
-        "lane_parent_added": claims_after - claims_before,
-    }
+    return dict(counts) | {"lane_parent_removed": int(removed.split()[-1])}
 
 
 def graph_seed(root: Path = Path(".")) -> JobFn:

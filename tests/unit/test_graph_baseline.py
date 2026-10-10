@@ -132,3 +132,15 @@ def test_links_and_discogs_ids() -> None:
     assert (
         clean_name("Jim Keltner (2)") == "Jim Keltner" and clean_role("Guitar [Lead]") == "Guitar"
     )
+
+
+def test_artwork_and_business_credits_are_not_work_on_the_music() -> None:
+    from musicdata.graph.baseline import musical_roles
+
+    assert musical_roles(["Photography By", "Artwork", "Design", "Management", "A&R"]) == []
+    assert musical_roles(["Guitar", "Cover", "Mixed By", "Sound Design"]) == [
+        "Guitar",
+        "Mixed By",
+        "Sound Design",
+    ]
+    assert musical_roles(["Counterpart", "Party Noise"]) == ["Counterpart", "Party Noise"]

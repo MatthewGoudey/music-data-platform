@@ -8,6 +8,7 @@ album being researched is `ALBUM`, filled in by the job.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from urllib.parse import urlparse
 
@@ -77,6 +78,26 @@ def _artist_ent(a: dict) -> Ent:
     return Ent("person" if a.get("type") == "Person" else "artist", a["name"], a["id"])
 
 
+# Roles that are not work on the music (spec v5, Matt: an album cover is not "working on" an
+# album): artwork, photography, design, liner notes and the business side.
+_NON_MUSICAL = re.compile(
+    r"\b(art|artwork|art direction|photo\w*|design\w*|layout|illustrat\w*|paint\w*|cover|logo"
+    r"|lettering|sleeve|graphic\w*|booklet|liner notes|creative direction|typograph\w*"
+    r"|calligraph\w*|a&r|management|manager|booking|legal|copyright|marketing|promotion"
+    r"|publicity|coordinat\w*|stylist|make-up|hair)\b",
+    re.IGNORECASE,
+)
+
+
+def is_musical_role(role: str) -> bool:
+    return "sound design" in role.lower() or not _NON_MUSICAL.search(role)
+
+
+def musical_roles(roles: list[str] | set[str]) -> list[str]:
+    """The roles that are work on the music; empty when a credit is only artwork or business."""
+    return sorted(r for r in roles if is_musical_role(r))
+
+
 def role_of(rel: dict) -> list[str]:
     attrs = [a for a in rel.get("attributes") or [] if a not in ("guest", "additional")]
     if rel["type"] in ("instrument", "vocal"):
@@ -127,7 +148,9 @@ def musicbrainz_claims(release: dict, artists: list[dict]) -> list[ClaimSpec]:
                             w["tracks"].append(t.get("title"))
 
     for p in people.values():
-        roles = sorted(p["roles"])
+        roles = musical_roles(p["roles"])
+        if not roles:
+            continue
         claims.append(
             ClaimSpec(
                 p["ent"], "credited_on", ALBUM,
@@ -220,7 +243,9 @@ def discogs_claims(dg: dict) -> list[ClaimSpec]:
     for c in dg.get("credits") or []:
         people.setdefault(clean_name(c["name"]), set()).add(clean_role(c.get("role") or ""))
     for name, roles in people.items():
-        r = sorted(x for x in roles if x)
+        r = musical_roles({x for x in roles if x})
+        if not r:
+            continue
         out.append(
             ClaimSpec(
                 Ent("person", name), "credited_on", ALBUM, {"role": r}, "discogs",

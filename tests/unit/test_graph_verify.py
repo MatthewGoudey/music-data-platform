@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from musicdata.graph.baseline import musical_roles
 from musicdata.graph.facts import facts_claims
 from musicdata.graph.seed import read_predicates
 from musicdata.graph.verify import (
@@ -116,9 +117,18 @@ def test_t1_ported_facts_match_the_firecrawl_claims() -> None:
         if r.get("facts") and facts.exists():
             for c in facts_claims(json.loads(facts.read_text("utf-8")), r["url"]):
                 ported.add((c.predicate, c.evidence))
-    prototype = {
-        (c["predicate"], c["evidence"]) for c in t1_claims() if c["source"] == "firecrawl_json"
-    }
+    prototype = set()
+    for c in t1_claims():
+        if c["source"] != "firecrawl_json":
+            continue
+        if c["predicate"] == "credited_on":  # spec v5: artwork and layout are not credits
+            roles = musical_roles(c["qualifiers"]["role"])
+            if not roles:
+                continue
+            name = c["subject"]["name"]
+            prototype.add(("credited_on", f"Wikipedia personnel: {name} — {', '.join(roles)}"))
+        else:
+            prototype.add((c["predicate"], c["evidence"]))
     assert ported == prototype
 
 

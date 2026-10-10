@@ -43,7 +43,7 @@ Four workers, each doing what it is best at:
 | --- | --- | --- |
 | MusicBrainz, Wikidata, Discogs (free APIs) | identity, links, labels, credits, studios, songwriters, memberships, areas, every recording of a song with its date | `musicdata graph import`, GitHub Actions |
 | Firecrawl (paid, budgeted) | every web page fetch: page text plus facts JSON | `musicdata graph fetch`, GitHub Actions |
-| Claude, extracting | reading cached pages and atlas prose for lineage, covers and relationships | Claude Code sessions with the `music-graph-research` skill, on Matt's plan |
+| Claude, extracting | reading cached pages for lineage, covers and relationships (never the atlas's prose: spec v5) | Claude Code sessions with the `music-graph-research` skill, on Matt's plan |
 | Claude, reading | an independent agent judging each text claim against its quote alone | a separate agent in the same sessions |
 
 Everything except the two Claude steps runs unattended. The Claude steps exchange files with the
@@ -459,7 +459,7 @@ Add `GET /albums/{id}/brief`, `GET /entities/{id}/neighbors` and the two questio
 
 - `POST /graph/walk?from={release_group_id}&depth=2` builds a list from the album's lineage:
   ancestors through `sounds_like`, `influenced_by` and `covers` objects, the records of artists
-  linked by `member_of`, `associated_with` and `credited_on`, and the album's atlas path steps
+  linked by `member_of`, `associated_with` and `credited_on` (never the atlas's path steps: spec v5)
   before it — weighted by edge confidence, two hops at most.
 - It replaces the entries of one list, slug `graph_walk`, ranked by walk score. Each entry is a
   complete `list_entry`: `raw_artist` and `raw_album` from the release group, `artist_key` and
@@ -572,3 +572,14 @@ Tests:
   basis `reported`, confidence 0.7 (they were `matt`, 1.0); the reader sees "an AI-written atlas
   note". Where the atlas conflicts with another source, both claims stay and the evidence decides.
   The walk list's migration becomes 0021.
+- 2026-10-09: v5 (Matt). The atlas is AI-written, so it sets scope only: which albums and
+  artists the pilot covers, their priority, lanes as coordinates, and the pages it links to. It
+  is never the source of a claim. `lane_parent` claims are no longer seeded; `load-claims`
+  refuses a `map:*` source; batch exports carry no atlas prose; the walk does not follow atlas
+  path steps. The 216 atlas claims in dev and Matt's 7 answers on atlas quotes were deleted (his
+  go). Every claim quotes a real page or a database. Also: `credited_on` means work on the music
+  (playing, singing, writing, producing, engineering, mixing, mastering, arranging); artwork,
+  photography, design, liner notes and business roles are not credits (Matt: "an album cover
+  isn't really working on an album"); imports skip them and the 332 such claims in dev were
+  deleted. And a song written by someone else is not a cover unless the source names who
+  recorded it first.

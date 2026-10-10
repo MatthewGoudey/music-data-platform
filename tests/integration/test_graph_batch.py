@@ -202,3 +202,11 @@ async def test_batch_load_resolve_read_and_verify(conn) -> None:
     assert got["ZT1-L002"][0] == "superseded" and got["ZT1-L002-M"][0] == "accepted"
     with pytest.raises(ValueError):
         await answer(conn, "ZT1-L002", "no")  # no longer an open question
+
+
+async def test_load_claims_refuses_the_atlas_as_a_source(conn) -> None:
+    await _setup(conn)
+    atlas = _claim("ZT1-L009", "sounds_like", ALBUM, {"type": "artist", "name": "Zz Old Band"},
+                   "inferred", "builds on Zz Old Band", source="map:v_atlas")  # fmt: skip
+    with pytest.raises(ValueError, match="not a source"):
+        await load_batch_claims(conn, StubMB(), "ZT1", [atlas], None)

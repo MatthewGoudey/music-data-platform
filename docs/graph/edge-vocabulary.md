@@ -57,10 +57,9 @@ Every claim carries:
 (`musicbrainz`, `wikidata`, `discogs`) > documented or `reported` text sources > the atlas's own
 statements (`map:*`) > `inferred` from a map or an extractor alike; by confidence within a rank.
 
-**The atlas is AI-written** (Matt, 2026-10-09). It chooses the pilot's albums and supplies notes
-to read, and its notes count as one ordinary source: never as Matt's word, never as a tiebreak.
-Where the atlas is unclear, ambiguous or contradicted by another source, record what each source
-says and let the evidence decide.
+**The atlas is AI-written** (Matt, 2026-10-09, spec v5). It sets scope only: which albums and
+artists a slice covers, their priority, lanes as coordinates, and the pages it links to. It is
+never the source of a claim: every claim quotes a real page or comes from a database.
 
 **Rules**
 - Always point lineage from the newer subject to the older object (the descendant is the subject).
@@ -124,7 +123,7 @@ ranking came back as `influenced_by`, and a cover *of* the album came back as th
 someone. So:
 - always take labels from MusicBrainz;
 - always extract credits and recording facts with Firecrawl JSON extraction (it runs unattended);
-- always extract lineage with Claude, reading the atlas prose and the cached page text, with an
+- always extract lineage with Claude, reading the cached page text (never the atlas's prose), with an
   explicit `direction` for every claim (`this album → other` or `other → this album`) and lists or
   rankings routed to `on_list`; every extracted lineage claim goes through the checks in section 13.
 
@@ -312,3 +311,8 @@ sentences judged.
 - Proposed, for Matt: a predicate for a band's earlier name or predecessor band (Crazy Horse
   recorded in 1968 as The Rockets), e.g. `continues` (artist → artist, `from` year). Until agreed,
   such sentences go to the skipped log.
+- 2026-10-09 (Matt, graph spec v5): the atlas is scope, never a source of claims. `credited_on`
+  covers work on the music only (playing, singing, writing, producing, engineering, mixing,
+  mastering, arranging); artwork, photography, design, liner notes and business roles are not
+  credits. A song written by someone else is a `covers` claim only when the source names who
+  recorded it first.

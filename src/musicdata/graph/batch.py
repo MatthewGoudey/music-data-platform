@@ -149,7 +149,9 @@ def graph_batch_export(*, slice_name: str, size: int = 25, root: Path = Path("."
             )
         for t in picked:
             fc = facets.get(t["atlas_id"], {})
-            note = {k: fc.get(k) for k in ("description", "lineage", "source_urls")}
+            # the atlas is AI-written: its prose is never evidence (spec v5), so only the
+            # pages it points at go to the reader of the batch
+            note = {"source_urls": fc.get("source_urls")}
             (out / "atlas" / f"{t['atlas_id']}.json").write_text(
                 json.dumps({"atlas_id": t["atlas_id"], **note}, indent=1, ensure_ascii=False),
                 encoding="utf-8",
@@ -400,6 +402,11 @@ async def load_batch_claims(
     }
     res = Resolver(conn, mb)
     seq: dict[str, int] = defaultdict(int)
+    atlas = [
+        c.get("claim_id") or "?" for c in claims if str(c.get("source", "")).startswith("map:")
+    ]
+    if atlas:
+        raise ValueError(f"the atlas is not a source of claims (spec v5): {atlas[:5]}")
     for c in claims:
         album_id = albums.get(c.get("album") or "")
         if album_id is None:

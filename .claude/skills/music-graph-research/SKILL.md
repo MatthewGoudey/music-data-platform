@@ -15,9 +15,9 @@ source says it and the checks in section 4 pass; how much it matters is its conf
 know the music to approve a claim. He answers only **reading questions** ("does this quote say X?") for the
 few claims the checks cannot settle.
 
-**The atlas is AI-written** (graph spec v4). It chooses the albums and supplies notes to read; its notes are
-one ordinary source, never Matt's word and never a tiebreak. Where the atlas is unclear, ambiguous or
-contradicted by a page, record what each source says and let the evidence decide.
+**The atlas is AI-written** (graph spec v5). It sets scope only: which albums and artists a batch covers
+and which pages to read. It is never the source of a claim: every claim quotes a real page, and
+`load-claims` refuses a `map:*` source.
 
 Division of labour:
 - **MusicBrainz, Wikidata, Discogs** (free APIs): identity, links, labels, credits, studios, memberships,
@@ -40,7 +40,7 @@ database; a reading batch's files live in `data/graph/batches/LABEL/` (gitignore
 | `albums.csv` | the batch's albums: `atlas_id,artist,album,year,priority,entity_id` |
 | `pages/FETCH_ID.md` | each fetched page, full text, with a header (url, title, atlas id) |
 | `cues/FETCH_ID.md` | the paragraphs of each page that can carry lineage, numbered `[¶n]` |
-| `atlas/ATLAS_ID.json` | the album's atlas note: `description`, `lineage`, `source_urls` |
+| `atlas/ATLAS_ID.json` | the pages the atlas links to (`source_urls`); scope only, never evidence |
 | `known.json` | entities already linked to each album (credits, members, label, places), for names |
 | `claims/` | the claim files written in step E, and the skipped file |
 | `reader_input.txt`, `reader_output.jsonl`, `report.md` | the reader's input and verdicts, the batch report |
@@ -86,7 +86,7 @@ them all.
 
 **E. Export a batch and read (Claude).** `graph batch export --slice SLICE --size 25` creates the next batch
 (`P01`, `P02`…). For each album, read its `cues/` paragraphs (the full `pages/` text when a cue needs
-context) and its `atlas/` note, then write claims by section 3 into `claims/LABEL_lineage.jsonl`, and
+context), then write claims by section 3 into `claims/LABEL_lineage.jsonl`, and
 everything read but not claimed into `claims/LABEL_skipped.jsonl` (one `{"album", "text", "reason"}` object
 per line). Load them: `graph batch load-claims LABEL data/graph/batches/LABEL/claims/LABEL_lineage*.jsonl`
 (names resolve to entities: those in `known.json` first, then MusicBrainz).
@@ -110,13 +110,12 @@ Write one JSON object per line:
 Entity types: `album`, `recording`, `work`, `artist` (a group, or a joint credit as written), `person`,
 `label`, `place`, `area`, `genre`. Give `year` and `artist` wherever the source states them; give the
 batch's album its `atlas_id` (`{"type": "album", "name": "ARTIST – ALBUM", "atlas_id": "A0015"}`). Sources:
-`wikipedia` (any page: a non-Wikipedia URL is stored as `web:DOMAIN`), `map:v_atlas` (with `source_url`
-`atlas:seeds/atlas/album_notes.csv#ATLAS_ID.FIELD`), `web:DOMAIN`. Use the page's URL from its header.
+`wikipedia` (any page: a non-Wikipedia URL is stored as `web:DOMAIN`) or `web:DOMAIN`. Never the atlas. Use the page's URL from its header.
 Put the publication or critic a source cites in `qualifiers.via`. A corrected claim carries
 `"replaces": "OLD_CLAIM_ID"` and a new claim id.
 
 **Evidence**
-- Always copy evidence verbatim from the cached page or the atlas field, at most 300 characters.
+- Always copy evidence verbatim from the cached page, at most 300 characters.
 - Always quote the clause that names both ends of the claim. When they sit in two sentences of one source,
   join the passages with " … ". On a Wikipedia album article, "the album" and "the band" may stand for the
   album and its artist; anything else must be named in the quote.
@@ -132,7 +131,11 @@ Put the publication or critic a source cites in `qualifiers.via`. A corrected cl
   the song. Never assume the album's own recording came first: when the source names an earlier performer,
   that performer is the object (Nazareth's "Gone Dead Train" covers Randy Newman's 1970 recording, not Crazy
   Horse's). Covers *of* this album's songs by later artists are claims too, with the later recording as subject.
-- `credited_on`: a person or band played, produced, arranged or worked on a named album; use `role`.
+  A song written by someone else is not a cover by itself: claim `covers` only when the source names who
+  recorded or performed it first; a writer alone is a skip.
+- `credited_on`: a person or band played, sang, wrote, produced, engineered, mixed, mastered or arranged a
+  named album; use `role`. Artwork, photography, design, layout, liner notes and business roles
+  (management, A&R) are not credits: skip them (Matt: "an album cover isn't really working on an album").
 - `member_of`: the source says the person was in, joined, or was a member of the group.
 - `associated_with`: two artists worked, toured or recorded together; give `kind` (collaborator, touring,
   bandmate, label-mate, scene).
@@ -172,8 +175,7 @@ artists or dates: a claim you believe is true but the quote does not state is no
 CLAIM that the quote does not mention are context, not part of the judgement, unless the quote contradicts them.
 
 References the source resolves count as stated: on a Wikipedia article about an album, "the album", "this
-album", "the band" (the album's artist) and the album's own songs refer to that album and its artist; on
-an AI-written atlas note about an album, an unnamed subject is that album.
+album", "the band" (the album's artist) and the album's own songs refer to that album and its artist.
 
 What each relation means:
 - "compared to, or said to sound like or build on": the quote says the album resembles, is compared with, is
@@ -181,8 +183,8 @@ What each relation means:
 - "influenced or inspired by": the quote says influence or inspiration, not just resemblance.
 - "is a cover of X: a later recording of a song that X recorded first": the quote says the later artist
   covered, recorded or performed the song, and that X recorded or performed it earlier.
-- "worked or played on": the quote says the person or band played, produced, backed, arranged or worked on
-  that album.
+- "worked or played on": the quote says the person or band played, sang, wrote, produced, engineered,
+  mixed, mastered, backed or arranged that album. Artwork, photography, design and business work do not count.
 - "was a member of": the quote says the person was in, joined, or was a member of the group.
 - "worked with (kind)": the quote says they worked, played, or recorded together.
 - "is described as" / "came out of": the quote says the album is that style or came from that scene, not
@@ -205,17 +207,17 @@ What `graph verify` checks (graph spec section 8), none of which needs music kno
 | Check | Passes when | On failure |
 | --- | --- | --- |
 | Structure | the predicate is in the vocabulary and the subject and object types fit it; `sounds_like` is `inferred`; `influenced_by` is `reported` or `documented`; lineage carries a direction | rejected |
-| Evidence | the quote appears verbatim on the cached page or in the atlas field; a `field:` value appears on the page; a Firecrawl-JSON name appears on its page (quote marks aside; a place may drop a trailing "Studio(s)") | rejected |
+| Evidence | the quote appears verbatim on the cached page; a `field:` value appears on the page; a Firecrawl-JSON name appears on its page (quote marks aside; a place may drop a trailing "Studio(s)") | rejected |
 | Dates | for lineage, the object's first release (or the artist's start) is not later than the subject's | rejected |
 | First recording | for `covers`, no MusicBrainz recording of the song predates the object's | rejected |
 | Databases | MusicBrainz or Discogs records the same credit, membership, label, studio, or the cover order | adds support; a contradiction rejects |
-| Independence | an atlas note whose `source_urls` include the same page counts as that page, not as a second source | no double counting |
+| Independence | claims from one page count once | no double counting |
 | Reader | SUPPORTS | DOES_NOT_SUPPORT, WRONG_DIRECTION and NOT_A_CLAIM reject; PARTIAL becomes a reading question unless a database records the same edge |
 
 Confidence starts by source and basis — databases 0.9; Firecrawl JSON from a Wikipedia personnel list 0.75;
-a page's own statement (`documented`) 0.8; `reported` text 0.7; the atlas's `reported` 0.7 and `inferred`
-0.5; a critic's comparison 0.5 — and gains 0.1 per independent source that agrees, up to 0.95. Where sources
-disagree, the current view of an edge follows Matt, then the databases, then pages, then the atlas.
+a page's own statement (`documented`) 0.8; `reported` text 0.7; a critic's comparison 0.5 — and gains 0.1
+per independent source that agrees, up to 0.95. Where sources disagree, the current view of an edge follows
+Matt, then the databases, then pages.
 
 Statuses: `accepted` (the source says it and every check passed), `rejected` (a check failed),
 `ask_matt` (a reading question), `unread` (the reader has not judged it yet).
