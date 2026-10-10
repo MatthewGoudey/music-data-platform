@@ -44,6 +44,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; letter-spac
 .chip { font: 600 13px var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--ink);
   border-radius: 999px; padding: 6px 12px; cursor: pointer; }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.chip.walk { text-decoration: none; background: color-mix(in srgb, #2f8f5b 16%, transparent); color: #2f8f5b; border-color: #2f8f5b; }
 button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .spacer { flex: 1; }
 .list { display: grid; gap: 10px; }
@@ -196,8 +197,16 @@ function card(a, i) {
 }
 
 function render() {
-  $("profiles").innerHTML = data.profiles.map(p =>
-    `<button class="chip" aria-pressed="${p.name === profile}" data-profile="${esc(p.name)}" title="${esc(p.description || "")}">${esc(p.label || p.name)}</button>`).join("") +
+  $("profiles").innerHTML = data.profiles.map(p => {
+    if (p.name === "walk-back") {
+      // a walk is entered from an album page; while on it, its chip leads back to that album
+      if (profile !== "walk-back") return "";
+      return p.origin
+        ? `<a class="chip walk" aria-current="page" href="${esc(url(`/albums/${p.origin}/page`))}" title="Back to the album">← ${esc(p.label || "Walk back")}</a>`
+        : `<span class="chip walk" aria-current="page">${esc(p.label || "Walk back")}</span>`;
+    }
+    return `<button class="chip" aria-pressed="${p.name === profile}" data-profile="${esc(p.name)}" title="${esc(p.description || "")}">${esc(p.label || p.name)}</button>`;
+  }).join("") +
     `<span class="spacer"></span>` +
     (shuffled ? `<button class="chip" id="top">Top picks</button>` : "") +
     `<button class="btn play" id="shuffle">Shuffle</button>`;
@@ -327,6 +336,8 @@ document.addEventListener("click", async e => {
   if (b.dataset.profile) {
     profile = b.dataset.profile; shuffled = false; presses = 0; seen = new Set();
     try { localStorage.setItem("queue.profile", profile); } catch (err) {}
+    const u = new URL(location.href);  // leaving a walk: a reload stays on the chosen queue
+    if (u.searchParams.has("profile")) { u.searchParams.delete("profile"); history.replaceState(null, "", u); }
     return load();
   }
   if (b.id === "shuffle") { shuffled = true; presses++; return load({ shuffle: true }); }

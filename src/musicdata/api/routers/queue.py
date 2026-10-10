@@ -318,7 +318,12 @@ async def queue_data(
                 """SELECT p.name, p.description,
                           CASE p.name WHEN 'walk-back' THEN (SELECT l.name FROM list l
                                                               WHERE l.slug = 'graph_walk')
-                          END AS label
+                          END AS label,
+                          CASE p.name WHEN 'walk-back' THEN (
+                              SELECT substring(e.added_by FROM 'graph:([0-9]+)')::int
+                                FROM list_entry e JOIN list l USING (list_id)
+                               WHERE l.slug = 'graph_walk' LIMIT 1)
+                          END AS origin
                      FROM queue_profile p ORDER BY p.name <> 'default', p.name"""
             )
         ]
