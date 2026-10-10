@@ -3,7 +3,8 @@
 This file is the current state of the music graph (Phases 5 and 6) of `music-data-platform`, written for
 Matt's claude.ai Project. Read it to answer questions about the graph pilot; read
 `docs/graph/GRAPH_SPEC.md` (how the graph is built) and `docs/graph/edge-vocabulary.md` (what a
-claim is) for the rules themselves. All graph data lives in the dev environment; prod has none yet.
+claim is) for the rules themselves. The graph lives in prod since 2026-10-10 (Phase 6 Block B);
+dev keeps a copy for development.
 
 ## 1. What the graph is
 
@@ -35,7 +36,7 @@ Centro-matic and Will Johnson to Neil Young, Crazy Horse, Buffalo Springfield an
 - 169 of the 181 have a MusicBrainz match and are in the pilot; 12 small releases have none.
 - Albums are read in **batches of 25** (P01–P07).
 
-## 3. Rules Matt set during the pilot (graph spec v2–v9)
+## 3. Rules Matt set during the pilot (graph spec v2–v12)
 
 | Version | Rule |
 | --- | --- |
@@ -48,6 +49,8 @@ Centro-matic and Will Johnson to Neil Young, Crazy Horse, Buffalo Springfield an
 | v7 | **Touring is not working together.** `associated_with` means worked, played or recorded together (including playing in someone's band). Four predicates were added: `toured_with` (two acts on one tour or bill), `performs_as` (stage name or solo project), `renamed_from` (a band's earlier name), `interpolates` (a song borrowing an older song's melody or lyric). The walk will not follow `toured_with`. |
 | v8 | **English sources are always accepted; another language only for artists tied to it.** The pilot is English-language, so it reads English pages only; 18 claims quoting German pages were deleted and 35 non-English links marked dead. A future non-English slice reads English plus its own language, with reading questions translated for Matt. |
 | v9 | The graph's uses for Matt moved to `docs/graph/COMPANION_SPEC.md` (Phase 6): the API, the prod copy and the walk are its Blocks A, B and H. |
+| v10 | **Duplicate entities merge only when safe**: an entity without an MBID merges into one with an MBID only when both share a normalised name and at least one album. Every merge is logged and `graph unmerge` undoes it; other name matches stay apart and are reported. |
+| v11, v12 | **More vocabulary** (Matt: "add whatever vocab you need"): `tribute_to`, `named_after`, `references` (a lyric naming a song), `based_on` (a song from a poem), `appears_in` (a song in a film or advert), `relative_of`, `arrangement_from` (following another performer's arrangement), `compiles` (an album collecting EPs), `companion_to` (an album and its film); `influenced_by` may name a genre; `renamed_from` covers studios and labels. 30 predicates. |
 
 Matt also confirmed Josh Terry's **No Expectations** (noexpectations.fyi) as a critic worth
 reading: 92 of his posts are linked as review pages to 37 pilot albums.
@@ -60,51 +63,35 @@ Rate Your Music review pages are not read: their cached pages often held the wro
 
 ## 4. Where the work stands
 
-Phase 5 (building the graph):
+Phase 5 (building the graph) is done: all 169 baselined albums of the Crazy Horse slice are read
+and verified in seven batches (P01–P07), and the graph moved to prod with Phase 6 Block A (the
+graph API) and Block B (the prod copy and the nightly graph workflow), released as v0.4.0.
 
-| Block | What | State |
-| --- | --- | --- |
-| 0, A | Setup, schema, predicates | Done |
-| B | Free baseline from MusicBrainz, Discogs and Wikidata | Done for all 169 albums |
-| C | Firecrawl page fetches and Wikipedia credit facts | Done (395 pages) |
-| D | Verification, reading batches, report, data checks G1–G8 | Done |
-| E | **Reading batches** | **P01–P04 verified (100 of 169 albums)**; P05–P07 to go (69 albums), alongside Phase 6 |
+| Batch | Albums | First-pass agreement | Notes |
+| --- | --- | --- | --- |
+| P01–P04 | 100 | 96.2% | Neil Young, Crazy Horse and the Chicago and Asheville circle |
+| P05 | 25 | 97% | Dialup Ghost's own list of 48 influences; Jason Molina's influence on 11 artists; Will Johnson's bands |
+| P06 | 25 + 2 | 98% | Buffalo Springfield to *This Note's for You*; "The Loner" covered by Stephen Stills; *Trans* and Kraftwerk; Arbouretum's real Wikipedia page fetched after the atlas link proved dead |
+| P07 | 19 | 99% | *Left for Dead* to *Oceanside Countryside*; Sonic Youth's influence on *Arc* and their tour; Dogwood Tales and the Asheville Bandcamp records |
 
-Phase 6 (`docs/graph/COMPANION_SPEC.md`, what the graph does for Matt) starts with Block A, the
-graph API. Prod becomes the graph's home at its Block B, on Matt's go.
-
-### P04 (done)
-
-25 Neil Young albums, *Long May You Run* (1976) to *Talkin to the Trees* (2025): 217 claims,
-**98% first-pass agreement**, three reading questions answered (Spooner Oldham and Ben Keith on
-*Prairie Wind*: no; "Silver Eagle", a German quote: removed under v8). Highlights:
-
-- *Harvest Moon*: eight covers (Cassandra Wilson, Lord Huron, Bill Frisell and others).
-- *Mirror Ball*: Pearl Jam's credits, and Pearl Jam opening Young's 1993 tour (`toured_with`).
-- "Four Strong Winds" covers Ian & Sylvia's 1963 recording; Nicolette Larson's "Lotta Love" covers
-  Young's 1976 version.
-- "Love Is a Rose" reworks "Dance, Dance, Dance"; the riff of "Psychedelic Pill" comes from "Sign
-  of Love" (`interpolates`).
-- Rejected by the checks, correctly: Linda Ronstadt's "Love Is a Rose" as a cover (she released it
-  before Young did).
-
-## 5. What the graph holds (dev, 2026-10-10)
+## 5. What the graph holds (prod, 2026-10-10)
 
 | | Count |
 | --- | --- |
-| Accepted claims | 5,582 |
-| Rejected (a check failed, or Matt said no) | 24 |
-| Superseded (replaced by a correction or an answer) | 50 |
-| Entities (people, bands, albums, recordings, places, labels) | 5,384 |
-| Albums with accepted lineage claims (P01–P04) | 60 of 100 |
-| Claims under Matt's name (his answers) | 21 |
+| Accepted claims | 6,315 |
+| Rejected (a check failed, or Matt said no) | 29 |
+| Superseded (replaced by a correction or an answer) | 53 |
+| Open reading questions | 3 |
+| Entities (people, bands, albums, recordings, places, labels) | 5,112 |
+| Pilot albums with accepted lineage or connection claims | 88 of 169 |
+| Claims under Matt's name (his answers) | 13 |
 
-Accepted claims by origin: MusicBrainz 1,731; Discogs 1,680; Wikipedia credit facts via Firecrawl
-1,160; read from pages by Claude 1,000; Matt 11.
+Accepted claims by origin: pages (Wikipedia credit facts and claims read by Claude) 2,857;
+MusicBrainz 1,742; Discogs 1,703; Matt 13.
 
-Accepted claims by kind: credited on 4,007; recorded at 359; member of 323; released by 286; genre
-260; worked with 98; sounds like 94; based in 73; influenced by 28; toured with 25; covers 24;
-borrows from (interpolates) 3; came out of a scene 2.
+Accepted claims by kind: credited on 4,376; member of 405; recorded at 400; genre 317; released by
+309; worked with 144; sounds like 113; influenced by 90; based in 89; toured with 29; covers 27;
+borrows from (interpolates) 4; relative of 4; performs as 4; renamed from 2; came out of a scene 2.
 
 ## 6. Quality
 
@@ -112,27 +99,28 @@ Each text claim is judged by an **independent reader agent** that sees only the 
 quote. The bar (Block E) is at least 90% `SUPPORTS` on the first reading for every kind of claim
 with 10 or more read.
 
-First-pass reader agreement, P01–P04 (916 claims read): **96.2%**.
+First-pass reader agreement, P01–P07 (1,525 claims read): **97.0%**.
 
 | Kind | Read | First-pass agreement |
 | --- | --- | --- |
-| credited on | 342 | 97% |
-| member of | 188 | 96% |
-| worked with | 124 | 98% |
-| sounds like | 97 | 92% |
-| genre | 32 | 100% |
-| recorded at | 28 | 100% |
-| influenced by | 28 | 100% |
-| covers | 25 | 84% |
-| toured with | 25 | 100% |
-| released by | 14 | 93% |
-| based in | 10 | 100% |
+| credited on | 665 | 98% |
+| member of | 260 | 95% |
+| worked with | 170 | 98% |
+| sounds like | 118 | 91% |
+| influenced by | 90 | 100% |
+| recorded at | 60 | 97% |
+| genre | 53 | 98% |
+| covers | 30 | 83% |
+| toured with | 29 | 100% |
+| released by | 24 | 96% |
+| based in | 12 | 100% |
 
-Covers is the one kind below the bar. Its early misses were the writer-versus-first-recording
-mistake (Ratboys' "Spiderweb", the Byrds' "See the Sky About to Rain"), which v5 now prevents; P04's
-covers alone reached 90%.
+**Covers is the one kind below the bar** (25 of 30). Its misses are the writer-versus-first-recording
+mistake: a page names a song's writer or an earlier version without saying who recorded it first
+(Ratboys' "Spiderweb", the Byrds' "See the Sky About to Rain", Jimmy Reed's "Bright Lights, Big
+City"). The checks caught each one; none was accepted on a wrong reading.
 
-All eight graph data checks (G1–G8) pass in dev. No reading questions are open.
+All eight graph data checks (G1–G8) pass in prod. Three reading questions are open.
 
 ## 7. Known problems and fixes
 
@@ -150,8 +138,9 @@ All eight graph data checks (G1–G8) pass in dev. No reading questions are open
 
 ## 8. Cost
 
-- Firecrawl: 850 credits spent this month of the 100,000 limit (395 pages, including the 168
-  No Expectations posts). Reading batches cost no Firecrawl credits.
+- Firecrawl: 855 credits spent this month of the 100,000 limit (396 pages, including the 168
+  No Expectations posts). Matt pre-approved spending up to the monthly limit; reading batches cost
+  no Firecrawl credits.
 - MusicBrainz, Discogs and Wikidata: free.
 - Reading and checking run as Claude Code agents on Matt's plan.
 
@@ -178,16 +167,17 @@ Other commands: `graph critic --site noexpectations` (refresh the critic's posts
 
 ## 10. Next steps
 
-1. Phase 6 Block A: the graph API (entities, neighbors, the album brief with pages and per-track
-   credits, questions, coverage, posting claims and links), and the pilot's re-import for
-   per-track credits.
-2. P05–P07, the remaining 69 albums, alongside Phase 6.
-3. Phase 6 Block B on Matt's go: prod becomes the graph's home, with a nightly graph workflow.
-4. Then Blocks C–I of `docs/graph/COMPANION_SPEC.md`: default building blocks, connections and
-   threads, album and hub pages, liner notes and deep dives, the worker, the queue changes.
+1. Phase 6 Block C on Matt's go: the nightly workflow builds the near-queue albums (the default
+   scope) — baseline, pages and facts — and reports coverage, credits and database size after three
+   nights.
+2. Then Blocks D–I of `docs/graph/COMPANION_SPEC.md`: connections and threads, album and hub pages,
+   liner notes and deep dives, the worker, the queue changes.
+3. Covers: tighten the extraction rule or the reader prompt until first-pass covers reach 90%.
 
 ## 11. Decisions waiting for Matt
 
-- Optional vocabulary still unmodelled, logged by extractors: songs written for or about a person,
-  awards, films and books as influences, songs used in films, reissues, family relations, song
-  working titles, a lyric naming another song.
+- Three reading questions: *Trans* recorded in Hawaii (skipped once; still open), Arbouretum
+  described as alternative rock (the reader misread the band's start year as an album), and *Arc*
+  sounding like Lou Reed's *Metal Machine Music* ("a similar concept").
+- Gaps still left out as not music relations: a band-name lawsuit, MTV as an influence, a book
+  mentioning an album, an album about a political figure.
