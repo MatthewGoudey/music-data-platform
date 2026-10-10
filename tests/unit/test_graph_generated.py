@@ -69,3 +69,16 @@ def test_generated_lists_only_count_where_named() -> None:
     )
     assert [i.release_group_id for i in following] == [2]
     assert why_part(following[0].why[0]) == "Following Ralph Molina · drums"
+
+
+def test_the_start_artist_is_never_a_step() -> None:
+    start = album(1, "Boat Songs", "MJ Lenderman", 2022)
+    step = album(2, "Twin Plagues", "Wednesday", 2021)
+    far = album(3, "I Love My Mom", "Indigo De Souza", 2018)
+    g = Graph(albums={a.entity_id: a for a in (start, step, far)}, names={100: "Xandy Chelmis",
+                                                                          101: "MJ Lenderman"})  # fmt: skip
+    g.add(Link(100, 1, "person", 0.6, "pedal steel", 0.9, 1))
+    g.add(Link(100, 2, "person", 0.6, "pedal steel", 0.9, 2))
+    g.add(Link(101, 2, "member", 1.0, "guitar", 0.9, 3))
+    g.add(Link(101, 3, "person", 0.6, "drums", 0.9, 4))
+    assert set(walk_scores(g, start)) == {20}

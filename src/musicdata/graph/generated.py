@@ -145,8 +145,8 @@ def walk_scores(g: Graph, start: Album) -> dict[int, tuple[float, str]]:
         reached: dict[int, float] = defaultdict(float)
         for link in g.links_by_album.get(src.entity_id, []):
             name = g.names.get(link.node, "")
-            if norm_key(name) in src.parts:
-                continue  # the album's own artist: its discography is not a step back
+            if norm_key(name) in src.parts or norm_key(name) in start.parts:
+                continue  # an album's own artist (or the start's): discography is not a step back
             busy = len({x.album for x in g.links_by_node[link.node]})
             for other in g.links_by_node[link.node]:
                 x = g.albums.get(other.album)
