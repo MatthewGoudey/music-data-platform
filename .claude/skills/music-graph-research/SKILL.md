@@ -1,0 +1,248 @@
+---
+name: "music-graph-research"
+description: "Use when researching albums or artists for Matt's music graph in music-data-platform: claims (credits, covers, memberships, lineage) for the Crazy Horse pilot or any album batch, or one album with sources."
+---
+
+# Music graph research
+
+This skill turns albums into **claims** for Matt's music graph: *subject — predicate — object*, each with a
+source, a basis, verbatim evidence and a confidence. The vocabulary is `docs/graph/edge-vocabulary.md`
+(sections 3–4) and the build is `docs/graph/GRAPH_SPEC.md` in the `music-data-platform` repo; read the
+vocabulary before the first album of a session.
+
+A claim is an attributed statement: "this source says X — predicate — Y". A claim is accurate when its
+source says it and the checks in section 4 pass; how much it matters is its confidence. Matt never has to
+know the music to approve a claim. He answers only **reading questions** ("does this quote say X?") for the
+few claims the checks cannot settle.
+
+**The atlas is AI-written** (graph spec v4). It chooses the albums and supplies notes to read; its notes are
+one ordinary source, never Matt's word and never a tiebreak. Where the atlas is unclear, ambiguous or
+contradicted by a page, record what each source says and let the evidence decide.
+
+Division of labour:
+- **MusicBrainz, Wikidata, Discogs** (free APIs): identity, links, labels, credits, studios, memberships,
+  songwriters, every recording of a song with its date. `musicdata graph import` runs these first.
+- **Firecrawl**: every web page fetch and every web search. Never fetch a page any other way.
+- **Claude**: reading pages for lineage, covers and relationships, and writing the claims.
+- **A separate reader agent**: checks every text claim against its quote, without the extraction context.
+
+Tested on 2026-10-09 with Boat Songs, Crazy Horse (1971) and Keeper (run T1): 126 claims, 125 accepted, 1
+reading question, 12 Firecrawl credits. The run is the golden test in `tests/unit/fixtures/graph/T1/`.
+
+## 1. Setup
+
+Work from the repo root. Every step is a `musicdata` command against an environment (dev until Matt gives the
+go for prod): `uv run musicdata --env dev --plain-logs graph …`. Claims, pages and checks live in the
+database; a reading batch's files live in `data/graph/batches/LABEL/` (gitignored):
+
+| Path | Holds |
+| --- | --- |
+| `albums.csv` | the batch's albums: `atlas_id,artist,album,year,priority,entity_id` |
+| `pages/FETCH_ID.md` | each fetched page, full text, with a header (url, title, atlas id) |
+| `cues/FETCH_ID.md` | the paragraphs of each page that can carry lineage, numbered `[¶n]` |
+| `atlas/ATLAS_ID.json` | the album's atlas note: `description`, `lineage`, `source_urls` |
+| `known.json` | entities already linked to each album (credits, members, label, places), for names |
+| `claims/` | the claim files written in step E, and the skipped file |
+| `reader_input.txt`, `reader_output.jsonl`, `report.md` | the reader's input and verdicts, the batch report |
+
+Firecrawl:
+- The key is `FIRECRAWL_API_KEY` (the repo's `.env`, and the GitHub Environment secrets). Never print it,
+  paste it, or write it into a file; `musicdata` redacts any `fc-…` token in errors and logs.
+- Budgets (graph spec section 9): 500 credits per run (`graph fetch --max-credits`), a monthly ceiling of
+  `GRAPH_MONTHLY_CREDITS` (100,000, the plan's limit; the ledger counts graph fetches only), about 35 per
+  album in a single-album session, and ask Matt before a slice above 1,500 credits.
+- In a chat without the repo, use the Firecrawl connector (`firecrawl_scrape`, `onlyMainContent: true`, with
+  `formats: ["markdown", "json"]` and the schema in `src/musicdata/graph/schemas/facts_v2.json` for a
+  Wikipedia album page), save the result to a file at once, and keep to single albums.
+
+Free APIs: the clients send a real User-Agent, keep MusicBrainz at 1 request/second and Discogs under its
+limit, follow MusicBrainz redirects (merged IDs), and back off on 503 and 429.
+
+## 2. Per slice, then per batch
+
+Steps A–D run once per slice as jobs (laptop or the `backfill` workflow); they are resumable and skip
+albums already done.
+
+**A. Baseline (free).** `graph import --slice SLICE`, then `graph link`. Albums with no MusicBrainz match
+appear under "No match" in the report.
+
+**B–C. Fetch (Firecrawl).** `graph fetch --slice SLICE --max-credits 500` picks pages by atlas priority from
+registered links only:
+
+| Atlas priority | Pages |
+| --- | --- |
+| Essential, or `start_here` / on a path | English Wikipedia (`facts`) + up to 2 other registered links |
+| Recommended | Wikipedia + 1 |
+| Deep cut | 1: Wikipedia, else Bandcamp |
+
+The album's own Wikipedia page (from MusicBrainz or Wikidata) comes first; a page an atlas note cites feeds
+facts mode only when its title names the album. Modes: `facts` (text plus facts JSON, 5 credits), `bandcamp`
+(the about, credits, tags and location blocks, 1 credit), `plain` (1 credit). A cached page costs nothing; a
+failed page is logged and never retried in the run. Batch jobs run no web searches.
+
+**D. Facts to claims (free).** `graph facts --slice SLICE` writes the Firecrawl-JSON claims (credits and
+studios); the baseline already wrote MusicBrainz and Discogs claims. `graph verify --slice SLICE` checks
+them all.
+
+**E. Export a batch and read (Claude).** `graph batch export --slice SLICE --size 25` creates the next batch
+(`P01`, `P02`…). For each album, read its `cues/` paragraphs (the full `pages/` text when a cue needs
+context) and its `atlas/` note, then write claims by section 3 into `claims/LABEL_lineage.jsonl`, and
+everything read but not claimed into `claims/LABEL_skipped.jsonl` (one `{"album", "text", "reason"}` object
+per line). Load them: `graph batch load-claims LABEL data/graph/batches/LABEL/claims/LABEL_lineage*.jsonl`
+(names resolve to entities: those in `known.json` first, then MusicBrainz).
+
+## 3. Reading rules
+
+Write one JSON object per line:
+
+```json
+{"claim_id": "P01-A2184-L001", "run_id": "P01", "album": "A2184",
+ "subject": {"type": "recording", "name": "Rod Stewart – I Don't Want to Talk About It", "artist": "Rod Stewart", "year": 1975, "album": "Atlantic Crossing"},
+ "predicate": "covers",
+ "object": {"type": "recording", "name": "Crazy Horse – I Don't Want to Talk About It", "artist": "Crazy Horse", "year": 1971, "album": "Crazy Horse"},
+ "qualifiers": {"work": "I Don't Want to Talk About It", "writer": "Danny Whitten"},
+ "source": "wikipedia", "basis": "reported",
+ "evidence": "Whitten's ballad \" I Don't Want to Talk About It\" would be covered by a variety of artists, including Rita Coolidge; Everything but the Girl on their 1988 album Idlewild; and Rod Stewart, who had a chart-topping hit with the song in the United Kingdom, taken from his 1975 album Atlantic Crossing.",
+ "source_url": "https://en.wikipedia.org/wiki/Crazy_Horse_(album)", "direction": "subject_newer",
+ "extractor": "claude", "status": "proposed", "asserted_by": "music-graph-research", "asserted_at": "2026-10-09"}
+```
+
+Entity types: `album`, `recording`, `work`, `artist` (a group, or a joint credit as written), `person`,
+`label`, `place`, `area`, `genre`. Give `year` and `artist` wherever the source states them; give the
+batch's album its `atlas_id` (`{"type": "album", "name": "ARTIST – ALBUM", "atlas_id": "A0015"}`). Sources:
+`wikipedia` (any page: a non-Wikipedia URL is stored as `web:DOMAIN`), `map:v_atlas` (with `source_url`
+`atlas:seeds/atlas/album_notes.csv#ATLAS_ID.FIELD`), `web:DOMAIN`. Use the page's URL from its header.
+Put the publication or critic a source cites in `qualifiers.via`. A corrected claim carries
+`"replaces": "OLD_CLAIM_ID"` and a new claim id.
+
+**Evidence**
+- Always copy evidence verbatim from the cached page or the atlas field, at most 300 characters.
+- Always quote the clause that names both ends of the claim. When they sit in two sentences of one source,
+  join the passages with " … ". On a Wikipedia album article, "the album" and "the band" may stand for the
+  album and its artist; anything else must be named in the quote.
+- For a structured page field, write `field: FIELD NAME = VALUE` (for example
+  `field: Bandcamp artist location = Ohio`).
+
+**Predicates**
+- `sounds_like` (basis `inferred`): a curator or critic compares the album to, says it resembles, is
+  indebted to, or builds on another artist or album. One claim per object.
+- `influenced_by` (basis `reported` or `documented`): only when the source says influence or inspiration in
+  so many words, or quotes the artist saying it. A critic's comparison is `sounds_like`.
+- `covers` (basis `reported`): the subject is the later recording, the object is the **first** recording of
+  the song. Never assume the album's own recording came first: when the source names an earlier performer,
+  that performer is the object (Nazareth's "Gone Dead Train" covers Randy Newman's 1970 recording, not Crazy
+  Horse's). Covers *of* this album's songs by later artists are claims too, with the later recording as subject.
+- `credited_on`: a person or band played, produced, arranged or worked on a named album; use `role`.
+- `member_of`: the source says the person was in, joined, or was a member of the group.
+- `associated_with`: two artists worked, toured or recorded together; give `kind` (collaborator, touring,
+  bandmate, label-mate, scene).
+- `has_genre` and `from_scene`: only when the source says the album *is* that style or *came out of* that
+  scene; "closer to", "nods to" and "hints of" are skipped.
+- A ranking or list placement routes to `on_list`, never to lineage.
+
+**Direction:** the descendant is always the subject (`direction: "subject_newer"` on every lineage claim).
+
+**Skip, and log the reason in the skipped file:** objects that are not one entity (a label's roster, a decade,
+a mood); the same artist's earlier or later records (discography order comes from MusicBrainz); mentions with
+no named album or artist; and relations the vocabulary lacks (log these as `vocabulary gap: …`, for example a
+band's earlier name). Never bend a relation into the nearest predicate.
+
+## 4. Checks and the independent reader
+
+1. `graph verify --batch LABEL`
+2. `graph batch reader-input LABEL` writes `reader_input.txt` (every text claim that passed the checks).
+3. Launch a **separate** agent (never the one that extracted) with the reader prompt below on
+   `reader_input.txt`; it writes `reader_output.jsonl`. About 30 claims per reader agent.
+   Then `graph batch load-reader LABEL data/graph/batches/LABEL/reader_output.jsonl` (a claim's first verdict
+   stays in `reader_first`, the M2 measure).
+4. Fix what the reader flagged where the fault is in the extraction (a clipped quote, the wrong object): write
+   the corrected claims with `replaces`, load them, run `graph batch reader-input LABEL` again, and send just
+   the revised lines to the same reader; load its verdicts.
+5. `graph verify --batch LABEL`, then `graph report --batch LABEL` (also written to `report.md`).
+
+Reader prompt (send verbatim, filling RUN_DIR):
+
+```
+You are an independent reader checking extracted claims against their evidence quotes. You have not seen how
+they were extracted. Read RUN_DIR/reader_input.txt. Each line has a claim ID, a CLAIM in plain words, an
+EVIDENCE quote (" … " joins two passages from the same source), and the SOURCE the quote comes from.
+
+Judge ONLY whether the quote, read on its source, states the claim. Use no outside knowledge of music,
+artists or dates: a claim you believe is true but the quote does not state is not supported. Dates in the
+CLAIM that the quote does not mention are context, not part of the judgement, unless the quote contradicts them.
+
+References the source resolves count as stated: on a Wikipedia article about an album, "the album", "this
+album", "the band" (the album's artist) and the album's own songs refer to that album and its artist; on
+an AI-written atlas note about an album, an unnamed subject is that album.
+
+What each relation means:
+- "compared to, or said to sound like or build on": the quote says the album resembles, is compared with, is
+  indebted to, or builds on the other artist's sound. A bare co-mention is not enough.
+- "influenced or inspired by": the quote says influence or inspiration, not just resemblance.
+- "is a cover of X: a later recording of a song that X recorded first": the quote says the later artist
+  covered, recorded or performed the song, and that X recorded or performed it earlier.
+- "worked or played on": the quote says the person or band played, produced, backed, arranged or worked on
+  that album.
+- "was a member of": the quote says the person was in, joined, or was a member of the group.
+- "worked with (kind)": the quote says they worked, played, or recorded together.
+- "is described as" / "came out of": the quote says the album is that style or came from that scene, not
+  merely near it.
+
+Verdicts:
+- SUPPORTS: the quote states the claim.
+- PARTIAL: the quote states only part of it, or something weaker (implies, hints, "closer to"); say which.
+- WRONG_DIRECTION: the quote states the relation the other way round.
+- DOES_NOT_SUPPORT: the quote does not state it.
+- NOT_A_CLAIM: the quote is a list, ranking, hedge, or otherwise not an assertion of this relation.
+
+Write RUN_DIR/reader_output.jsonl, one JSON object per line:
+{"claim_id": "...", "verdict": "...", "reason": "one short sentence"}.
+Reply with only the counts per verdict and the IDs of every verdict other than SUPPORTS, each with its reason.
+```
+
+What `graph verify` checks (graph spec section 8), none of which needs music knowledge:
+
+| Check | Passes when | On failure |
+| --- | --- | --- |
+| Structure | the predicate is in the vocabulary and the subject and object types fit it; `sounds_like` is `inferred`; `influenced_by` is `reported` or `documented`; lineage carries a direction | rejected |
+| Evidence | the quote appears verbatim on the cached page or in the atlas field; a `field:` value appears on the page; a Firecrawl-JSON name appears on its page (quote marks aside; a place may drop a trailing "Studio(s)") | rejected |
+| Dates | for lineage, the object's first release (or the artist's start) is not later than the subject's | rejected |
+| First recording | for `covers`, no MusicBrainz recording of the song predates the object's | rejected |
+| Databases | MusicBrainz or Discogs records the same credit, membership, label, studio, or the cover order | adds support; a contradiction rejects |
+| Independence | an atlas note whose `source_urls` include the same page counts as that page, not as a second source | no double counting |
+| Reader | SUPPORTS | DOES_NOT_SUPPORT, WRONG_DIRECTION and NOT_A_CLAIM reject; PARTIAL becomes a reading question unless a database records the same edge |
+
+Confidence starts by source and basis — databases 0.9; Firecrawl JSON from a Wikipedia personnel list 0.75;
+a page's own statement (`documented`) 0.8; `reported` text 0.7; the atlas's `reported` 0.7 and `inferred`
+0.5; a critic's comparison 0.5 — and gains 0.1 per independent source that agrees, up to 0.95. Where sources
+disagree, the current view of an edge follows Matt, then the databases, then pages, then the atlas.
+
+Statuses: `accepted` (the source says it and every check passed), `rejected` (a check failed),
+`ask_matt` (a reading question), `unread` (the reader has not judged it yet).
+
+## 5. Finish a batch
+
+- `musicdata --env dev dq`: checks G1–G8 green (G4: every accepted Claude claim has a reader SUPPORTS, or a
+  PARTIAL backed by a database; G8: the month's credits under the ceiling).
+- Send Matt the report's reading questions as they appear in `report.md`: the quote, the claim, yes / no /
+  skip. Record his answers as `matt` claims (`accepted` or `rejected`) with the quote as evidence; once the
+  graph API exists, `POST /graph/questions/{assertion_id}/answer` does this.
+- Add any `vocabulary gap` lines from the skipped log to the changes section of `edge-vocabulary.md` as
+  proposals for Matt; the vocabulary changes only when he agrees.
+- Close with the report's counts, the first-pass reader SUPPORTS rate per predicate (the bar is 90%), the
+  credits spent, the reading questions, and the gaps.
+
+## 6. Batches
+
+- 20–25 albums per batch. For more than 10 albums, split the reading across extractor agents of 5 albums
+  each, in waves of up to 5 agents; each writes its own `claims/LABEL_lineage_N.jsonl` and skipped file.
+- The reader is always a different agent from every extractor, about 30 claims per reader.
+- Re-reading a batch costs nothing for pages already fetched; after a rule change, re-run `graph verify`.
+
+## 7. One album for listening
+
+For "tell me about this album while I listen": run the slice steps for `--slice album:RELEASE_GROUP_ID`,
+then steps E and section 4 for that album inside its 35-credit cap, then answer from the accepted claims and
+the cached pages only, in the companion outline's order (at a glance; listen for; who made it; where it
+comes from; where it leads; scene and place; further reading), citing each source URL. Every fact in the
+answer traces to a claim or a cached page.
