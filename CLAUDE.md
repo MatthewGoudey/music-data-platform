@@ -139,6 +139,10 @@ Matt's go.
       Block C, `graph-nightly.yml` runs `graph link`, `graph verify --pending` and `dq` only.
 - [ ] Block C — the near-queue set and default scope in the nightly workflow, on Matt's go for the
       Firecrawl spend; report coverage, credits and database size after three nights.
+      Built 2026-10-10 (v0.4.3, Matt's go): `graph near-queue` (each profile's top 300, slice
+      `near_queue`), `--scope default` (opened → near-queue → heard → atlas, only albums that still
+      need the step); import 400 a night, stops at 650 MB; fetch 500 credits a night, 15,000 in all.
+      First prod run started by hand 2026-10-10; report after three nights (2026-10-13).
 - [ ] Block D — migration 0021; `graph connections` (nightly) and `graph threads` (end of
       `derive`); the brief gains `connections`.
 - [ ] Block E — pages router (`page_or_bearer` in `deps.py`), album, hub and search pages,
