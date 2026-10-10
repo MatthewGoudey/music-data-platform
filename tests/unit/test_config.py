@@ -26,7 +26,7 @@ def test_graph_keys_are_optional_and_never_in_repr(monkeypatch) -> None:
         monkeypatch.delenv(name, raising=False)
     s = Settings(_env_file=None)
     assert s.firecrawl_api_key is None and s.discogs_token is None
-    assert s.graph_monthly_credits == 15000
+    assert s.graph_monthly_credits == 100000
     monkeypatch.setenv("FIRECRAWL_API_KEY", "fc-" + "0" * 32)
     s = Settings(_env_file=None)
     assert s.firecrawl_api_key.get_secret_value().startswith("fc-")

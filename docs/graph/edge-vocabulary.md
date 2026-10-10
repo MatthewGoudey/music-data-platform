@@ -164,7 +164,7 @@ Two different callers, two rule sets:
   per schema version.
 - Always stop a run at `--max-credits` (default 500) using the `creditsUsed` the API returns, and
   record credits spent in the run's `pipeline_run.notes`.
-- Monthly ceiling for the music graph: a number Matt sets (suggested 15,000 of the 100,000 a
+- Monthly ceiling for the music graph: a number Matt sets (100,000, the whole plan, since 2026-10-09; first suggested 15,000 of the 100,000 a
   month), checked before each run against the month's recorded spend.
 
 **Interactive sessions (an "album companion" or research in a Claude chat):**

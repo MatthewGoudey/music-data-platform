@@ -62,7 +62,7 @@ class Settings(BaseSettings):
         default=None, description="Optional Discogs token: 60 requests/minute instead of 25."
     )
     graph_monthly_credits: int = Field(
-        default=15000, description="Firecrawl credits the graph may spend in a calendar month."
+        default=100000, description="Firecrawl credits the graph may spend in a calendar month."
     )
 
     ntfy_topic: str | None = Field(default=None, description="ntfy.sh topic for failure pushes.")

@@ -331,7 +331,7 @@ registered links; Recommended → Wikipedia + 1; Deep cut → 1 page (Wikipedia,
 Reviews and interviews found by search come only from interactive skill sessions.
 
 Rules: reuse a cached `(url, schema_version)` row; stop at `--max-credits` (default 500) before a
-call that would cross it; check the month's spend against `GRAPH_MONTHLY_CREDITS` (default 15000)
+call that would cross it; check the month's spend against `GRAPH_MONTHLY_CREDITS` (default 100000, the plan's limit)
 before the first call; on a 403, 429, 5xx or timeout, always write the failed row (1 credit) and
 move to the next page, leaving the retry to a later run; record the `creditsUsed` the API returns,
 or the mode's cost when it returns none; read `FIRECRAWL_API_KEY` from settings; redact `fc-…`
@@ -423,7 +423,7 @@ each write a `matt` claim (source `matt`, extractor `matt`, the same quote as ev
 
 | Resource | Limit | Pilot estimate |
 | --- | --- | --- |
-| Firecrawl | 500 credits per run; `GRAPH_MONTHLY_CREDITS` 15,000; ask Matt above 1,500 for a slice | ~1,000–1,200 for 181 albums (5 per Wikipedia page, 1 per Bandcamp page, extra pages for Essentials) |
+| Firecrawl | 500 credits per run; `GRAPH_MONTHLY_CREDITS` 100,000 (the plan's limit; the ledger counts graph fetches only); ask Matt above 1,500 for a slice | ~1,000–1,200 for 181 albums (5 per Wikipedia page, 1 per Bandcamp page, extra pages for Essentials) |
 | MusicBrainz | 1 request/second (existing throttle); 503 → back off | ~6–10 requests per album: ~30 minutes for the slice |
 | Discogs | 25 requests/minute without a token | 2 per album |
 | Neon | keep the database under 800 MB (check G7) | ~7,000 claims and ~300 page bodies: a few MB |
@@ -560,3 +560,7 @@ Tests:
   that run: `graph fetch` reads an atlas-cited Wikipedia page in facts mode only when its title
   names the album (ten artist and discography pages had credited their people to the album;
   Matt approved deleting those 64 claims).
+- 2026-10-09: v3 (Matt). `GRAPH_MONTHLY_CREDITS` is 100,000, the Firecrawl plan's real monthly
+  limit (15,000 was a guess). October has about 80,000 left after other Firecrawl use, which the
+  graph's ledger (`source_fetch`) does not see. The per-run cap of 500 and "ask Matt above 1,500
+  for a slice" stay.
