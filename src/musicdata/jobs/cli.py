@@ -275,6 +275,20 @@ def graph_verify_cmd(
     )
 
 
+@graph_app.command("critic")
+def graph_critic_cmd(
+    site: str = typer.Option("noexpectations", help="A critic's site (graph/critics.py)."),
+    slice_: str = typer.Option("crazy_horse", "--slice", help="The slice to link posts to."),
+    max_credits: int = typer.Option(500, "--max-credits", help="Firecrawl credits this run."),
+) -> None:
+    """A critic's posts (1 credit each, cached) linked as review pages to the albums they name."""
+    from musicdata.graph.critics import graph_critic
+    from musicdata.jobs import runs
+
+    job = graph_critic(site=site, slice_name=slice_, max_credits=max_credits)
+    raise typer.Exit(runs.run("graph_critic", job, trigger=_trigger()))
+
+
 @graph_app.command("answer")
 def graph_answer_cmd(
     replies: list[str] = typer.Argument(  # noqa: B008

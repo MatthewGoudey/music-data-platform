@@ -99,12 +99,24 @@ def graph_batch_export(*, slice_name: str, size: int = 25, root: Path = Path("."
                     batch_id,
                     ids,
                 )
-            fetches = await conn.fetch(
-                """SELECT DISTINCT ON (url) fetch_id, url, title, fetched_at, schema_version,
-                          mode, entity_id, body
-                     FROM source_fetch WHERE ok AND entity_id = ANY($1::bigint[])
-                    ORDER BY url, fetched_at DESC""",
+            # an album's pages: those fetched for it, and any linked to it (a critic's post can
+            # serve several albums)
+            pairs = await conn.fetch(
+                """SELECT DISTINCT a.album, f.fetch_id
+                     FROM (SELECT DISTINCT ON (url) fetch_id, url, entity_id
+                             FROM source_fetch WHERE ok ORDER BY url, fetched_at DESC) f
+                     JOIN LATERAL (
+                          SELECT f.entity_id AS album WHERE f.entity_id = ANY($1::bigint[])
+                          UNION
+                          SELECT l.entity_id FROM entity_link l
+                           WHERE l.url = f.url AND l.entity_id = ANY($1::bigint[])
+                             AND l.status = 'ok') a ON true""",
                 ids,
+            )
+            fetches = await conn.fetch(
+                """SELECT fetch_id, url, title, fetched_at, schema_version, mode, body
+                     FROM source_fetch WHERE fetch_id = ANY($1::bigint[])""",
+                sorted({p["fetch_id"] for p in pairs}),
             )
             known = await conn.fetch(
                 """SELECT DISTINCT a.album_context, e.entity_id, e.type, e.name, a.predicate
@@ -137,14 +149,25 @@ def graph_batch_export(*, slice_name: str, size: int = 25, root: Path = Path("."
                     [t["atlas_id"], t["raw_artist"], t["raw_album"], t["first_release_year"] or "",
                      t["priority"] or "", t["entity_id"]]
                 )  # fmt: skip
+        albums_of: dict[int, list[str]] = defaultdict(list)
+        for p in pairs:
+            albums_of[p["fetch_id"]].append(atlas_of[p["album"]])
+        with (out / "pages.csv").open("w", encoding="utf-8", newline="") as fh:
+            w = csv.writer(fh, lineterminator="\n")
+            w.writerow(["atlas_id", "fetch_id", "url"])
+            for f in fetches:
+                for aid in sorted(albums_of[f["fetch_id"]]):
+                    w.writerow([aid, f["fetch_id"], f["url"]])
         for f in fetches:
-            aid = atlas_of.get(f["entity_id"], "")
+            aids = sorted(albums_of[f["fetch_id"]])
             (out / "pages" / f"{f['fetch_id']}.md").write_text(
-                _header(f, aid) + (f["body"] or ""), encoding="utf-8"
+                _header(f, " ".join(aids)) + (f["body"] or ""), encoding="utf-8"
             )
-            artist = next((t["raw_artist"] for t in picked if t["atlas_id"] == aid), "")
+            artists = [t["raw_artist"] for t in picked if t["atlas_id"] in aids]
             (out / "cues" / f"{f['fetch_id']}.md").write_text(
-                _header(f, aid) + "\n\n".join(cue_paragraphs(f["body"] or "", [artist])) + "\n",
+                _header(f, " ".join(aids))
+                + "\n\n".join(cue_paragraphs(f["body"] or "", artists))
+                + "\n",
                 encoding="utf-8",
             )
         for t in picked:
