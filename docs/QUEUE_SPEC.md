@@ -456,3 +456,8 @@ priority Essential. Matt has played other Ratboys records but no session of this
   compilation rejected after resolving, `lists reject-compilations`). Goal `breadth`, weight 0.8,
   ranked; Essential to #250, Recommended to #1,000. A `popular` profile (migration 0017) draws
   from it alone; `default` counts it too.
+- 2026-10-10 v13: Matt added Rate Your Music's all-time top 5,000 (his download, `rym_clean1.csv`;
+  snapshot date not recorded). `scripts/convert_rym.py` writes `rym_top_5000` in the shared shape,
+  with RYM's genres and descriptors carried over and the rating in the note. Goal `canon`, weight
+  1.0, ranked, like BestEverAlbums; label "Rate Your Music". The music graph's rule that Rate Your
+  Music review pages are dead (graph spec, P04) covers scraped review pages, not this chart.
