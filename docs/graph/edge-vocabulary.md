@@ -24,7 +24,7 @@ and evidence (Matt's listening).
 | Type | Anchor | Notes |
 | --- | --- | --- |
 | `album` | MusicBrainz release group; points at the existing `release_group` row | the main subject of most claims |
-| `recording`, `work` | MusicBrainz recording / work | track level: covers, samples, songwriting |
+| `recording`, `work` | MusicBrainz recording / work | track level: covers, samples, songwriting; a `work` may also be a poem, story, film, TV episode, advert or slogan (`attrs.kind`) |
 | `artist` | MusicBrainz artist; points at the existing `artist` row | person or group |
 | `person` | MusicBrainz artist of type person | the same table as `artist`; used in credits |
 | `label` | MusicBrainz label | |
@@ -70,7 +70,7 @@ never the source of a claim: every claim quotes a real page or comes from a data
 - Always keep claims that disagree side by side; the current view picks by precedence, and both
   stay visible with their sources.
 
-## 4. Predicates (17, grouped by facet)
+## 4. Predicates (27, grouped by facet)
 
 | Facet | Predicate | Subject → object | Qualifiers | Typical sources |
 | --- | --- | --- | --- | --- |
@@ -83,11 +83,21 @@ never the source of a claim: every claim quotes a real page or comes from a data
 | People | `member_of` | artist (person) → artist (group) | `from`, `to`, `instrument` | musicbrainz, wikipedia |
 | | `credited_on` | person → album, recording | `role` (producer, engineer, mixer, pedal steel, …) | wikipedia (firecrawl_json), discogs, musicbrainz |
 | Label | `released_by` | album → label | `year`, `catalog` | musicbrainz (authoritative), map |
-| Lineage | `influenced_by` | album, artist → album, artist | | interviews, wikipedia, wikidata (P737) |
+| | `performs_as` | person → artist (stage name, solo project) | | wikipedia |
+| | `renamed_from` | artist → artist (newer → earlier name) | | wikipedia |
+| | `toured_with` | artist ↔ artist (symmetric) | `role`, `year` | wikipedia, critics |
+| | `relative_of` | person ↔ person (symmetric) | `relation` | wikipedia |
+| Lineage | `influenced_by` | album, artist → album, artist, genre | | interviews, wikipedia, wikidata (P737) |
 | | `sounds_like` | album → album, artist | | map, atlas_matcher, matt |
 | | `covers` | recording, album → work, recording, album | | musicbrainz, wikipedia |
 | | `samples` | recording → recording | | musicbrainz |
-| | `associated_with` | artist ↔ artist (symmetric) | `kind`: collaborator, touring, bandmate, label-mate, scene | map, wikipedia |
+| | `interpolates` | recording, album → recording, work | `track` | wikipedia |
+| | `tribute_to` | album, recording → artist, album, recording, work | `kind` | wikipedia, bandcamp |
+| | `named_after` | album, recording, artist → recording, work, album, artist | | wikipedia |
+| | `references` | album, recording → recording, work, album, artist | `track` | wikipedia |
+| | `based_on` | album, recording, work → work | `track`, `kind` | wikipedia |
+| | `appears_in` | recording, work, album → work (film, TV, advert, game) | `kind`, `year` | wikipedia |
+| | `associated_with` | artist ↔ artist (symmetric) | `kind`: collaborator, bandmate, backing | wikipedia |
 | | `path_next` | album → album | `path`, `step` | map |
 | Sound, mood, function, context | `has_tag` | album → tag | | map, matt, musicbrainz tags via mapping |
 | Source | `on_list` | album → list | `position`, `priority` | lists (already modelled as `list_entry`) |
@@ -327,3 +337,11 @@ sentences judged.
 - 2026-10-10 (Matt, graph spec v8): English sources are always accepted; another language only for
   artists tied to it (a future non-English slice reads English plus its own language and translates
   reading questions for Matt). The English-language pilot reads English pages only.
+- 2026-10-10 (Matt, graph spec v11): "Add whatever vocab you need." Six predicates join (27 in all):
+  `tribute_to` (a tribute album, a song written for someone, an homage), `named_after` (a title or
+  band name taken from an older song, work or artist), `references` (a lyric naming or quoting an
+  older song without borrowing its melody), `based_on` (a song adapting a poem, story or film, or
+  setting another writer's words), `appears_in` (a song used in a film, TV episode, advert or game)
+  and `relative_of` (family, symmetric). `influenced_by` may take a genre as its object ("informed
+  by krautrock"). A `work` may be a non-musical work. Left out as not music relations: a legal
+  dispute over a band name, and influence from a channel or medium (MTV).

@@ -1,6 +1,6 @@
 """`musicdata graph seed` (GRAPH_SPEC section 5). Idempotent.
 
-Loads the 21 predicates from `seeds/graph/predicates.csv`; one `map` entity (`v_atlas`); every
+Loads the 27 predicates from `seeds/graph/predicates.csv`; one `map` entity (`v_atlas`); every
 atlas lane as a `lane` entity; every list as a `list` entity; and for each resolved `v_atlas`
 entry an `album` entity with its `map_membership` coordinates.
 

@@ -154,6 +154,20 @@ Put the publication or critic a source cites in `qualifiers.via`. A corrected cl
   Horse → The Rockets; Dinosaur Jr. → Dinosaur).
 - `interpolates` (lineage, `direction: subject_newer`): a song borrows the melody or lyric of an older song
   ("Borrowed Tune" → "Lady Jane"); the subject is the newer recording (or the album, with `track`).
+- `tribute_to`: the album or song pays tribute or homage to an artist, writer or work (a tribute album, a
+  song written for or about someone, "a tip of the hat to"); give `kind` (tribute album, song, homage).
+- `named_after`: the album, song or band takes its name from an older song, work, album or artist (Didn't
+  It Rain → Mahalia Jackson's song; a title parodying a slogan names the slogan as a `work`).
+- `references`: a lyric or album names or quotes an older song, album or artist without borrowing its
+  melody ("Hippie Dream" names "Wooden Ships"); a borrowed melody or lyric is `interpolates`.
+- `based_on`: a song or album adapts a poem, story or film, or sets another writer's words to music (a
+  song drawn from a James Wright poem; New Multitudes setting Woody Guthrie's lyrics); the object is a
+  `work` with `kind` (poem, story, lyrics).
+- `appears_in`: a song or album is used in a film, TV episode, advert or game; the object is a `work`
+  named as the source names it, with `kind` (film, tv, advert, game) and `year`.
+- `relative_of`: two people are family; give `relation` (brother, great-grandfather, …).
+- `influenced_by` may name a genre as its object when the source says the album or artist drew on it
+  ("informed by krautrock"); a channel or medium (MTV) is a skip.
 - `has_genre` and `from_scene`: only when the source says the album *is* that style or *came out of* that
   scene; "closer to", "nods to" and "hints of" are skipped.
 - A ranking or list placement routes to `on_list`, never to lineage.
@@ -211,6 +225,15 @@ What each relation means:
 - "was earlier known as": the quote says the group or project had the other name before.
 - "borrows the melody or lyric of": the quote says the song borrows, adapts, interpolates or is set to the
   other song's melody or words.
+- "pays tribute or homage to": the quote says the album or song is a tribute or homage to, written for,
+  or tips its hat to the other.
+- "is named after": the quote says the title or name comes from, is taken from, or refers to the other.
+- "names or quotes": the quote says the lyric or album names, mentions or quotes the other.
+- "is based on, adapts or sets the words of": the quote says the song or album is drawn from, adapted
+  from, based on, or sets the words of the other work.
+- "was used in": the quote says the song or album was used, featured or played in the film, show,
+  advert or game.
+- "is a relative of": the quote states the family relation.
 - "is described as" / "came out of": the quote says the album is that style or came from that scene, not
   merely near it.
 

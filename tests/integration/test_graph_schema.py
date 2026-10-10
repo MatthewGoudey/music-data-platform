@@ -145,7 +145,7 @@ async def test_the_atlas_ranks_below_a_page(conn) -> None:
 async def test_seeding_twice_adds_nothing(conn) -> None:
     first = await seed(conn, None)
     second = await seed(conn, None)
-    assert first["predicates"] == 21 and first["maps"] == 1
+    assert first["predicates"] == 27 and first["maps"] == 1
     assert second["lane_parent_removed"] == 0
     assert {k: v for k, v in first.items() if k != "lane_parent_removed"} == {
         k: v for k, v in second.items() if k != "lane_parent_removed"

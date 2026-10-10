@@ -620,3 +620,8 @@ Tests:
   entity's names still count for the Firecrawl name-on-page check. Names posted as written
   (`POST /assertions`) take an MBID by exact MusicBrainz search when exactly one matches and no
   entity holds it. First run in dev: 479 merges, 81 matches left apart.
+- 2026-10-10: v11 (Matt: "Add whatever vocab you need"). Six predicates from the P05–P06 vocabulary
+  gaps (27 in all): `tribute_to`, `named_after`, `references`, `based_on`, `appears_in` (lineage
+  facet, not lineage edges: no direction or date checks) and `relative_of` (people, symmetric);
+  `influenced_by` accepts a genre object. The skill's extraction rules and reader prompt describe
+  each; `graph seed` loads them. The gaps logged in P01–P06 skip files can be re-read under them.
