@@ -228,10 +228,13 @@ Input: profile, `n` (default 10, max 50), `shuffle` (default false), `seed` (opt
 2. **Revisit.** `round(n × composition.revisit_share)` slots (default 0.2 → 2 of 10), filled
    round-robin from the pools in section 9 in the order spaced → abandoned → unfinished, most
    overdue first. Slots a pool cannot fill pass to the next pool, then to new.
-3. **Thread.** `composition.thread` slots (1 in default and home-genre, 0 elsewhere): from the
-   newest finished album with `graph_thread` rows, the highest-ranked album it reaches that is a
-   candidate under the profile; else the next newest finished album; else the slot goes to new.
-   Its why line reads `Because you finished <album>: <connection>`.
+3. **Thread.** `composition.thread` slots (3 in default and home-genre, 0 elsewhere). The albums
+   finished in the last 14 days (the newest 10) take turns, newest first: each gives the
+   highest-ranked album its thread reaches that is a candidate under the profile, round again
+   when there are fewer finished albums than slots; slots no thread fills go to new. With
+   shuffle, the finished albums go in random order and each draws from its connected albums,
+   weighted toward the stronger ones, leaving out `exclude`. Its why line reads
+   `Because you finished <album>: <connection>`.
 3a. **Wildcard.** `composition.wildcard` slots (default 1), only when there are no pins: one
    candidate drawn at random from ranks 51–500 of the profile's scored list.
 4. **New.** The remaining slots: candidates by descending score.
@@ -487,3 +490,7 @@ priority Essential. Matt has played other Ratboys records but no session of this
   gain one thread slot after revisits and before the wildcard. Prod's queue changes only with
   Block H's tag on Matt's go. Generated lists, Follow and Walk back (5.4–5.6) come with the
   album and hub pages.
+- 2026-10-10 v17 (Matt: "Can you add more threads and make the shuffle work on them?"): three
+  thread slots in default and home-genre (migration 0023), taken in turn from the albums finished
+  in the last 14 days (the newest 10; were 7 days and 5); Shuffle re-draws them like the other
+  slots, and the page counts them as shown.

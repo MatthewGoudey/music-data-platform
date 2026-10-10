@@ -145,7 +145,7 @@ of the two edges' confidences. Constants live in `src/musicdata/queue/config.py`
 **Threads.** At the end of every `derive` (cheap SQL, recorded as its own `pipeline_run` row),
 `graph threads` rewrites
 `graph_thread (from_release_group_id, to_release_group_id, rank, connection, computed_at)`: for each
-album with a full session in the last 7 days (the newest five), its 20 strongest connected unheard
+album with a full session in the last 14 days (the newest ten; queue spec v17), its 20 strongest connected unheard
 albums, by the same node rules with that one album as the heard set.
 
 ## 5. Queue effects (Block H)

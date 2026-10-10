@@ -204,17 +204,44 @@ def test_shuffle_redraws_revisits_and_the_wildcard_too() -> None:
     assert [i.release_group_id for i in ranked if i.slot == "revisit"] == [9000, 9001]
 
 
-def test_thread_slot_takes_the_first_candidate_a_thread_reaches() -> None:
-    cands = _cands()
+def _threads(cands: list[Item], spec: dict[int, list[int]]) -> list[tuple[Item, str, int]]:
+    """Thread choices: finished album → its targets in rank order."""
     by_rg = {i.release_group_id: i for i in cands}
-    threads = [(by_rg[300], "Because you finished X: a"), (by_rg[301], "Because you finished X: b")]
-    items = _build(cands=cands, thread=1, threads=threads)
+    return [(by_rg[t], f"Because you finished F{src}: c{t}", src)
+            for src, targets in spec.items() for t in targets]  # fmt: skip
+
+
+def test_thread_slots_take_turns_across_finished_albums() -> None:
+    cands = _cands()
+    threads = _threads(cands, {1001: [300, 301, 302], 1002: [310, 311], 1003: [320]})
+    items = _build(cands=cands, thread=3, threads=threads)
     thread = [i for i in items if i.slot == "thread"]
-    assert [i.release_group_id for i in thread] == [300]
-    assert thread[0].because == "Because you finished X: a"
+    assert [i.release_group_id for i in thread] == [300, 310, 320]  # best of each, newest first
+    assert thread[0].because == "Because you finished F1001: c300"
     slots = [i.slot for i in items]
-    assert len(items) == 10 and slots.count("new") == 6  # the thread takes a new slot
+    assert len(items) == 10 and slots.count("new") == 4  # 2 revisits, 3 threads, 1 wildcard
     assert slots.index("thread") < slots.index("wildcard")
+
+
+def test_thread_slots_go_round_again_when_few_albums_finished() -> None:
+    cands = _cands()
+    items = _build(cands=cands, thread=3, threads=_threads(cands, {1001: [300, 301, 302]}))
+    assert [i.release_group_id for i in items if i.slot == "thread"] == [300, 301, 302]
+
+
+def test_shuffle_redraws_threads_and_skips_what_was_shown() -> None:
+    cands = _cands()
+    spec = {
+        src: list(range(200 + 20 * k, 220 + 20 * k)) for k, src in enumerate((1001, 1002, 1003))
+    }
+    seen: set[int] = set()
+    for seed in range(8):
+        items = _build(cands=cands, thread=3, threads=_threads(cands, spec), shuffle=True,
+                       seed=seed, exclude=frozenset(seen))  # fmt: skip
+        drawn = [i.release_group_id for i in items if i.slot == "thread"]
+        assert len(drawn) == 3 and not set(drawn) & seen
+        seen |= set(drawn)
+    assert len(seen) == 24  # every shuffle drew fresh threads
 
 
 def test_thread_slot_falls_back_to_new() -> None:

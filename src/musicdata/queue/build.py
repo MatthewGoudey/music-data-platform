@@ -3,8 +3,10 @@
 1. Pinned albums, oldest pin first; they ignore filters and the artist rule.
 2. Revisit slots, round(n × revisit share), round-robin over spaced → abandoned →
    unfinished, most overdue first; slots a pool cannot fill pass on, then to new.
-3. The thread slot (companion spec 5.3): the first candidate a thread reaches, newest
-   finished album first; none fits → the slot goes to new.
+3. Thread slots (companion spec 5.3, queue spec v17): one per finished album in turn, newest
+   first, each taking the best-ranked candidate its thread reaches; with shuffle, the finished
+   albums in random order and a draw weighted toward the stronger connections. Slots no thread
+   fills go to new.
 4. One wildcard (when nothing is pinned), drawn from ranks 51–500 of the scored list.
 5. New slots: the best scores; with shuffle, a weighted draw (weight = score) from the
    top SHUFFLE_POOL, leaving out `exclude`.
@@ -85,6 +87,44 @@ def _weighted(pool: list[Item], k: int, q: _Queue, rng: random.Random) -> list[I
     return out
 
 
+def _threads(
+    q: _Queue,
+    threads: Sequence[tuple[Item, str, int]],
+    slots: int,
+    skip: Collection[int],
+    rng: random.Random | None,
+) -> list[Item]:
+    """Thread slots: the finished albums take turns (newest first, or in random order with
+    shuffle), each giving its best-ranked fitting candidate, or a draw weighted toward its
+    stronger connections with shuffle."""
+    groups: dict[int, list[tuple[Item, str]]] = {}
+    for item, because, source in threads:  # already in rank order within each finished album
+        groups.setdefault(source, []).append((item, because))
+    order = list(groups)
+    if rng is not None:
+        rng.shuffle(order)
+    picked: list[Item] = []
+    while len(picked) < slots and order:
+        for source in list(order):
+            if len(picked) == slots:
+                break
+            left = [(i, b) for i, b in groups[source]
+                    if q.fits(i) and i.release_group_id not in skip]  # fmt: skip
+            if not left:
+                order.remove(source)
+                continue
+            if rng is None:
+                item, because = left[0]
+            else:
+                weights = [len(left) - k for k in range(len(left))]
+                item, because = rng.choices(left, weights=weights)[0]
+            item.because = because
+            picked.append(item)
+            q.groups.add(item.release_group_id)
+            q.artists.add(item.artist_id)
+    return picked
+
+
 def build(
     candidates: Sequence[Item],
     pools: Mapping[str, Sequence[Item]],
@@ -97,7 +137,7 @@ def build(
     shuffle: bool = False,
     exclude: Collection[int] = (),
     thread: int = 0,
-    threads: Sequence[tuple[Item, str]] = (),
+    threads: Sequence[tuple[Item, str, int]] = (),
 ) -> list[Item]:
     rng = random.Random(seed)
     q = _Queue()
@@ -119,15 +159,7 @@ def build(
     revisits = _revisits(q, pools, min(round(n * revisit_share), open_slots))
     open_slots -= len(revisits)
 
-    threaded: list[Item] = []
-    for item, because in threads:
-        if len(threaded) >= min(thread, open_slots):
-            break
-        if q.fits(item) and item.release_group_id not in skip:
-            item.because = because
-            threaded.append(item)
-            q.groups.add(item.release_group_id)
-            q.artists.add(item.artist_id)
+    threaded = _threads(q, threads, min(thread, open_slots), skip, rng if shuffle else None)
     open_slots -= len(threaded)
 
     wild: list[Item] = []

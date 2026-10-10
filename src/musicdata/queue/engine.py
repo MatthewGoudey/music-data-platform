@@ -143,7 +143,7 @@ SELECT t.from_release_group_id, f.title AS finished, t.to_release_group_id, t.co
 
 async def thread_choices(
     conn: asyncpg.Connection, candidates: list[Item]
-) -> list[tuple[Item, str]]:
+) -> list[tuple[Item, str, int]]:
     """Candidates under the profile that a thread reaches, newest finished album first, each with
     its why line (`Because you finished <album>: <connection>`)."""
     if not await conn.fetchval("SELECT to_regclass('graph_thread') IS NOT NULL"):
@@ -154,7 +154,8 @@ async def thread_choices(
         item = by_rg.get(r["to_release_group_id"])
         if item is not None:
             text = json.loads(r["connection"])["text"]
-            out.append((item, f"Because you finished {r['finished']}: {text}"))
+            because = f"Because you finished {r['finished']}: {text}"
+            out.append((item, because, r["from_release_group_id"]))
     return out
 
 

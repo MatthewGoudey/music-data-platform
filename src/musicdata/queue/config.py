@@ -53,8 +53,8 @@ DAMP_ALBUMS = 10  # damp(n) = 1 / (1 + ln(1 + albums(n) / DAMP_ALBUMS)) for peop
 LISTEN_BASE = 0.5  # listen(n) = min(1, LISTEN_BASE + LISTEN_STEP × full sessions it reaches)
 LISTEN_STEP = 0.1
 CONNECTION_TOP = 3  # nodes kept per candidate for card lines
-THREAD_DAYS = 7  # threads start from albums finished in the last this-many days
-THREAD_FROM = 5  # the newest this-many of them
+THREAD_DAYS = 14  # threads start from albums finished in the last this-many days
+THREAD_FROM = 10  # the newest this-many of them
 THREAD_TO = 20  # connected unheard albums kept per finished album
 C_CAP = 3  # C(g) at which graph affinity stops growing (spec 5.2)
 CARD_LINES = 2  # connection lines on a card (spec 5.1)
