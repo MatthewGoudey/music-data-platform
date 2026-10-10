@@ -67,6 +67,24 @@ ALBUMS = """
                      attrs = entity.attrs || EXCLUDED.attrs
 """
 
+# An album entity copied from another environment keeps release_group_id NULL when its release
+# group has no MBID to map by (graph copy); link it by name before ALBUMS would insert a twin.
+LINK_UNMAPPED = """
+    UPDATE entity en SET release_group_id = x.release_group_id
+      FROM (SELECT DISTINCT ON (rg.release_group_id) rg.release_group_id, rg.norm_key,
+                   a.norm_key AS artist_key
+              FROM list_entry e
+              JOIN list l USING (list_id)
+              JOIN release_group rg ON rg.release_group_id = e.release_group_id
+              JOIN artist a ON a.artist_id = rg.artist_id
+             WHERE l.slug = $1 AND e.resolve_status = 'resolved'
+               AND e.review_status = 'accepted' AND rg.mbid IS NULL
+             ORDER BY rg.release_group_id) x
+     WHERE en.type = 'album' AND en.release_group_id IS NULL AND en.mbid IS NULL
+       AND en.norm_key = x.norm_key AND en.context_key = x.artist_key
+       AND NOT EXISTS (SELECT 1 FROM entity o WHERE o.release_group_id = x.release_group_id)
+"""
+
 MEMBERSHIP = """
     INSERT INTO map_membership (entity_id, map, coords)
     SELECT DISTINCT ON (en.entity_id) en.entity_id, $1,
@@ -116,6 +134,7 @@ async def seed(conn: asyncpg.Connection, run_id: int | None, root: Path = Path("
                 LOCAL_ENTITY, "list", r["name"], norm_key(r["name"]), r["slug"], "{}"
             )
 
+        await conn.execute(LINK_UNMAPPED, MAP)
         await conn.execute(ALBUMS, MAP)
         await conn.execute(MEMBERSHIP, MAP)
         counts = await conn.fetchrow(
