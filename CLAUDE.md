@@ -12,16 +12,19 @@ Read first: `docs/REDESIGN_PLAN.md` (sections "What this is for", "Data model", 
 
 **The queue, lists and the atlas: always read `docs/QUEUE_SPEC.md` first and follow it exactly.**
 It is the authoritative spec and overrides the plan and the ADRs where they differ. Its core rule:
-the queue's new albums always come from `list_entry` (the lists in `seeds/`); listening history
+the queue's new albums always come from `list_entry` (the lists in `seeds/`, plus the generated
+lists of `docs/graph/COMPANION_SPEC.md`, which only the profiles that name them read); listening history
 only marks entries heard / started / unheard, fills the revisit slice, and adds a small affinity
 boost. Always ask Matt before changing a rule in that spec, and log the change at its bottom.
 
 **The music graph: always read `docs/graph/GRAPH_SPEC.md` and `docs/graph/edge-vocabulary.md`
 first and follow them exactly.** The vocabulary says what a claim is; the spec says how the graph
 is built. Their core rule: the graph stores claims with a source and verbatim evidence, the
-checks decide whether the source says it, and Matt answers only reading questions. Graph work runs
-in dev until Matt gives the go for prod (spec Block G). Always ask Matt before changing a rule in
-either file, and log the change at its bottom.
+checks decide whether the source says it, and Matt answers only reading questions.
+**What the graph does for Matt — queue effects, album and hub pages, liner notes and deep dives —
+is `docs/graph/COMPANION_SPEC.md` (Phase 6); always read it first for that work.** Graph work runs
+in dev until Matt gives the go for prod (Phase 6 Block B). Always ask Matt before changing a rule in
+any of these files, and log the change at its bottom.
 
 ## Working conventions
 - Always run commands through uv: `uv run <cmd>`; always run `uv lock` after editing `pyproject.toml`.
@@ -82,9 +85,10 @@ Load or reload an environment with `gh workflow run full-load -f env=<dev|prod>`
 `musicdata shows --sweep` reads all ~600 Oh My Rockness venues once (~20 min); nightly
 runs read active venues plus a rotating 85.
 
-Current priority (Matt, 2026-10-09): the queue's gate week continues untouched, and the music
-graph starts now in dev: Phase 5, `docs/graph/GRAPH_SPEC.md` section 13, Blocks 0 and A–G.
-Shows, venues and verdict work wait until the Phase 4 gate.
+Current priority (Matt, 2026-10-10): finish P04 (Phase 5 Block E), then Phase 6
+(`docs/graph/COMPANION_SPEC.md` section 13) from Block A, while P05–P07 continue alongside.
+The queue's gate week continues untouched until Phase 6 Block H. Shows, venues and verdict work
+wait until the Phase 4 gate.
 
 Open items that need Matt:
 - Done: `docs/claude-project-instructions.md` pasted into the claude.ai Project (gate step 19).
@@ -115,10 +119,35 @@ Notes for the next session:
 - Integration tests run against Neon dev; they use made-up MBIDs and coordinates far from
   Chicago, and clean up their rows.
 
+## Phase 6 checklist — the graph in the queue, and the album companion (spec: `docs/graph/COMPANION_SPEC.md`)
+Gate: C1–C5 and G1–G8 green in prod, and Matt has used the cards, pages and one deep dive while
+listening for a week. Prod runs only `v*` tags, so each block that changes code ends with a tag on
+Matt's go.
+
+- [ ] Block A — graph API (Block A rows of spec section 11), the brief with `pages` and per-track
+      credits, the import's qualifier upsert and the pilot's re-import, Project instructions rows.
+- [ ] Block B — `graph import --scope` with `rg` labels, `graph verify --pending`, the nightly
+      graph workflow on prod; on Matt's go, `graph copy --source dev` and prod becomes the graph's
+      home (P05–P07 then run against prod).
+- [ ] Block C — the near-queue set and default scope in the nightly workflow, on Matt's go for the
+      Firecrawl spend; report coverage, credits and database size after three nights.
+- [ ] Block D — migration 0021; `graph connections` (nightly) and `graph threads` (end of
+      `derive`); the brief gains `connections`.
+- [ ] Block E — pages router (`page_or_bearer` in `deps.py`), album, hub and search pages,
+      now-playing, opened-page baselines; Matt tries them on his phone.
+- [ ] Block F1 — migration 0022; document request and worker endpoints with leases and the
+      sweep, server-side fetches, marker checks and rendering, document tabs.
+- [ ] Block F2 — `.claude/skills/album-companion/SKILL.md`; one liner notes and one deep dive for
+      an album Matt picks, fact-checked by a separate agent.
+- [ ] Block G — one manual worker run in a claude.ai cloud session; on Matt's go, the scheduled task.
+- [ ] Block H — migrations 0023–0025; card connection lines and page link, `graph_weight`, thread slot,
+      generated-list handling, follow and walk back; the rules written into `docs/QUEUE_SPEC.md`;
+      tag on Matt's go.
+- [ ] Block I — sign-off: C1–C5 and G1–G8 green in prod; a week of use.
+
 ## Phase 5 checklist — the music graph (spec: `docs/graph/GRAPH_SPEC.md`)
-Gate (milestone M3): the pilot slice verified in dev (Block E), the API live, the walk-back
-profile working, and on Matt's go the graph copied to prod with G1–G8 green; then Matt uses
-`walk-back` for a week. The prototype (`scripts/graph/`) is ported and deleted; run T1 is in `data/graph/runs/T1/` and `tests/unit/fixtures/graph/T1/`.
+Gate (milestone M2): the pilot slice verified (Block E) at the first-pass reader bar with G1–G8
+green. Blocks F and G moved to Phase 6 (2026-10-10). The prototype (`scripts/graph/`) is ported and deleted; run T1 is in `data/graph/runs/T1/` and `tests/unit/fixtures/graph/T1/`.
 
 - [x] Block 0 — ADR 0017 (the claims graph); `FIRECRAWL_API_KEY` and `DISCOGS_TOKEN` as optional
       settings, GitHub Environment secrets (dev, prod) and backfill workflow env. Done
@@ -141,13 +170,10 @@ profile working, and on Matt's go the graph copied to prod with G1–G8 green; t
 - [ ] Block E — the 181 albums in batches of 25; reading questions to Matt; first-pass reader
       SUPPORTS ≥ 90% per predicate type; G1–G8 green in dev (M2).
       In progress: P01 (25 albums) verified 2026-10-09 (first-pass SUPPORTS 96%; Matt's answers
-      recorded with `musicdata graph answer`). Spec v5: the atlas is scope only, never a claim
-      source; credits are work on the music only. The skill lives in
+      recorded with `musicdata graph answer`). Spec v5: the atlas is scope only, and claims come from
+      pages and databases; credits are work on the music only. The skill lives in
       `.claude/skills/music-graph-research/`. Next: P02.
-- [ ] Block F — graph API (spec section 10); Project instructions rows.
-- [ ] Block G — migration 0021, walk-back list, profile and card control; tag; on Matt's go:
-      prod migrations, `graph copy --source dev`, `graph link` in `daily-sync`, G1–G8 green in
-      prod (M3).
+- [x] Blocks F and G — moved to Phase 6 (API → Block A; prod copy → Block B; walk → Block H).
 
 ## Phase 4 checklist — lists, the atlas and the queue (spec: `docs/QUEUE_SPEC.md`)
 Gate: dev green on checks L1–L5 and tests Q1–Q5, the version tagged and live in prod with

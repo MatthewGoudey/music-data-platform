@@ -461,3 +461,9 @@ priority Essential. Matt has played other Ratboys records but no session of this
   with RYM's genres and descriptors carried over and the rating in the note. Goal `canon`, weight
   1.0, ranked, like BestEverAlbums; label "Rate Your Music". The music graph's rule that Rate Your
   Music review pages are dead (graph spec, P04) covers scraped review pages, not this chart.
+- 2026-10-10 v14 (planned, Matt): the music graph will shape the queue. `docs/graph/COMPANION_SPEC.md`
+  section 5 specifies connection lines on cards, a `graph_affinity` score factor (profile
+  `graph_weight`), a `thread` slot that picks a profile candidate connected to a just-finished
+  album, generated lists read only by profiles that name them, and the `following` and `walk-back`
+  profiles. Phase 6 Block H builds them and writes their rules into sections 7, 8, 10, 12 and 13
+  here as the next version. Until then this spec describes the queue as it runs.

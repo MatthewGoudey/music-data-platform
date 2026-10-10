@@ -15,11 +15,12 @@
 
 **Matt said start now (2026-10-09).** The queue's Phase 4 gate (Matt's week on the page) runs in
 parallel, exactly as it is:
-- Always run graph jobs and keep graph data in **dev** until Block G. Migrations 0018–0019 may
-  reach prod with any queue fix tagged meanwhile: empty tables change nothing there. Graph jobs,
-  graph data and any graph step in `daily-sync` reach prod only in Block G, on Matt's go.
+- Always run graph jobs and keep graph data in **dev** until Phase 6 Block B
+  (`docs/graph/COMPANION_SPEC.md`). Migrations may reach prod with any queue fix tagged meanwhile:
+  empty tables change nothing there. Graph jobs, graph data and the nightly graph workflow reach
+  prod only in Phase 6 Block B, on Matt's go.
 - Always keep the queue code (`src/musicdata/queue/`, `/next`, the `/queue` page) as it is until
-  Block G.
+  Phase 6 Block H.
 - Shows, venues and verdict work still wait for the Phase 4 gate.
 - The old pipeline and its Task Scheduler task keep running.
 
@@ -43,7 +44,7 @@ Four workers, each doing what it is best at:
 | --- | --- | --- |
 | MusicBrainz, Wikidata, Discogs (free APIs) | identity, links, labels, credits, studios, songwriters, memberships, areas, every recording of a song with its date | `musicdata graph import`, GitHub Actions |
 | Firecrawl (paid, budgeted) | every web page fetch: page text plus facts JSON | `musicdata graph fetch`, GitHub Actions |
-| Claude, extracting | reading cached pages for lineage, covers and relationships (never the atlas's prose: spec v5) | Claude Code sessions with the `music-graph-research` skill, on Matt's plan |
+| Claude, extracting | reading cached pages for lineage, covers and relationships (pages only; the atlas's prose stays out: spec v5) | Claude Code sessions with the `music-graph-research` skill, on Matt's plan |
 | Claude, reading | an independent agent judging each text claim against its quote alone | a separate agent in the same sessions |
 
 Everything except the two Claude steps runs unattended. The Claude steps exchange files with the
@@ -315,7 +316,7 @@ Per target album, with no Firecrawl:
 8. `graph_album.baseline_at = now()`.
 
 `graph link`: set `entity.release_group_id` and `artist_id` wherever an MBID matches. It runs by
-hand until Block G, which adds it to `daily-sync` after `derive`.
+hand until Phase 6 Block B, which adds it to the nightly graph workflow.
 
 ### 7.2 `graph fetch` — Firecrawl (port of `fetch.py`)
 
@@ -381,7 +382,7 @@ those entities for the next batch.
   (albums with ≥ 1 accepted claim in credits, recording, label, people, lineage); first-pass reader
   SUPPORTS rate per predicate; reading questions; gaps (failed fetches, no-match albums,
   unresolved entities); credits this run and this month.
-- `graph copy --source dev` (Block G): copies `predicate`, `entity`, `entity_link`,
+- `graph copy --source dev` (Phase 6 Block B): copies `predicate`, `entity`, `entity_link`,
   `map_membership`, `graph_album`, `graph_batch`, `source_fetch` and `assertion` into the empty
   target tables with their ids (`INSERT … OVERRIDING SYSTEM VALUE`, then reset each identity
   sequence), remapping `release_group_id` and `artist_id` by MBID in the target (NULL where absent,
@@ -428,15 +429,16 @@ each write a `matt` claim (source `matt`, extractor `matt`, the same quote as ev
 | MusicBrainz | 1 request/second (existing throttle); 503 → back off | ~6–10 requests per album: ~30 minutes for the slice |
 | Discogs | 25 requests/minute without a token | 2 per album |
 | Neon | keep the database under 800 MB (check G7) | ~7,000 claims and ~300 page bodies: a few MB |
-| GitHub Actions | public repo: free | graph jobs run by hand, not nightly, until the pilot gate |
+| GitHub Actions | public repo: free | graph jobs run by hand until Phase 6 Block B starts the nightly graph workflow on prod |
 | Claude | Matt's plan | ~8 batches of 25 albums, one reader agent per ~30 text claims |
 
 Secrets: `FIRECRAWL_API_KEY` (and `DISCOGS_TOKEN` if Matt makes one) in the `dev` and `prod` GitHub
-Environments and the backfill workflow's `env` block. The Fly API fetches nothing, so Fly keeps its
-current secrets. Add both to
+Environments and the backfill workflow's `env` block. From Phase 6 Block F the Fly app holds
+`FIRECRAWL_API_KEY` too: it fetches the pages the document worker asks for
+(`docs/graph/COMPANION_SPEC.md` section 8.3). Add both to
 `src/musicdata/config.py` as optional `SecretStr` settings.
 
-## 10. API (Block F; every endpoint needs `API_TOKEN`, like the existing routers)
+## 10. API (built in Phase 6 Block A, `docs/graph/COMPANION_SPEC.md` section 11; these endpoints need `API_TOKEN`, like the existing routers; the pages there use the page token)
 
 | Endpoint | Returns |
 | --- | --- |
@@ -445,22 +447,22 @@ current secrets. Add both to
 | `GET /entities/{id}/neighbors?predicates=&direction=in\|out\|both&min_confidence=0.5&limit=` | adjacent entities via `edge` |
 | `GET /albums/{release_group_id}/graph` | the album's edges grouped by facet, each with sources and confidence |
 | `GET /albums/{release_group_id}/brief` | the brief (edge-vocabulary section 8): identity and tracklist, where it sits in the atlas, edges by facet, registered links, gaps, research questions from section 7 of the vocabulary, Matt's status and sessions, budget hint |
-| `POST /assertions` | proposed claims from a Claude session (the skill's JSONL shape); runs `load-claims` resolution; returns ids |
+| `POST /assertions` | proposed claims from a Claude session (the skill's JSONL shape), names stored as written for `graph verify --pending` to resolve; returns claim label → id (COMPANION_SPEC section 8.3) |
 | `POST /links` | new links `{entity_id, kind, url, source}` |
 | `GET /graph/questions` | open reading questions: quote, claim, source URL, reader reason |
 | `POST /graph/questions/{assertion_id}/answer` | `{"answer": "yes" \| "no" \| "skip"}` |
 | `GET /graph/coverage?slice=` | the coverage report as JSON |
-| `POST /graph/walk?from={release_group_id}&depth=2` | Block G |
+| `POST /graph/walk?from={release_group_id}&depth=2` | Phase 6 Block H (COMPANION_SPEC section 5.6) |
 
 Add `GET /albums/{id}/brief`, `GET /entities/{id}/neighbors` and the two question endpoints to
 `docs/claude-project-instructions.md`.
 
-## 11. Queue integration — "walk back from here" (Block G)
+## 11. Queue integration — "walk back from here" (moved: Phase 6 Block H, widened to people paths in COMPANION_SPEC section 5.6; the entry rules below still apply)
 
 - `POST /graph/walk?from={release_group_id}&depth=2` builds a list from the album's lineage:
   ancestors through `sounds_like`, `influenced_by` and `covers` objects, the records of artists
-  linked by `member_of`, `associated_with` and `credited_on` (never `toured_with`: spec v7; never the
-  atlas's path steps: spec v5)
+  linked by `member_of`, `associated_with` and `credited_on` (exactly these edges, per spec v5 and
+  v7)
   before it — weighted by edge confidence, two hops at most.
 - It replaces the entries of one list, slug `graph_walk`, ranked by walk score. Each entry is a
   complete `list_entry`: `raw_artist` and `raw_album` from the release group, `artist_key` and
@@ -468,14 +470,15 @@ Add `GET /albums/{id}/brief`, `GET /entities/{id}/neighbors` and the two questio
   `resolve_status = 'resolved'`, `review_status = 'accepted'`, `added_by = 'graph:<release_group_id>'`.
   Only albums that resolve to a release group become entries, so `list_entry_status` and `/next`
   read them exactly as they read any list.
-- Migration 0021 seeds the `graph_walk` list (goal `depth`, weight 1.0, ranked, `source =
+- Migration 0023 (COMPANION_SPEC section 10) seeds the `graph_walk` list (goal `depth`, weight 1.0, ranked, `source =
   'generated:graph'`, `file_rows` NULL) and the `walk-back` profile (filters
   `{"lists": ["graph_walk"]}`, goal weights `{"depth": 1}`, composition n 10, revisit 0,
   wildcard 0, affinity 0.1). Confirm that check L1 and `lists load` skip generated lists (no row
   in `_lists.csv`), and make them do so if they do not.
 - `/next?profile=walk-back` then serves the walk through the existing queue engine.
-- The `/queue` page gets one control per card, "Walk back", that calls the walk (with the same
-  auth the page's Pin action uses) and switches to `walk-back`; the profile switcher shows "Walk back from <album>". The rest of the page stays as it is.
+- The album page (COMPANION_SPEC section 6.1) carries "Walk back", which calls the walk with the
+  page token and opens the queue on `walk-back`; the `/queue` page's profile switcher shows "Walk
+  back from <album>".
 
 ## 12. Acceptance checks and tests
 
@@ -490,7 +493,7 @@ Add `GET /albums/{id}/brief`, `GET /entities/{id}/neighbors` and the two questio
 | G5 | every claim in a `verified` batch is `accepted`, `rejected`, `ask_matt` or `superseded` |
 | G6 | no `source_fetch.error`, `assertion.evidence` or `pipeline_run.notes` matches a Firecrawl key, `(?<![0-9a-f])fc-[0-9a-f]{32}(?![0-9a-f])` (32 hex characters, so MBIDs such as `…9cfc-07e36eee65b9` stay clear) |
 | G7 | the database is under 800 MB |
-| G8 | this month's Firecrawl credits ≤ `GRAPH_MONTHLY_CREDITS` |
+| G8 | this month's Firecrawl credits ≤ `GRAPH_MONTHLY_CREDITS`: `source_fetch` credits plus the search credits documents report (COMPANION_SPEC section 8.3) |
 
 Tests:
 - **T1 golden (unit, Block D):** fixtures in `tests/unit/fixtures/graph/T1/`, copied from the
@@ -517,7 +520,7 @@ Tests:
 - **Block 0 — setup.** ADR 0017 (the claims graph: storage in Postgres, page bodies in
   `source_fetch`, Claude reading via batches, dev-first). Settings and secrets (section 9);
   `FIRECRAWL_API_KEY` and `DISCOGS_TOKEN` added to the backfill workflow's `env`.
-- **Block A — schema and seeds.** Migrations 0018–0019 (0020 is the spec v4 edge ranks; 0021 comes in Block G); `seeds/graph/predicates.csv`;
+- **Block A — schema and seeds.** Migrations 0018–0019 (0020 is the spec v4 edge ranks; 0021 onward are Phase 6's, COMPANION_SPEC section 10); `seeds/graph/predicates.csv`;
   `musicdata graph seed`; integration tests for the constraints; apply to dev.
 - **Block B — the free baseline (milestone M1).** Client methods (MusicBrainz, Discogs,
   Wikidata); `graph import`, `graph link`; run `--slice crazy_horse` in dev; report coverage per
@@ -532,14 +535,13 @@ Tests:
 - **Block E — the pilot run (milestone M2).** The 181 albums in batches of 25 with the skill;
   reading questions sent to Matt after each batch. Done when every predicate type with ≥ 10 text
   claims has ≥ 90% `SUPPORTS` in `reader_first` (`PARTIAL` counts against), checks G1–G8 are
-  green in dev, and Matt has answered the open reading questions. When a predicate type falls
+  green where the graph lives (dev, or prod once Phase 6 Block B has moved it), and Matt has answered the open reading questions. When a predicate type falls
   short after two batches, report the failing claims and the rule change you propose, and wait for
   Matt. (`docs/graph/golden_set_crazy_horse.csv` is a record of the first extractor test; the
   first-pass reader measure replaces it.)
-- **Block F — API.** Section 10; tests; the Project instructions rows.
-- **Block G — the walk and the gate (milestone M3).** Section 11 with migration 0021; a version
-  tag; on Matt's go: migrations to prod, `graph copy --source dev`, `graph link` added to
-  `daily-sync` after `derive`, G1–G8 green in prod; Matt uses `walk-back` for a week.
+- **Blocks F and G moved to `docs/graph/COMPANION_SPEC.md` (Phase 6) on 2026-10-10:** the API is
+  its Block A, the prod copy and nightly graph workflow its Block B, and the walk its Block H.
+  Phase 5 ends when Block E's bar is met.
 
 ## 14. What Matt does
 
@@ -547,7 +549,7 @@ Tests:
   `GET /graph/questions`.
 - Agrees or not to vocabulary proposals (open: a predicate for a band's earlier name, e.g. Crazy
   Horse as The Rockets).
-- Gives the go for prod (Block G) and for any Firecrawl spend above section 9's limits.
+- Gives the go for prod (Phase 6 Block B) and for any Firecrawl spend above section 9's limits.
 
 ## Changes to this spec
 
@@ -604,3 +606,8 @@ Tests:
   Matt's go; 35 links to non-English sites were marked dead. Also from the P04 run: Rate Your
   Music links are dead (their cached pages often held the wrong album), and the normaliser reads
   link titles with escaped quotes.
+- 2026-10-10: v9 (Matt). The graph's uses for Matt — queue effects, album and hub pages, liner notes
+  and deep dives — get their own spec, `docs/graph/COMPANION_SPEC.md` (Phase 6). Blocks F (API) and
+  G (walk back, prod copy) moved there as Blocks A, B and H; the walk follows people paths as well
+  as lineage. Prod becomes the graph's home at Phase 6 Block B. The Fly app gets `FIRECRAWL_API_KEY`
+  in Phase 6 Block F for the document worker's page fetches.

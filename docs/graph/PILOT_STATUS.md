@@ -20,9 +20,10 @@ Matt never judges whether music claims are true. He answers only **reading quest
 this quote say X?", yes / no / skip, from the quote alone. His answers become claims under his
 name (`matt`, confidence 1.0) that outrank every other source.
 
-The point: an API that answers "what is this record connected to?" (Block F) and a "walk back
-from here" control on the `/queue` page that builds a listening list from an album's lineage
-(Block G).
+The point (Phase 6, `docs/graph/COMPANION_SPEC.md`): an API that answers "what is this record
+connected to?"; album and hub pages; liner notes and deep dives written on request; and a queue
+that the graph shapes — connection lines on cards, a small score factor, a thread slot after a
+finished album, and follow and walk-back profiles.
 
 ## 2. The pilot
 
@@ -61,8 +62,7 @@ including Claude's, and it asks for reference use only. Samples come from MusicB
 | C | Firecrawl page fetches and Wikipedia credit facts | Done (395 pages) |
 | D | Verification, reading batches, report, data checks G1–G8 | Done |
 | E | **Reading batches** | P01–P03 verified (75 albums); P04 extracted, not yet loaded; P05–P07 to go (69 albums) |
-| F | Graph API, including answering reading questions from the Project | Not started |
-| G | "Walk back from here" on the `/queue` page; copy the graph to prod | Not started; the prod copy waits for Matt's go |
+| F, G | Moved on 2026-10-10 to Phase 6, `docs/graph/COMPANION_SPEC.md` (the graph in the queue, album pages, liner notes and deep dives) | Not started; Phase 6 begins after P04 |
 
 ### P04 (in progress)
 
@@ -176,10 +176,11 @@ Other commands: `graph critic --site noexpectations` (refresh the critic's posts
 2. P05–P07: the remaining 69 albums.
 3. Block E sign-off: every kind of claim at 90% or better on first reading, G1–G8 green, every
    question answered.
-4. Block F: the graph API (`/entities`, `/albums/{id}/graph`, `/albums/{id}/brief`,
-   `/graph/questions` and answers), and its rows in the Project instructions.
-5. Block G: "walk back from here" on the `/queue` page, following lineage claims only; then the
-   copy to prod on Matt's go.
+4. Phase 6 (`docs/graph/COMPANION_SPEC.md`, Blocks A–I): the graph API; the prod copy on Matt's
+   go, after which prod is the graph's home; default building blocks for the near-queue set, heard
+   albums and the atlas; connections and threads; album, hub and search pages; liner notes and
+   deep dives written on request; then connection lines, a score factor, a thread slot, follow and
+   walk back in the queue.
 
 ## 11. Decisions waiting for Matt
 
