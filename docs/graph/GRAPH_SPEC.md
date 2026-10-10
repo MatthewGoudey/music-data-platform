@@ -625,3 +625,6 @@ Tests:
   facet, not lineage edges: no direction or date checks) and `relative_of` (people, symmetric);
   `influenced_by` accepts a genre object. The skill's extraction rules and reader prompt describe
   each; `graph seed` loads them. The gaps logged in P01–P06 skip files can be re-read under them.
+- 2026-10-10: v12 (Matt's v11 go). From the P07 gaps: `arrangement_from`, `compiles`,
+  `companion_to` (lineage facet, not lineage edges), and `renamed_from` for places and labels;
+  30 predicates.

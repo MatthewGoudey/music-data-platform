@@ -165,6 +165,12 @@ Put the publication or critic a source cites in `qualifiers.via`. A corrected cl
   `work` with `kind` (poem, story, lyrics).
 - `appears_in`: a song or album is used in a film, TV episode, advert or game; the object is a `work`
   named as the source names it, with `kind` (film, tv, advert, game) and `year`.
+- `arrangement_from`: a recording follows another performer's arrangement of a song someone else recorded
+  first ("Oh Susannah" after Tim Rose and the Thorns); the first recording itself is `covers`.
+- `compiles`: an album collects earlier releases (two EPs issued as one LP).
+- `companion_to`: an album accompanies a film, book or show of its own (Year of the Horse and its film);
+  the object is a `work` with `kind`.
+- `renamed_from` also covers a studio or label's earlier name.
 - `relative_of`: two people are family; give `relation` (brother, great-grandfather, …).
 - `influenced_by` may name a genre as its object when the source says the album or artist drew on it
   ("informed by krautrock"); a channel or medium (MTV) is a skip.
@@ -234,6 +240,10 @@ What each relation means:
 - "was used in": the quote says the song or album was used, featured or played in the film, show,
   advert or game.
 - "is a relative of": the quote states the family relation.
+- "follows the arrangement of": the quote says the recording takes, copies or follows the other
+  performer's arrangement or version.
+- "collects": the quote says the album combines, collects or compiles the other releases.
+- "accompanies": the quote says the album is the soundtrack or companion of the film, book or show.
 - "is described as" / "came out of": the quote says the album is that style or came from that scene, not
   merely near it.
 

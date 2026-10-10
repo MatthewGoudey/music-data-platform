@@ -70,7 +70,7 @@ never the source of a claim: every claim quotes a real page or comes from a data
 - Always keep claims that disagree side by side; the current view picks by precedence, and both
   stay visible with their sources.
 
-## 4. Predicates (27, grouped by facet)
+## 4. Predicates (30, grouped by facet)
 
 | Facet | Predicate | Subject → object | Qualifiers | Typical sources |
 | --- | --- | --- | --- | --- |
@@ -84,7 +84,7 @@ never the source of a claim: every claim quotes a real page or comes from a data
 | | `credited_on` | person → album, recording | `role` (producer, engineer, mixer, pedal steel, …) | wikipedia (firecrawl_json), discogs, musicbrainz |
 | Label | `released_by` | album → label | `year`, `catalog` | musicbrainz (authoritative), map |
 | | `performs_as` | person → artist (stage name, solo project) | | wikipedia |
-| | `renamed_from` | artist → artist (newer → earlier name) | | wikipedia |
+| | `renamed_from` | artist, place, label → the same (newer → earlier name) | | wikipedia |
 | | `toured_with` | artist ↔ artist (symmetric) | `role`, `year` | wikipedia, critics |
 | | `relative_of` | person ↔ person (symmetric) | `relation` | wikipedia |
 | Lineage | `influenced_by` | album, artist → album, artist, genre | | interviews, wikipedia, wikidata (P737) |
@@ -97,6 +97,9 @@ never the source of a claim: every claim quotes a real page or comes from a data
 | | `references` | album, recording → recording, work, album, artist | `track` | wikipedia |
 | | `based_on` | album, recording, work → work | `track`, `kind` | wikipedia |
 | | `appears_in` | recording, work, album → work (film, TV, advert, game) | `kind`, `year` | wikipedia |
+| | `arrangement_from` | album, recording → album, recording, artist | `track` | wikipedia |
+| | `compiles` | album → album | | wikipedia, bandcamp |
+| | `companion_to` | album → work (film, book, show) | `kind` | wikipedia |
 | | `associated_with` | artist ↔ artist (symmetric) | `kind`: collaborator, bandmate, backing | wikipedia |
 | | `path_next` | album → album | `path`, `step` | map |
 | Sound, mood, function, context | `has_tag` | album → tag | | map, matt, musicbrainz tags via mapping |
@@ -345,3 +348,7 @@ sentences judged.
   and `relative_of` (family, symmetric). `influenced_by` may take a genre as its object ("informed
   by krautrock"). A `work` may be a non-musical work. Left out as not music relations: a legal
   dispute over a band name, and influence from a channel or medium (MTV).
+- 2026-10-10 (Matt, graph spec v12, under v11's "Add whatever vocab you need"): from P07,
+  `arrangement_from` (a recording following another performer's arrangement, not the first
+  recording), `compiles` (an album collecting EPs) and `companion_to` (an album accompanying its
+  film); `renamed_from` also covers studios and labels (30 predicates in all).

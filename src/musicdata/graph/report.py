@@ -45,6 +45,9 @@ FACETS = {
         "references",
         "based_on",
         "appears_in",
+        "arrangement_from",
+        "compiles",
+        "companion_to",
     ),
 }
 
