@@ -6,7 +6,7 @@ from __future__ import annotations
 import json
 import secrets
 from collections import defaultdict
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
@@ -81,6 +81,44 @@ class UnknownProfileError(LookupError):
     pass
 
 
+@dataclass
+class ScoreContext:
+    """What scoring reads once, so several profiles can be scored from one read."""
+
+    entries: list[asyncpg.Record]
+    tags: dict[int, list[str]]
+    list_sizes: dict[int, int]
+    lane_shares: dict[str, float]
+
+    def score(self, p: Profile, now: datetime) -> list[Item]:
+        return score_candidates(
+            self.entries, p, list_sizes=self.list_sizes, lane_shares=self.lane_shares,
+            tags=self.tags, now=now,
+        )  # fmt: skip
+
+
+async def score_context(conn: asyncpg.Connection) -> ScoreContext:
+    entries = await conn.fetch(ENTRIES)
+    tags: dict[int, list[str]] = defaultdict(list)
+    for r in await conn.fetch(
+        """SELECT rt.release_group_id, t.name FROM release_group_tag rt JOIN tag t USING (tag_id)
+            WHERE rt.status = 'applied' ORDER BY t.name"""
+    ):
+        tags[r["release_group_id"]].append(r["name"])
+    list_sizes = {
+        r["list_id"]: r["n"]
+        for r in await conn.fetch("SELECT list_id, count(*) AS n FROM list_entry GROUP BY 1")
+    }
+    lane_total: dict[str, int] = defaultdict(int)
+    lane_heard: dict[str, int] = defaultdict(int)
+    for e in entries:
+        if e["slug"] == "v_atlas" and e["lane_id"]:
+            lane_total[e["lane_id"]] += 1
+            lane_heard[e["lane_id"]] += e["status"] == "heard"
+    lane_shares = {k: lane_heard[k] / v for k, v in lane_total.items()}
+    return ScoreContext(entries, tags, list_sizes, lane_shares)
+
+
 async def load_profile(conn: asyncpg.Connection, name: str) -> Profile:
     r = await conn.fetchrow("SELECT * FROM queue_profile WHERE name = $1", name)
     if r is None:
@@ -116,28 +154,9 @@ async def next_queue(
     if seed is None:
         seed = secrets.randbits(40) if shuffle else day_seed(p.name, now.astimezone(CHICAGO).date())
 
-    entries = await conn.fetch(ENTRIES)
-    tags: dict[int, list[str]] = defaultdict(list)
-    for r in await conn.fetch(
-        """SELECT rt.release_group_id, t.name FROM release_group_tag rt JOIN tag t USING (tag_id)
-            WHERE rt.status = 'applied' ORDER BY t.name"""
-    ):
-        tags[r["release_group_id"]].append(r["name"])
-    list_sizes = {
-        r["list_id"]: r["n"]
-        for r in await conn.fetch("SELECT list_id, count(*) AS n FROM list_entry GROUP BY 1")
-    }
-    lane_total: dict[str, int] = defaultdict(int)
-    lane_heard: dict[str, int] = defaultdict(int)
-    for e in entries:
-        if e["slug"] == "v_atlas" and e["lane_id"]:
-            lane_total[e["lane_id"]] += 1
-            lane_heard[e["lane_id"]] += e["status"] == "heard"
-    lane_shares = {k: lane_heard[k] / v for k, v in lane_total.items()}
-
-    candidates = score_candidates(
-        entries, p, list_sizes=list_sizes, lane_shares=lane_shares, tags=tags, now=now
-    )
+    sc = await score_context(conn)
+    entries, tags = sc.entries, sc.tags
+    candidates = sc.score(p, now)
 
     # Revisits: albums with history, inside the profile's filters when it has any.
     in_profile = {

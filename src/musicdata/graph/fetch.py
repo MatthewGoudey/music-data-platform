@@ -39,6 +39,12 @@ MONTH_SPENT = """SELECT coalesce(sum(credits), 0) FROM source_fetch
                   WHERE fetched_at >= date_trunc('month', now())"""
 
 
+# Companion spec 9: Matt's go on Block C approves up to 15,000 credits for the default scope.
+DEFAULT_SCOPE_CREDITS = 15_000
+DEFAULT_SPENT = """SELECT coalesce(sum((notes ->> 'credits')::int), 0) FROM pipeline_run
+                    WHERE job = 'graph_fetch' AND notes ->> 'slice' = 'default'"""
+
+
 def is_english_wikipedia(url: str) -> bool:
     return (urlparse(url).hostname or "").lower() == "en.wikipedia.org"
 
@@ -114,7 +120,16 @@ def graph_fetch(
                     f"this month's Firecrawl credits ({month}) reached GRAPH_MONTHLY_CREDITS "
                     f"({settings.graph_monthly_credits})"
                 )
-            targets = await slice_targets(conn, slice_name)
+            cap = max_credits
+            if slice_name == "default":
+                scope_spent = int(await conn.fetchval(DEFAULT_SPENT))
+                if scope_spent >= DEFAULT_SCOPE_CREDITS:
+                    ctx.notes.update(slice=slice_name, default_scope_credits=scope_spent,
+                                     stopped_at_cap=True)  # fmt: skip
+                    log.warning("graph fetch stopped: the default scope's approved credits")
+                    return
+                cap = min(max_credits, DEFAULT_SCOPE_CREDITS - scope_spent)
+            targets = await slice_targets(conn, slice_name, None if refresh else "fetch", limit)
             ready = {
                 r["entity_id"]
                 for r in await conn.fetch(
@@ -146,7 +161,7 @@ def graph_fetch(
                         counts["cached"] += 1
                         continue
                     if (
-                        spent + COST[mode] > max_credits
+                        spent + COST[mode] > cap
                         or month + spent + COST[mode] > settings.graph_monthly_credits
                     ):
                         stopped = True

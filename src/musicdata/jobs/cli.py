@@ -182,7 +182,9 @@ def graph_import_cmd(
         "crazy_horse", "--slice", help="crazy_horse, v_atlas or album:<id>."
     ),
     scope: str | None = typer.Option(
-        None, "--scope", help="rg:<id>[,<id>…] or opened (companion spec 3.2); replaces --slice."
+        None,
+        "--scope",
+        help="default, opened or rg:<id>[,<id>…] (companion spec 3.2–3.3); replaces --slice.",
     ),
     limit: int | None = typer.Option(None, help="Max albums this run."),
     refresh: bool = typer.Option(False, "--refresh", help="Baseline albums already done again."),
@@ -207,7 +209,9 @@ def graph_fetch_cmd(
         "crazy_horse", "--slice", help="crazy_horse, v_atlas or album:<id>."
     ),
     scope: str | None = typer.Option(
-        None, "--scope", help="rg:<id>[,<id>…] or opened (companion spec 3.2); replaces --slice."
+        None,
+        "--scope",
+        help="default, opened or rg:<id>[,<id>…] (companion spec 3.2–3.3); replaces --slice.",
     ),
     limit: int | None = typer.Option(None, help="Max albums this run."),
     max_credits: int = typer.Option(
@@ -235,7 +239,9 @@ def graph_facts_cmd(
         "crazy_horse", "--slice", help="crazy_horse, v_atlas or album:<id>."
     ),
     scope: str | None = typer.Option(
-        None, "--scope", help="rg:<id>[,<id>…] or opened (companion spec 3.2); replaces --slice."
+        None,
+        "--scope",
+        help="default, opened or rg:<id>[,<id>…] (companion spec 3.2–3.3); replaces --slice.",
     ),
     refresh: bool = typer.Option(False, "--refresh", help="Re-read albums already done."),
 ) -> None:
@@ -256,6 +262,17 @@ def graph_link_cmd() -> None:
     from musicdata.jobs import runs
 
     raise typer.Exit(runs.run("graph_link", graph_link(), trigger=_trigger()))
+
+
+@graph_app.command("near-queue")
+def graph_near_queue_cmd(
+    size: int = typer.Option(300, help="Top candidates per queue profile."),
+) -> None:
+    """The near-queue set (companion spec 3.3): each profile's top candidates, for the default scope."""
+    from musicdata.graph.near_queue import graph_near_queue
+    from musicdata.jobs import runs
+
+    raise typer.Exit(runs.run("graph_near_queue", graph_near_queue(size), trigger=_trigger()))
 
 
 @graph_app.command("report")

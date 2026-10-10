@@ -63,7 +63,7 @@ def graph_facts(*, slice_name: str, refresh: bool = False) -> JobFn:
     async def _run(ctx: RunContext) -> None:
         counts: dict[str, int] = defaultdict(int)
         async with connection(ctx.pool) as conn:
-            targets = await slice_targets(conn, slice_name)
+            targets = await slice_targets(conn, slice_name, None if refresh else "facts")
             ready = {
                 r["entity_id"]
                 for r in await conn.fetch(

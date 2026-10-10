@@ -133,11 +133,64 @@ async def ensure_album(conn: asyncpg.Connection, release_group_id: int) -> dict 
     }  # fmt: skip
 
 
-async def scope_targets(conn: asyncpg.Connection, scope: str) -> list[dict]:
-    """Companion spec 3.2: `rg:<id>[,<id>…]` or `opened` (pages opened without a baseline).
-    The `default` scope (3.3) arrives with Block C, on Matt's go."""
+# Companion spec 3.3: the default scope in its order — 1 pages opened without a baseline, 2 the
+# near-queue set by rank, 3 heard albums (a full session), 4 the V atlas by priority — each release
+# group once, at its earliest place. `$1` picks the step an album still needs.
+DEFAULT_ORDER = """
+WITH src AS (
+    SELECT en.release_group_id AS rg, 1 AS grp, 0 AS ord, NULL::text AS priority,
+           false AS start_here
+      FROM graph_album g JOIN entity en USING (entity_id)
+     WHERE 'opened' = ANY(g.slices) AND en.release_group_id IS NOT NULL
+    UNION ALL
+    SELECT en.release_group_id, 2, (g.notes ->> 'near_queue_rank')::int, NULL, false
+      FROM graph_album g JOIN entity en USING (entity_id)
+     WHERE 'near_queue' = ANY(g.slices) AND en.release_group_id IS NOT NULL
+    UNION ALL
+    SELECT release_group_id, 3, -full_sessions, NULL, false
+      FROM release_group_stat WHERE full_sessions > 0
+    UNION ALL
+    SELECT e.release_group_id, 4,
+           CASE e.priority WHEN 'Essential' THEN 0 WHEN 'Recommended' THEN 2 ELSE 3 END
+             - CASE WHEN e.start_here THEN 1 ELSE 0 END,
+           e.priority, e.start_here
+      FROM list_entry e JOIN list l USING (list_id)
+     WHERE l.slug = 'v_atlas' AND e.resolve_status = 'resolved' AND e.review_status = 'accepted'
+), first AS (
+    SELECT DISTINCT ON (rg) rg, grp, ord, priority, start_here
+      FROM src WHERE rg IS NOT NULL ORDER BY rg, grp, ord
+)
+SELECT f.rg, f.priority, f.start_here
+  FROM first f
+  JOIN release_group r ON r.release_group_id = f.rg
+  LEFT JOIN entity en ON en.release_group_id = f.rg AND en.type = 'album'
+  LEFT JOIN graph_album g ON g.entity_id = en.entity_id
+ WHERE CASE $1::text
+         WHEN 'baseline' THEN r.mbid IS NOT NULL AND g.baseline_at IS NULL
+         WHEN 'fetch' THEN g.baseline_at IS NOT NULL AND g.fetched_at IS NULL
+         WHEN 'facts' THEN g.fetched_at IS NOT NULL AND g.facts_at IS NULL
+         ELSE true END
+ ORDER BY f.grp, f.ord, f.rg
+ LIMIT $2
+"""
+
+
+async def scope_targets(
+    conn: asyncpg.Connection, scope: str, pending: str | None = None, limit: int | None = None
+) -> list[dict]:
+    """Companion spec 3.2: `rg:<id>[,<id>…]`, `opened` (pages opened without a baseline) or
+    `default` (3.3, in its order; `pending` keeps the albums that still need that step:
+    baseline, fetch or facts, and `limit` caps how many become targets)."""
     if scope == "default":
-        raise ValueError("the default scope arrives with Phase 6 Block C, on Matt's go")
+        out = []
+        for r in await conn.fetch(DEFAULT_ORDER, pending, limit):
+            t = await ensure_album(conn, r["rg"])
+            if t is None:
+                continue
+            if r["priority"]:
+                t["priority"], t["start_here"] = r["priority"], r["start_here"]
+            out.append(t)
+        return out
     if scope == "opened":
         rgs = [
             r[0]
@@ -159,11 +212,14 @@ async def scope_targets(conn: asyncpg.Connection, scope: str) -> list[dict]:
     return out
 
 
-async def slice_targets(conn: asyncpg.Connection, slice_name: str) -> list:
+async def slice_targets(
+    conn: asyncpg.Connection, slice_name: str, pending: str | None = None, limit: int | None = None
+) -> list:
     """A slice's atlas entries in research order (GRAPH_SPEC 6), resolved or not; or a scope's
-    release groups (`rg:<ids>`, `opened`; companion spec 3.2)."""
+    release groups (`rg:<ids>`, `opened`, `default`; companion spec 3.2–3.3). `pending` and
+    `limit` narrow the default scope only (thousands of albums); slices stay whole."""
     if slice_name in ("opened", "default") or slice_name.startswith("rg:"):
-        return await scope_targets(conn, slice_name)
+        return await scope_targets(conn, slice_name, pending, limit)
     lanes, rg, path_ids = None, None, []
     if slice_name.startswith("album:"):
         rg = int(slice_name.split(":", 1)[1])
@@ -285,12 +341,31 @@ async def write_album(
     return len(rows)
 
 
+DB_STOP_MB = 650  # companion spec 9: stop the default import and report at 650 MB
+ERRORS_MAX = 20  # a run that fails this many albums stops and fails (MusicBrainz down)
+
+
+async def database_mb(conn: asyncpg.Connection) -> float:
+    return round(
+        int(await conn.fetchval("SELECT pg_database_size(current_database())")) / 1048576, 1
+    )
+
+
 def graph_import(*, slice_name: str, limit: int | None = None, refresh: bool = False) -> JobFn:
     async def _run(ctx: RunContext) -> None:
         settings = get_settings()
         counts: dict[str, int] = defaultdict(int)
+        default = slice_name == "default"
         async with connection(ctx.pool) as conn:
-            targets = await slice_targets(conn, slice_name)
+            size = await database_mb(conn)
+            ctx.notes.update(database_mb=size)
+            if default and size >= DB_STOP_MB:
+                ctx.notes.update(slice=slice_name, stopped_at_size=True)
+                log.warning("graph import stopped: database size", extra={"mb": size})
+                return
+            targets = await slice_targets(
+                conn, slice_name, "baseline" if default and not refresh else None, limit
+            )
             for t in targets:
                 if t["entity_id"] is None:
                     continue
@@ -370,6 +445,15 @@ def graph_import(*, slice_name: str, limit: int | None = None, refresh: bool = F
                         links.append((link_kind(url), url, f"map:{MAP}"))
                 except NotFoundError:
                     notes, claims, links = {"gap": "release group not in MusicBrainz"}, [], []
+                except Exception as exc:  # one album's failure leaves it for the next run
+                    counts["errors"] += 1
+                    log.warning(
+                        "graph import album failed",
+                        extra={"release_group_id": t["release_group_id"], "error": str(exc)[:200]},
+                    )
+                    if counts["errors"] >= ERRORS_MAX:
+                        raise
+                    continue
                 async with connection(ctx.pool) as conn, conn.transaction():
                     n = await write_album(
                         conn, t["entity_id"], label_id(t), claims, links, notes, ctx.run_id
@@ -378,10 +462,18 @@ def graph_import(*, slice_name: str, limit: int | None = None, refresh: bool = F
                 counts["claims"] += n
                 if i % 20 == 0:
                     log.info("graph import progress", extra={"done": i, "of": len(todo)})
+                if default and i % 50 == 0:
+                    async with connection(ctx.pool) as conn:
+                        size = await database_mb(conn)
+                    if size >= DB_STOP_MB:
+                        counts["stopped_at_size"] = 1
+                        break
             counts["musicbrainz_requests"] = mb.requests
             counts["discogs_requests"] = dg.requests
             counts["wikidata_requests"] = wd.requests
         ctx.rows = counts["albums"]
+        async with connection(ctx.pool) as conn:
+            ctx.notes.update(database_mb_after=await database_mb(conn))
         ctx.notes.update(slice=slice_name, **counts)
 
     return _run
