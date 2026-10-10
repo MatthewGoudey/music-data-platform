@@ -231,7 +231,10 @@ async def _foreign(
                     else []
                 )
                 discogs = [u for k, u in url_links(rg) if k == "discogs"]
-                album_dg = await dg.album(discogs) if discogs else None
+                try:
+                    album_dg = await dg.album(discogs) if discogs else None
+                except Exception:  # a dead Discogs link (404) leaves MusicBrainz's credits
+                    album_dg = None
                 credits["discogs"] = sorted(
                     {
                         match_key(clean_name(x["name"]))
