@@ -56,6 +56,18 @@ def _db(coro_fn):
     return asyncio.run(run())
 
 
+async def _predicates(conn) -> None:
+    """The predicate rows the claims need (CI's database starts empty)."""
+    from musicdata.graph.seed import read_predicates
+
+    await conn.executemany(
+        """INSERT INTO predicate (name, facet, subject_types, object_types, "symmetric", lineage,
+                                  description)
+           VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (name) DO NOTHING""",
+        [tuple(p.values()) for p in read_predicates()],
+    )
+
+
 async def _cleanup(conn: asyncpg.Connection) -> None:
     ids = [r[0] for r in await conn.fetch("SELECT entity_id FROM entity WHERE name LIKE 'Zz Api%'")]
     await conn.execute("DELETE FROM assertion WHERE claim_label LIKE 'ZTAPI-%'")
@@ -68,6 +80,7 @@ async def _cleanup(conn: asyncpg.Connection) -> None:
 
 async def _setup(conn: asyncpg.Connection) -> dict:
     await _cleanup(conn)
+    await _predicates(conn)
     person = await conn.fetchval(
         """INSERT INTO entity (type, name, norm_key, mbid) VALUES ('person', 'Zz Api Drummer',
            'zz api drummer', $1) RETURNING entity_id""",

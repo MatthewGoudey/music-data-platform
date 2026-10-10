@@ -29,6 +29,18 @@ async def conn() -> AsyncIterator[asyncpg.Connection]:
         await c.close()
 
 
+async def _predicates(conn) -> None:
+    """The predicate rows the claims need (CI's database starts empty)."""
+    from musicdata.graph.seed import read_predicates
+
+    await conn.executemany(
+        """INSERT INTO predicate (name, facet, subject_types, object_types, "symmetric", lineage,
+                                  description)
+           VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (name) DO NOTHING""",
+        [tuple(p.values()) for p in read_predicates()],
+    )
+
+
 async def _entity(conn, type_: str, name: str, mbid: str | None = None) -> int:
     return await conn.fetchval(
         """INSERT INTO entity (type, name, norm_key, mbid, resolve_status)
@@ -59,6 +71,7 @@ async def _credit(conn, person: int, album: int, source: str, label: str) -> int
 
 
 async def test_merge_only_with_a_shared_album_and_undo(conn) -> None:
+    await _predicates(conn)
     album = await _entity(conn, "album", "Zzm Record", MBID.format(1))
     other_album = await _entity(conn, "album", "Zzm Other Record", MBID.format(2))
     firm = await _entity(conn, "person", "zzm drummer", MBID.format(3))
