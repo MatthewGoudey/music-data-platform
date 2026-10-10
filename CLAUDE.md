@@ -124,8 +124,11 @@ Gate: C1–C5 and G1–G8 green in prod, and Matt has used the cards, pages and 
 listening for a week. Prod runs only `v*` tags, so each block that changes code ends with a tag on
 Matt's go.
 
-- [ ] Block A — graph API (Block A rows of spec section 11), the brief with `pages` and per-track
+- [x] Block A — graph API (Block A rows of spec section 11), the brief with `pages` and per-track
       credits, the import's qualifier upsert and the pilot's re-import, Project instructions rows.
+      Done 2026-10-10 in dev (`api/routers/graph.py`, `graph/queries.py`): 1,025 MusicBrainz
+      credits carry their track list after the re-import; G1–G8 green. Prod gets the code with
+      the next `v*` tag.
 - [ ] Block B — `graph import --scope` with `rg` labels, `graph verify --pending`, the nightly
       graph workflow on prod; on Matt's go, `graph copy --source dev` and prod becomes the graph's
       home (P05–P07 then run against prod).
