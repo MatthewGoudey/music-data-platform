@@ -43,8 +43,9 @@ def is_english_wikipedia(url: str) -> bool:
     return (urlparse(url).hostname or "").lower() == "en.wikipedia.org"
 
 
-# Matt reads English only (spec v8): pages on these country domains, and Wikipedias other than
-# English, are not fetched or read.
+# Spec v8: a source's language matches the artist's world. The pilot is English-language, so
+# pages on these country domains, and Wikipedias other than English, are not fetched; a future
+# non-English slice will choose its languages instead.
 NON_ENGLISH_TLDS = (".de", ".fr", ".es", ".it", ".nl", ".se", ".no", ".dk", ".fi", ".pl", ".pt",
                     ".br", ".jp", ".ru", ".at", ".ch", ".cz", ".hu")  # fmt: skip
 

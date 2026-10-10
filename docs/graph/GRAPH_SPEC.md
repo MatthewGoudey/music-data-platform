@@ -594,7 +594,11 @@ Tests:
   became `toured_with`, a player in another artist's band stayed `associated_with` (kind `backing`),
   and every re-filed claim went back to a reader. The walk (section 11) does not follow
   `toured_with`.
-- 2026-10-10: v8 (Matt). English pages only: `graph fetch` skips non-English Wikipedias and
+- 2026-10-10: v8 (Matt). A source's language matches the artist's world: no German sources for
+  bands with no tie to the German language. A slice of non-English music (krautrock, Brazilian
+  music, …) reads sources in that language, and its reading questions then carry an English
+  translation for Matt. The Crazy Horse pilot is English-language throughout, so it reads English
+  pages only: `graph fetch` skips non-English Wikipedias and
   country domains (`.de`, `.fr`, `.it` and others), extractors skip any non-English page, and the
   18 claims quoting German pages (laut.de, plattentests.de, rollingstone.de) were deleted with
   Matt's go; 35 links to non-English sites were marked dead. Also from the P04 run: Rate Your
