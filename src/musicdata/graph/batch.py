@@ -231,7 +231,7 @@ class Resolver:
     async def linked(self, album_id: int) -> list[asyncpg.Record]:
         if album_id not in self.known:
             self.known[album_id] = await self.conn.fetch(
-                """SELECT DISTINCT e.entity_id, e.type, e.norm_key
+                """SELECT DISTINCT e.entity_id, e.type, e.norm_key, e.mbid
                      FROM assertion a JOIN entity e ON e.entity_id IN (a.subject_id, a.object_id)
                     WHERE a.album_context = $1 AND a.status <> 'superseded'""",
                 album_id,
@@ -252,7 +252,10 @@ class Resolver:
         k = norm_key(title)
         for r in await self.linked(album_id):
             same_type = r["type"] == type_ or (r["type"] in ART and type_ in ART)
-            if same_type and r["norm_key"] == k:
+            # Discogs files every credit as a person, bands too: a group named in a claim
+            # skips an un-IDed person and resolves through MusicBrainz instead
+            discogs_band = type_ == "artist" and r["type"] == "person" and r["mbid"] is None
+            if same_type and r["norm_key"] == k and not discogs_band:
                 self.counts["linked"] += 1
                 return r["entity_id"]
         memo = (type_, name, e.get("artist") or "")
