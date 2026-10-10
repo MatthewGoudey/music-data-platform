@@ -68,14 +68,21 @@ Rules (always):
 - Write warmly and concretely, in plain sentences, with no hype words.
 - Leave out any `## Sources` section: the page builds its own from the markers.
 
-## 4. New claims
+## 4. New claims (part of every deep dive)
 
-Facts you found on new pages that the graph lacks (a credit, where it was recorded, a comparison,
-an influence, a cover) go back to the graph. Post them in the music-graph-research skill's claim
-shape with labels `D<id>-rg<release_group_id>-L<n>`, `"batch": "D<id>"` and
-`"release_group_id": <id>`:
+A deep dive feeds the graph: every new page you fetched is read for facts the graph lacks, and those
+facts are posted before you hand in. Matt's queue cards, connections and walks are built from these
+claims, so a deep dive that fetched pages and posted none is unfinished.
 
-`POST $API/assertions [ … ]` → label → `assertion_id`. Cite those ids in the text.
+1. For each new page, list the facts it states that the brief does not have: who played, sang,
+   produced, engineered or mixed (on the album or a named track), where it was recorded, a critic's
+   comparison, an influence the band names, a cover with its first recording named.
+2. Write them in the music-graph-research skill's claim shape (section 3 there: credits are work on
+   the music only; a cover needs its first recording; touring is not working together), with labels
+   `D<id>-rg<release_group_id>-L<n>`, `"batch": "D<id>"`, `"release_group_id": <id>`, the page's URL
+   as `source_url` and its verbatim evidence (at most 300 characters).
+3. `POST $API/assertions [ … ]` → label → `assertion_id`. You may cite those ids in the text, or the
+   page behind them.
 
 Then run a **separate reader agent** on them with the reader prompt from
 `.claude/skills/music-graph-research/SKILL.md` section 4, and post its verdicts:
@@ -94,6 +101,8 @@ none remain. Keep the tally.
 
 ## 6. Hand in
 
+Before handing in, check: the new claims are posted (section 4) and their reader verdicts are in.
+
 `PUT $API/documents/{id}`:
 
 ```json
@@ -106,5 +115,5 @@ The API refuses `ready` and lists any marker that does not resolve (a claim must
 `D<id>`; a page must be cached): fix those and send again. When the work cannot be finished, send
 `{"lease_token": …, "status": "failed", "error": "<why>"}`; the document is retried once.
 
-Then report to Matt: the album, the kind, the word count, the sources added, the credits, the
-fact-check tally, and the page: `/albums/{release_group_id}/page` (the tab opens the document).
+Then report to Matt: the album, the kind, the word count, the sources added, the new claims and
+the reader's verdicts on them, the credits, the fact-check tally, and the page: `/albums/{release_group_id}/page` (the tab opens the document).
