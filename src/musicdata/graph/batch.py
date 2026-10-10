@@ -111,6 +111,9 @@ def graph_batch_export(*, slice_name: str, size: int = 25, root: Path = Path("."
                              FROM source_fetch WHERE ok ORDER BY url, fetched_at DESC) f
                      JOIN LATERAL (
                           SELECT f.entity_id AS album WHERE f.entity_id = ANY($1::bigint[])
+                             AND NOT EXISTS (SELECT 1 FROM entity_link d  -- a dead link's page
+                                              WHERE d.entity_id = f.entity_id AND d.url = f.url
+                                                AND d.status <> 'ok')
                           UNION
                           SELECT l.entity_id FROM entity_link l
                            WHERE l.url = f.url AND l.entity_id = ANY($1::bigint[])

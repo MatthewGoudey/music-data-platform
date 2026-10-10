@@ -43,5 +43,10 @@
     "case": "nothing",
     "in": "",
     "out": ""
+  },
+  {
+    "case": "a link title with escaped quotes",
+    "in": "on drums, [George \"Chocolate\" Perry](https://en.wikipedia.org/wiki/George_%22Chocolate%22_Perry \"George \\\"Chocolate\\\" Perry\") on bass",
+    "out": "on drums, george \"chocolate\" perry on bass"
   }
 ]

@@ -63,8 +63,9 @@ CAP = 0.95
 EVIDENCE_MAX = 300
 REJECTING = ("DOES_NOT_SUPPORT", "NOT_A_CLAIM", "WRONG_DIRECTION")
 
-# a link target, with nested parentheses and an optional "title"
-_URL = r"\((?:[^()\s]|\([^()\s]*\))*(?:\s+\"[^\"]*\")?\)"
+# a link target, with nested parentheses and an optional "title" (which may hold escaped \"
+# quotes: "George \"Chocolate\" Perry")
+_URL = r"\((?:[^()\s]|\([^()\s]*\))*(?:\s+\"(?:[^\"\\]|\\.)*\")?\)"
 _CITE_LINK = re.compile(r"\[\\?\[\d+\\?\]\]" + _URL)  # [\[4\]](…#cite_note-4)
 _LINK = re.compile(r"\[([^\]]*)\]" + _URL)
 _TITLE_REMNANT = re.compile(r' "[^"]+"\)')
