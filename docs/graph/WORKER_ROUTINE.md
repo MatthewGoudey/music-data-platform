@@ -58,9 +58,29 @@ every call to that host: call it with curl and no Authorization header. Use the 
 search for research; have the API fetch every page you cite (POST /fetches). Launch a separate agent
 for the reader and another for the fact-checker, as the skill says.
 
+A run started by a request begins with a <routine-fire-payload> block naming the document that was
+requested: treat it as a hint, and still list every requested document with GET /documents.
+
 When no document is requested, say so and finish. End with a short report: each document's album,
 word count, pages added, Firecrawl credits, and fact-check tally.
 ```
+
+### 4. Start a run on every request (Matt, 2026-10-10: "it should be per request")
+
+1. On **claude.ai/code/routines**, open the routine, open the menu next to its name, choose **Edit**.
+2. Under **Select a trigger**, click **Add another trigger** → **API**. Save the routine.
+3. In the trigger's window, copy the **URL**, click **Generate token** and copy the token at once (it
+   is shown once).
+4. In Claude Code on the laptop, set both as the dev app's secrets (the `!` runs it here; neither value
+   goes into the repo):
+   ```
+   ! "%USERPROFILE%\.flyinlyctl.exe" secrets set ROUTINE_FIRE_URL=<url> ROUTINE_FIRE_TOKEN=<token> -a musicdata-dev
+   ```
+5. Change the schedule trigger to a daily safety net (keep **Daily**, any hour): requests start their
+   own run within a minute; the daily run picks up anything a failed start left requested.
+
+The API fires the trigger when a request creates a new document (`worker.fire_routine`), and a failed
+start never fails the request. Limits: 30 runs an hour per routine, 100 API fires an hour per account.
 
 ## What Block G checks
 

@@ -45,9 +45,15 @@ async def request_document(release_group_id: int, body: RequestIn, pool: Pool) -
     """8.1: ask for a deep dive; one open request per album."""
     async with connection(pool) as conn:
         try:
-            return await worker.request(conn, release_group_id, body.kind)
+            out = await worker.request(conn, release_group_id, body.kind)
         except (LookupError, worker.DocumentError) as exc:
             raise _refuse(exc) from exc
+    if out["created"]:  # start the worker now; the daily run is the safety net
+        out["worker"] = await worker.fire_routine(
+            f"Document {out['document_id']} was requested: a {body.kind} for release group "
+            f"{release_group_id}."
+        )
+    return out
 
 
 @router.get("/albums/{release_group_id}/documents", dependencies=[Depends(page_or_bearer)])

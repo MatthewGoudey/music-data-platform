@@ -501,3 +501,8 @@ changes code ends with a version tag on Matt's go; the queue changes only with B
   track list carries no critic notes). Section 7's liner-notes column and 7.2's liner-notes
   outline no longer apply; `album_document.kind` keeps its check constraint, and the one test
   version written on dev (document 4, Boat Songs) stays unreachable.
+- 2026-10-10 (Matt: "it should be per request"): the worker is a Claude Code **routine**
+  (`docs/graph/WORKER_ROUTINE.md`), not a four-times-a-day schedule. A request that creates a
+  document fires the routine's API trigger at once (`ROUTINE_FIRE_URL`, `ROUTINE_FIRE_TOKEN`); a
+  daily scheduled run is the safety net for a failed start. The API token reaches the routine as a
+  network secret, so the session never holds it. Section 8.2's four fixed runs no longer apply.

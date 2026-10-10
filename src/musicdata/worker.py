@@ -27,6 +27,31 @@ KINDS = ("deep_dive",)  # liner notes dropped (companion spec change 2026-10-10)
 MARK = re.compile(r"\[(c|p):(\d+)\]")
 
 
+ROUTINE_HEADERS = {"anthropic-version": "2023-06-01", "Content-Type": "application/json"}
+
+
+async def fire_routine(text: str, client=None) -> dict:
+    """Start the document worker routine at once (companion spec 8.2, on request): POST to its API
+    trigger. Returns the run's session URL, or why it did not start; never raises, because the
+    daily run picks up anything a failed start leaves requested."""
+    import httpx
+
+    settings = get_settings()
+    if not settings.routine_fire_url or settings.routine_fire_token is None:
+        return {"fired": False, "reason": "no routine trigger configured"}
+    headers = ROUTINE_HEADERS | {
+        "Authorization": f"Bearer {settings.routine_fire_token.get_secret_value()}"
+    }
+    try:
+        async with client or httpx.AsyncClient(timeout=20) as http:
+            r = await http.post(settings.routine_fire_url, headers=headers, json={"text": text})
+    except Exception as exc:  # the network, not the request: the daily run is the net
+        return {"fired": False, "reason": type(exc).__name__}
+    if r.status_code != 200:
+        return {"fired": False, "reason": f"routine trigger answered {r.status_code}"}
+    return {"fired": True, "session_url": r.json().get("claude_code_session_url")}
+
+
 class DocumentError(ValueError):
     """A request the document flow refuses; the message says why."""
 

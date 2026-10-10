@@ -67,6 +67,13 @@ class Settings(BaseSettings):
     document_credits: int = Field(
         default=100, description="Firecrawl credits one deep dive's page fetches may spend."
     )
+    routine_fire_url: str | None = Field(
+        default=None,
+        description="The document worker routine's API trigger URL (claude.ai/code/routines).",
+    )
+    routine_fire_token: SecretStr | None = Field(
+        default=None, description="The routine trigger's bearer token (shown once when generated)."
+    )
 
     ntfy_topic: str | None = Field(default=None, description="ntfy.sh topic for failure pushes.")
     log_json: bool = Field(default=True)
