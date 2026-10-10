@@ -275,6 +275,31 @@ def graph_verify_cmd(
     )
 
 
+@graph_app.command("answer")
+def graph_answer_cmd(
+    replies: list[str] = typer.Argument(  # noqa: B008
+        ..., help="LABEL=yes|no|skip, one per reading question."
+    ),
+    qualify: list[str] = typer.Option(  # noqa: B008
+        [], "--qualify", help="LABEL:key=value narrows a yes (e.g. P01-A0794-L001:region=UK)."
+    ),
+) -> None:
+    """Matt's answers to reading questions: yes or no writes a matt claim; skip leaves it open."""
+    from musicdata.graph.answers import graph_answer
+    from musicdata.jobs import runs
+
+    quals: dict[str, dict] = {}
+    for q in qualify:
+        label, kv = q.split(":", 1)
+        key, value = kv.split("=", 1)
+        quals.setdefault(label, {})[key] = value
+    parsed = []
+    for r in replies:
+        label, reply = r.rsplit("=", 1)
+        parsed.append((label, reply, quals.get(label)))
+    raise typer.Exit(runs.run("graph_answer", graph_answer(replies=parsed), trigger=_trigger()))
+
+
 batch_app = typer.Typer(no_args_is_help=True, help="Reading batches (GRAPH_SPEC 7.4).")
 graph_app.add_typer(batch_app, name="batch")
 

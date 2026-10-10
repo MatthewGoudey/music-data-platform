@@ -11,6 +11,7 @@ from collections.abc import AsyncIterator
 import asyncpg
 import pytest
 
+from musicdata.graph.answers import answer
 from musicdata.graph.batch import load_batch_claims
 from musicdata.graph.claims import claim_key
 from musicdata.graph.seed import seed
@@ -188,3 +189,16 @@ async def test_batch_load_resolve_read_and_verify(conn) -> None:
     got = await _verify(conn, batch_id)
     assert "ZT1-L001" not in got or got["ZT1-L001"][0] == "superseded"
     assert got["ZT1-L005"][0] == "unread"  # waits for the reader's verdict on the new quote
+
+    # Matt answers the reading question: a matt claim replaces it, and verify leaves it alone
+    new = await answer(conn, "ZT1-L002", "yes", {"region": "UK"})
+    row = await conn.fetchrow(
+        "SELECT status, extractor, confidence, qualifiers::text AS q FROM assertion WHERE assertion_id = $1",
+        new,
+    )
+    assert (row["status"], row["extractor"], float(row["confidence"])) == ("accepted", "matt", 1.0)
+    assert json.loads(row["q"])["region"] == "UK"
+    got = await _verify(conn, batch_id)
+    assert got["ZT1-L002"][0] == "superseded" and got["ZT1-L002-M"][0] == "accepted"
+    with pytest.raises(ValueError):
+        await answer(conn, "ZT1-L002", "no")  # no longer an open question
