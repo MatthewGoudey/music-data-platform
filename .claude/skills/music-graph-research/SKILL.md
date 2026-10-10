@@ -88,7 +88,9 @@ them all.
 (`P01`, `P02`…). For each album, read its `cues/` paragraphs (the full `pages/` text when a cue needs
 context), then write claims by section 3 into `claims/LABEL_lineage.jsonl`, and
 everything read but not claimed into `claims/LABEL_skipped.jsonl` (one `{"album", "text", "reason"}` object
-per line). Load them: `graph batch load-claims LABEL data/graph/batches/LABEL/claims/LABEL_lineage*.jsonl`
+per line). Check every quote first, until it reports 0 problems:
+`graph batch check-quotes data/graph/batches/LABEL data/graph/batches/LABEL/claims/FILE.jsonl` (no database).
+Then load them: `graph batch load-claims LABEL data/graph/batches/LABEL/claims/LABEL_lineage*.jsonl`
 (names resolve to entities: those in `known.json` first, then MusicBrainz).
 
 ## 3. Reading rules

@@ -358,6 +358,21 @@ def graph_batch_reader_input_cmd(
     raise typer.Exit(runs.run("graph_batch_reader_input", job, trigger=_trigger()))
 
 
+@batch_app.command("check-quotes")
+def graph_batch_check_quotes_cmd(
+    folder: str = typer.Argument(..., help="A batch folder (or its topup/ folder)."),
+    file: str = typer.Argument(..., help="A claim file (JSON lines)."),
+) -> None:
+    """An extractor's self-check: each quote is on its page, structure fits. No database."""
+    from musicdata.graph.quotes import check_file
+
+    problems = check_file(Path(folder), Path(file))
+    for p in problems:
+        typer.echo(p)
+    typer.echo(f"{len(problems)} problem claims")
+    raise typer.Exit(1 if problems else 0)
+
+
 @batch_app.command("load-reader")
 def graph_batch_load_reader_cmd(
     label: str = typer.Argument(..., help="The batch label (P01…)."),
