@@ -194,8 +194,13 @@ def evidence_check(c: dict, k: str, lk: Lookups, chk: dict) -> list[str]:
     url = c.get("source_url") or ""
     if k == "firecrawl_json":  # extraction can invent: the name must be on its page
         place = c["predicate"] == "recorded_at"
-        name = c["object"]["name"] if place else c["subject"]["name"]
-        found = name_on_page(name, lk.pages.get(url, ""), place=place)
+        ent = c["object"] if place else c["subject"]
+        page = lk.pages.get(url, "")
+        # an entity merged by the graph spec v10 rule keeps its merged names ("Sound Shop" in
+        # "The Sound Shop")
+        found = any(
+            name_on_page(n, page, place=place) for n in [ent["name"], *ent.get("aliases", [])]
+        )
         chk["name_on_page"] = "pass" if found else "fail"
         if chk["name_on_page"] == "fail":
             fails.append("extracted name not on the cached page")

@@ -62,6 +62,10 @@ SELECT 'pipeline_run', count(*) FROM pipeline_run WHERE notes::text ~ '{FIRECRAW
 """
 
 
+def _merged_names(merged: str | None) -> list[str]:
+    return [m["entity"]["name"] for m in json.loads(merged)] if merged else []
+
+
 async def has_graph(conn: asyncpg.Connection) -> bool:
     return await conn.fetchval("SELECT to_regclass('assertion') IS NOT NULL")
 
@@ -83,7 +87,8 @@ async def g2_evidence(conn: asyncpg.Connection) -> Result:
         return NO_GRAPH
     rows = await conn.fetch(
         """SELECT a.claim_label, a.predicate, a.source, a.extractor, a.basis, a.evidence,
-                  a.source_url, s.name AS s_name, o.name AS o_name
+                  a.source_url, s.name AS s_name, o.name AS o_name,
+                  s.attrs -> 'merged' AS s_merged, o.attrs -> 'merged' AS o_merged
              FROM assertion a JOIN entity s ON s.entity_id = a.subject_id
              LEFT JOIN entity o ON o.entity_id = a.object_id
             WHERE a.status = 'accepted' AND a.extractor IN ('claude', 'firecrawl_json')
@@ -98,8 +103,8 @@ async def g2_evidence(conn: asyncpg.Connection) -> Result:
             "basis": r["basis"],
             "evidence": r["evidence"],
             "source_url": r["source_url"],
-            "subject": {"name": r["s_name"]},
-            "object": {"name": r["o_name"] or ""},
+            "subject": {"name": r["s_name"], "aliases": _merged_names(r["s_merged"])},
+            "object": {"name": r["o_name"] or "", "aliases": _merged_names(r["o_merged"])},
         }
         for r in rows
     ]

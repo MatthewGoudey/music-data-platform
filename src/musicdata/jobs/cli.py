@@ -263,16 +263,46 @@ def graph_report_cmd(
 def graph_verify_cmd(
     batch: str | None = typer.Option(None, help="A batch label (P01…)."),
     slice_: str | None = typer.Option(None, "--slice", help="Every album of a slice."),
+    pending: bool = typer.Option(
+        False,
+        "--pending",
+        help="Resolve posted names, merge duplicates, verify every pending claim.",
+    ),
 ) -> None:
     """The checks of GRAPH_SPEC section 8; writes each claim's status and confidence."""
-    from musicdata.graph.verify_job import graph_verify
+    from musicdata.graph.verify_job import graph_verify, graph_verify_pending
     from musicdata.jobs import runs
 
+    if pending:
+        if batch or slice_:
+            raise typer.BadParameter("--pending takes no --batch or --slice")
+        raise typer.Exit(
+            runs.run("graph_verify_pending", graph_verify_pending(), trigger=_trigger())
+        )
     if (batch is None) == (slice_ is None):
-        raise typer.BadParameter("give --batch or --slice")
+        raise typer.BadParameter("give --batch, --slice or --pending")
     raise typer.Exit(
         runs.run("graph_verify", graph_verify(batch=batch, slice_name=slice_), trigger=_trigger())
     )
+
+
+@graph_app.command("unmerge")
+def graph_unmerge_cmd(
+    kept: int = typer.Argument(..., help="The entity that was kept."),
+    merged: int = typer.Argument(..., help="The entity id that was merged into it."),
+) -> None:
+    """Undo one logged merge (graph spec v10)."""
+    from musicdata.graph.merge import unmerge
+    from musicdata.jobs import runs
+
+    async def job(ctx) -> None:
+        from musicdata.db import connection
+
+        async with connection(ctx.pool) as conn:
+            ctx.rows = await unmerge(conn, kept, merged)
+        ctx.notes.update(kept=kept, restored=merged)
+
+    raise typer.Exit(runs.run("graph_unmerge", job, trigger=_trigger()))
 
 
 @graph_app.command("critic")

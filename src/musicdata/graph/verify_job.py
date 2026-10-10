@@ -22,6 +22,7 @@ from musicdata.db import connection
 from musicdata.graph import names
 from musicdata.graph.baseline import url_links
 from musicdata.graph.importer import slice_targets
+from musicdata.graph.merge import candidates, merge, resolve_posted_names
 from musicdata.graph.verify import DB, LINEAGE, Lookups, kind, match_key, norm, verify
 from musicdata.jobs.runs import JobFn, RunContext
 from musicdata.log import get_logger
@@ -64,6 +65,9 @@ def _entity(r: asyncpg.Record) -> dict:
             e[k] = attrs[k]
     if r["atlas_id"]:
         e["atlas_id"] = r["atlas_id"]
+    aliases = [m["entity"]["name"] for m in attrs.get("merged") or []]
+    if aliases:
+        e["aliases"] = aliases
     return e
 
 
@@ -81,12 +85,38 @@ async def album_ids(
     return [t["entity_id"] for t in targets if t["entity_id"]]
 
 
+PENDING_ALBUMS = """
+SELECT DISTINCT album_context FROM assertion
+ WHERE status IN ('proposed', 'unread') AND album_context IS NOT NULL
+"""
+PENDING_LOOSE = """
+SELECT a.assertion_id, a.claim_label, a.predicate, a.qualifiers::text AS qualifiers, a.source,
+       a.extractor, a.basis, a.direction, a.evidence, a.source_url, a.status, a.fails,
+       a.reader_verdict, a.reader_reason, a.subject_id, a.object_id, a.object_value,
+       a.album_context, NULL::text AS album
+  FROM assertion a
+ WHERE a.album_context IS NULL AND a.status IN ('proposed', 'unread')
+ ORDER BY a.assertion_id
+"""
+
+
 async def load_claims(
-    conn: asyncpg.Connection, *, batch_id: int | None = None, slice_name: str | None = None
+    conn: asyncpg.Connection,
+    *,
+    batch_id: int | None = None,
+    slice_name: str | None = None,
+    pending: bool = False,
+    also_albums: list[int] | None = None,
 ) -> list[dict]:
-    """The stored claims of a batch's or slice's albums in the shape `verify()` reads."""
-    ids = await album_ids(conn, batch_id=batch_id, slice_name=slice_name)
-    rows = await conn.fetch(CLAIMS, ids)
+    """The stored claims of a batch's or slice's albums in the shape `verify()` reads; with
+    `pending`, every claim of the albums that have a proposed or unread claim, plus the
+    proposed or unread claims with no album."""
+    if pending:
+        ids = sorted({r[0] for r in await conn.fetch(PENDING_ALBUMS)} | set(also_albums or []))
+        rows = list(await conn.fetch(CLAIMS, ids)) + list(await conn.fetch(PENDING_LOOSE))
+    else:
+        ids = await album_ids(conn, batch_id=batch_id, slice_name=slice_name)
+        rows = await conn.fetch(CLAIMS, ids)
     ent_ids = {r["subject_id"] for r in rows} | {r["object_id"] for r in rows if r["object_id"]}
     ents = {r["entity_id"]: _entity(r) for r in await conn.fetch(ENTITIES, list(ent_ids))}
     claims = []
@@ -342,5 +372,70 @@ def graph_verify(*, batch: str | None = None, slice_name: str | None = None) -> 
         ctx.rows = len(claims)
         ctx.notes.update(batch=batch, slice=slice_name, claims=len(claims), **dict(statuses))
         log.info("graph verify", extra={"statuses": dict(statuses)})
+
+    return _run
+
+
+def graph_verify_pending(*, name_limit: int = 200) -> JobFn:
+    """Companion spec 3.4: resolve names posted as written, merge duplicates by the graph spec
+    v10 rule (logged, undoable), then verify every proposed or unread claim in any batch or
+    none, so imported and posted claims reach `accepted` and the `edge` view."""
+
+    async def _run(ctx: RunContext) -> None:
+        settings = get_settings()
+        token = settings.discogs_token.get_secret_value() if settings.discogs_token else None
+        ua = settings.musicbrainz_user_agent
+        async with (
+            connection(ctx.pool) as conn,
+            MusicBrainzClient(user_agent=ua) as mb,
+            DiscogsClient(user_agent=ua, token=token) as dg,
+        ):
+            named = await resolve_posted_names(conn, mb, name_limit)
+            merges, apart = await candidates(conn)
+            merged, touched = [], set()
+            for m in merges:
+                entry = await merge(conn, m["loose"], m["firm"], ctx.run_id)
+                if entry:
+                    claim_ids = sorted(set(entry["subject_of"]) | set(entry["object_of"]))
+                    touched |= {
+                        r[0]
+                        for r in await conn.fetch(
+                            """SELECT DISTINCT album_context FROM assertion
+                                WHERE assertion_id = ANY($1::bigint[]) AND album_context IS NOT NULL""",
+                            claim_ids,
+                        )
+                    }
+                    merged.append(
+                        {"kept": m["firm"], "merged": m["loose"], "name": m["firm_name"],
+                         "claims": len(set(entry["subject_of"]) | set(entry["object_of"]))}
+                    )  # fmt: skip
+            claims = await load_claims(conn, pending=True, also_albums=sorted(touched))
+            lk = await lookups(conn, claims, mb, dg)
+            verify(claims, lk)
+            async with conn.transaction():
+                statuses = await write_results(conn, claims)
+                ids = sorted({c["album_context"] for c in claims if c["album_context"]})
+                await conn.execute(
+                    "UPDATE graph_album SET verified_at = now() WHERE entity_id = ANY($1::bigint[])",
+                    ids,
+                )
+                await conn.execute(
+                    """UPDATE graph_batch b SET status = 'verified'
+                        WHERE status <> 'verified' AND NOT EXISTS (
+                              SELECT 1 FROM assertion a WHERE a.batch_id = b.batch_id
+                                 AND a.status IN ('proposed', 'unread'))
+                          AND EXISTS (SELECT 1 FROM assertion a WHERE a.batch_id = b.batch_id)"""
+                )
+            ctx.notes.update(musicbrainz_requests=mb.requests, discogs_requests=dg.requests)
+        ctx.rows = len(claims)
+        ctx.notes.update(
+            names=named, merged=merged, left_apart=len(apart),
+            left_apart_examples=[f"{a['loose_name']} ~ {a['firm_name']}: {a['reason']}"
+                                 for a in apart[:30]],
+            claims=len(claims), **dict(statuses),
+        )  # fmt: skip
+        log.info(
+            "graph verify --pending", extra={"statuses": dict(statuses), "merged": len(merged)}
+        )
 
     return _run

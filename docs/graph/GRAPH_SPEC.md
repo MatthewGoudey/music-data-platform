@@ -611,3 +611,12 @@ Tests:
   G (walk back, prod copy) moved there as Blocks A, B and H; the walk follows people paths as well
   as lineage. Prod becomes the graph's home at Phase 6 Block B. The Fly app gets `FIRECRAWL_API_KEY`
   in Phase 6 Block F for the document worker's page fetches.
+- 2026-10-10: v10 (Matt). Duplicate entities: `graph verify --pending` merges an entity without an
+  MBID into one with an MBID only when both share a normalised name (and kind; artist and person
+  count as one) and both are linked to at least one same album (a claim with each has that album
+  as its context). A name matching several MBID entities, or sharing no album, stays apart and is
+  reported. Each merge is logged on the kept entity (`attrs.merged`: the merged row, the claims
+  repointed, the links and fetches moved) and `graph unmerge <kept> <merged>` undoes it; a merged
+  entity's names still count for the Firecrawl name-on-page check. Names posted as written
+  (`POST /assertions`) take an MBID by exact MusicBrainz search when exactly one matches and no
+  entity holds it. First run in dev: 479 merges, 81 matches left apart.
