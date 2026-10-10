@@ -181,7 +181,8 @@ async def write_album(
                                   album_context, status, confidence, asserted_by, pipeline_run_id)
            VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, 'documented', $9, $10, $11,
                    'proposed', 0.9, 'graph import', $12)
-           ON CONFLICT DO NOTHING""",
+           ON CONFLICT (claim_key) DO UPDATE  -- a re-import refreshes qualifiers (track lists)
+              SET qualifiers = EXCLUDED.qualifiers, updated_at = now()""",
         rows,
     )
     await conn.executemany(

@@ -119,11 +119,14 @@ def musicbrainz_claims(release: dict, artists: list[dict]) -> list[ClaimSpec]:
             if rel.get("target-type") == "artist":
                 p = people.setdefault(
                     rel["artist"]["id"],
-                    {"ent": _artist_ent(rel["artist"]), "roles": set(), "tracks": set()},
-                )
+                    {"ent": _artist_ent(rel["artist"]), "roles": set(), "tracks": set(),
+                     "album": False},
+                )  # fmt: skip
                 p["roles"].update(role_of(rel))
                 if track:
                     p["tracks"].add(track)
+                else:
+                    p["album"] = True
             elif rel.get("target-type") == "place":
                 places.append(
                     {"place": rel["place"], "role": rel["type"], "begin": rel.get("begin")}
@@ -151,10 +154,15 @@ def musicbrainz_claims(release: dict, artists: list[dict]) -> list[ClaimSpec]:
         roles = musical_roles(p["roles"])
         if not roles:
             continue
+        # the tracks a recording-level credit covers (companion spec 3.5); "album" for a
+        # release-level credit, and album_wide when a person has both
+        quals: dict[str, object] = {"role": roles, "tracks": sorted(p["tracks"]) or "album"}
+        if p["tracks"] and p["album"]:
+            quals["album_wide"] = True
         claims.append(
             ClaimSpec(
                 p["ent"], "credited_on", ALBUM,
-                {"role": roles, "tracks": len(p["tracks"]) or "album"},
+                quals,
                 "musicbrainz",
                 f"MusicBrainz release credits: {p['ent'].name} — {', '.join(roles)}",
                 url,

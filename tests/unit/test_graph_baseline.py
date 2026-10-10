@@ -63,7 +63,11 @@ def test_credits_merge_per_person_with_roles_and_tracks() -> None:
     credits = [c for c in claims if c.predicate == "credited_on"]
     nitzsche = next(c for c in credits if c.subject.name == "Jack Nitzsche")
     assert nitzsche.obj is ALBUM and nitzsche.subject.type == "person"
-    assert nitzsche.qualifiers == {"role": ["co-producer", "piano"], "tracks": 1}
+    assert nitzsche.qualifiers == {  # co-producer of the album, piano on one track
+        "role": ["co-producer", "piano"],
+        "tracks": ["Cinnamon Girl"],
+        "album_wide": True,
+    }
     assert nitzsche.evidence == "MusicBrainz release credits: Jack Nitzsche — co-producer, piano"
     assert nitzsche.source_url == "https://musicbrainz.org/release/rel-1"
     writer = next(c for c in credits if c.subject.name == "Neil Young")
