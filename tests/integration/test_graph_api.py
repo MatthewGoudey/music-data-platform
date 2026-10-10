@@ -197,6 +197,16 @@ def test_graph_api_end_to_end(client) -> None:
         assert link("https://rateyourmusic.com/release/album/x/") == 422
         assert link("https://example.com/zz-api-review") == 200
 
+        async def retire(conn):
+            from musicdata.graph.queries import set_link_status
+
+            n = await set_link_status(conn, "https://example.com/zz-api-review", "dead")
+            return n, await conn.fetchval(
+                "SELECT status FROM entity_link WHERE url = 'https://example.com/zz-api-review'"
+            )
+
+        assert _db(retire) == (1, "dead")
+
         assert client.get("/albums/-1/brief", headers=AUTH).status_code == 404
     finally:
         _db(_cleanup)

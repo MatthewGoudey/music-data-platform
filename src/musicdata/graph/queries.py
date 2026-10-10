@@ -438,6 +438,17 @@ async def post_link(
     return {"entity_id": entity_id, "url": url, "added": bool(added)}
 
 
+async def set_link_status(conn: asyncpg.Connection, url: str, status: str) -> int:
+    """Mark every registered link to a URL ok, dead or blocked (a page that does not exist, or
+    holds the wrong album); fetch plans and batch exports read `ok` links only. Returns the count."""
+    if status not in ("ok", "dead", "blocked"):
+        raise GraphInputError(f"link status is ok, dead or blocked, not {status}")
+    done = await conn.execute(
+        "UPDATE entity_link SET status = $2, verified_at = now() WHERE url = $1", url, status
+    )
+    return int(done.split()[-1])
+
+
 async def assertions_by_id(conn: asyncpg.Connection, ids: list[int]) -> list[asyncpg.Record]:
     return await conn.fetch(
         """SELECT a.assertion_id, a.claim_label, a.status, s.name AS subject, a.predicate,

@@ -334,6 +334,25 @@ def graph_unmerge_cmd(
     raise typer.Exit(runs.run("graph_unmerge", job, trigger=_trigger()))
 
 
+@graph_app.command("link-status")
+def graph_link_status_cmd(
+    url: str = typer.Argument(..., help="The registered link's URL, exactly."),
+    status: str = typer.Argument("dead", help="ok, dead or blocked."),
+) -> None:
+    """Mark a registered link dead (a missing page, the wrong album) or ok again."""
+    from musicdata.graph.queries import set_link_status
+    from musicdata.jobs import runs
+
+    async def job(ctx) -> None:
+        from musicdata.db import connection
+
+        async with connection(ctx.pool) as conn:
+            ctx.rows = await set_link_status(conn, url, status)
+        ctx.notes.update(url=url, status=status)
+
+    raise typer.Exit(runs.run("graph_link_status", job, trigger=_trigger()))
+
+
 @graph_app.command("critic")
 def graph_critic_cmd(
     site: str = typer.Option("noexpectations", help="A critic's site (graph/critics.py)."),
