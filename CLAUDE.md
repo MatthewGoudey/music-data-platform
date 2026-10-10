@@ -146,11 +146,11 @@ Matt's go.
 - [x] Block D — migration 0021; `graph connections` (nightly) and `graph threads` (end of
       `derive`); the brief gains `connections`.
       Done 2026-10-10 in dev (`graph/connections.py`, checks C3 and C5).
-- [ ] Block E — pages router (`page_or_bearer` in `deps.py`), album, hub and search pages,
+- [x] Block E — pages router (`page_or_bearer` in `deps.py`), album, hub and search pages,
       now-playing, opened-page baselines; Matt tries them on his phone.
       E1 done 2026-10-10 in dev (`pages/`, `api/routers/pages.py`; queue card titles link to album
-      pages). E2 next: Follow, Walk back and generated lists (moved here from Block H, spec change
-      2026-10-10). Order is now A-B-C-D-H1-E-F-G-I; H1 (card lines, graph_affinity, three thread
+      pages). E2 done 2026-10-10 in dev: Follow, Walk back, generated lists `following` and
+      `graph_walk` with their profiles (migrations 0025-0026, `graph/generated.py`). Order is now A-B-C-D-H1-E-F-G-I; H1 (card lines, graph_affinity, three thread
       slots, migrations 0022-0023) is in dev; the album_document table (0024) and
       `/albums/{id}/documents/{kind}` hold the Boat Songs deep dive in dev.
 - [ ] Block F1 — migration 0022; document request and worker endpoints with leases and the
