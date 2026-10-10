@@ -202,3 +202,30 @@ def test_shuffle_redraws_revisits_and_the_wildcard_too() -> None:
         seen |= shown
     ranked = _build(pools=pools)
     assert [i.release_group_id for i in ranked if i.slot == "revisit"] == [9000, 9001]
+
+
+def test_thread_slot_takes_the_first_candidate_a_thread_reaches() -> None:
+    cands = _cands()
+    by_rg = {i.release_group_id: i for i in cands}
+    threads = [(by_rg[300], "Because you finished X: a"), (by_rg[301], "Because you finished X: b")]
+    items = _build(cands=cands, thread=1, threads=threads)
+    thread = [i for i in items if i.slot == "thread"]
+    assert [i.release_group_id for i in thread] == [300]
+    assert thread[0].because == "Because you finished X: a"
+    slots = [i.slot for i in items]
+    assert len(items) == 10 and slots.count("new") == 6  # the thread takes a new slot
+    assert slots.index("thread") < slots.index("wildcard")
+
+
+def test_thread_slot_falls_back_to_new() -> None:
+    items = _build(thread=1, threads=[])
+    assert [i.slot for i in items].count("new") == 7
+
+
+def test_graph_affinity_is_bounded() -> None:
+    from musicdata.queue.score import graph_affinity
+
+    assert graph_affinity(None, 0.3) == 1.0
+    assert graph_affinity(1.5, 0.3) == 1.15
+    assert graph_affinity(99, 0.3) == 1.3  # never more than ×(1 + graph_weight)
+    assert graph_affinity(99, 0.0) == 1.0  # profiles without the graph score as before

@@ -40,6 +40,19 @@ def artist_parts(name: str | None) -> frozenset[str]:
     return frozenset(k for k in keys if k)
 
 
+_ROLE_NAMES = {"written-by": "songwriter", "composer": "songwriter", "lyricist": "lyrics"}
+
+
+def role_text(role: object) -> str:
+    """A role as the card shows it: lower case, MusicBrainz's names made plain, lists joined
+    (["guitar", "lead vocals"] → "guitar, lead vocals")."""
+    parts = role if isinstance(role, list) else [role]
+    raw = [w.strip().lower() for r in parts if r for w in str(r).split(",") if w.strip()]
+    words = [_ROLE_NAMES.get(w, w) for w in raw]
+    words = [w for w in words if w != "performer"] or words
+    return ", ".join(dict.fromkeys(words)) or "credited"
+
+
 def role_weight(roles: list[str]) -> tuple[float, str]:
     """A credit's weight on the candidate (spec 4) and the role shown on the card."""
     best, shown = 0.0, roles[0] if roles else "credited"
@@ -53,7 +66,7 @@ def role_weight(roles: list[str]) -> tuple[float, str]:
             w = config.CONNECTION_WEIGHT["person_session"]
         if w > best:
             best, shown = w, r
-    return best, shown
+    return best, role_text(shown)
 
 
 @dataclass
@@ -265,10 +278,10 @@ async def load_graph(conn: asyncpg.Connection) -> Graph:
             by_part[k].append(a)
     for r in await conn.fetch(MEMBERS):
         q = _quals(r["qualifiers"])
-        role = q.get("instrument") or "member"
+        role = role_text(q.get("instrument") or "member")
         for a in by_part.get(norm_key(r["band"] or ""), []):
             g.add(Link(r["node"], a.entity_id, "member", config.CONNECTION_WEIGHT["person_core"],
-                       str(role), float(r["confidence"]), r["assertion_id"]))  # fmt: skip
+                       role, float(r["confidence"]), r["assertion_id"]))  # fmt: skip
     for r in await conn.fetch(STUDIOS):
         if r["album"] in albums:
             g.add(Link(r["node"], r["album"], "studio", config.CONNECTION_WEIGHT["studio"],

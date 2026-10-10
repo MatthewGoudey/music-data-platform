@@ -2,7 +2,8 @@
 
 base(g)  = Σ over the entries of g that pass the profile's filters:
            list weight × goal weight × tier × position factor × start here × zone weight
-score(g) = base(g) × affinity × lane gap × bump
+score(g) = base(g) × affinity × lane gap × bump × graph affinity
+graph affinity = 1 + graph_weight × min(C(g) / C_CAP, 1)   (companion spec 5.2; 1 without a connection)
 """
 
 from __future__ import annotations
@@ -23,6 +24,7 @@ class Profile:
     zone_weights: Mapping[str, float] = field(default_factory=dict)
     composition: Mapping[str, float] = field(default_factory=dict)
     affinity_weight: float = 0.2
+    graph_weight: float = 0.0
 
 
 @dataclass
@@ -44,6 +46,8 @@ class Item:
     pool: str | None = None
     reason: str | None = None
     tags: list[str] = field(default_factory=list)
+    connections: list[str] = field(default_factory=list)  # card lines (companion spec 5.1)
+    because: str | None = None  # the thread slot's why line (5.3)
 
 
 def tier(priority: str | None, default_priority: str | None) -> float:
@@ -105,6 +109,11 @@ def affinity(artist_listens: int, weight: float) -> float:
     return 1 + weight * min(math.log(1 + artist_listens) / cap, 1.0)
 
 
+def graph_affinity(score: float | None, weight: float) -> float:
+    """1 + graph_weight × min(C(g) / C_CAP, 1): lists stay the backbone, the graph reorders."""
+    return 1 + weight * min((score or 0.0) / config.C_CAP, 1.0)
+
+
 def lane_gap(lane_heard_share: float | None) -> float:
     """1 + 0.3 × (1 − heard share of the album's atlas lane); 1 off the atlas."""
     return 1.0 if lane_heard_share is None else 1 + config.LANE_GAP * (1 - lane_heard_share)
@@ -146,6 +155,7 @@ def score_candidates(
     lane_shares: Mapping[str, float],
     tags: Mapping[int, list[str]],
     now: datetime,
+    connections: Mapping[int, float] | None = None,
 ) -> list[Item]:
     """Unheard and started albums that pass the profile, best first (ties by id).
     Hidden, snoozed and pinned albums are left out (pins go first on their own)."""
@@ -176,7 +186,8 @@ def score_candidates(
             base[rg]
             * affinity(int(e["artist_listens"]), p.affinity_weight)
             * lane_gap(lane_shares.get(e["lane_id"]) if e["lane_id"] else None)
-            * (config.BUMP if bumped else 1.0),
+            * (config.BUMP if bumped else 1.0)
+            * graph_affinity((connections or {}).get(rg), p.graph_weight),
             3,
         )
     return sorted(items.values(), key=lambda i: (-(i.score or 0), i.release_group_id))

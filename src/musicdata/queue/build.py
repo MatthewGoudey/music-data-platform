@@ -3,13 +3,15 @@
 1. Pinned albums, oldest pin first; they ignore filters and the artist rule.
 2. Revisit slots, round(n × revisit share), round-robin over spaced → abandoned →
    unfinished, most overdue first; slots a pool cannot fill pass on, then to new.
-3. One wildcard (when nothing is pinned), drawn from ranks 51–500 of the scored list.
-4. New slots: the best scores; with shuffle, a weighted draw (weight = score) from the
+3. The thread slot (companion spec 5.3): the first candidate a thread reaches, newest
+   finished album first; none fits → the slot goes to new.
+4. One wildcard (when nothing is pinned), drawn from ranks 51–500 of the scored list.
+5. New slots: the best scores; with shuffle, a weighted draw (weight = score) from the
    top SHUFFLE_POOL, leaving out `exclude`.
-5. One album per artist across the queue, pins exempt.
-6. The same profile, Chicago day and data give the same queue: every draw uses `seed`.
+6. One album per artist across the queue, pins exempt.
+7. The same profile, Chicago day and data give the same queue: every draw uses `seed`.
 
-The queue reads pins, new, revisits, wildcard, in that order.
+The queue reads pins, new, revisits, thread, wildcard, in that order.
 """
 
 from __future__ import annotations
@@ -94,6 +96,8 @@ def build(
     seed: int,
     shuffle: bool = False,
     exclude: Collection[int] = (),
+    thread: int = 0,
+    threads: Sequence[tuple[Item, str]] = (),
 ) -> list[Item]:
     rng = random.Random(seed)
     q = _Queue()
@@ -114,6 +118,17 @@ def build(
         }
     revisits = _revisits(q, pools, min(round(n * revisit_share), open_slots))
     open_slots -= len(revisits)
+
+    threaded: list[Item] = []
+    for item, because in threads:
+        if len(threaded) >= min(thread, open_slots):
+            break
+        if q.fits(item) and item.release_group_id not in skip:
+            item.because = because
+            threaded.append(item)
+            q.groups.add(item.release_group_id)
+            q.artists.add(item.artist_id)
+    open_slots -= len(threaded)
 
     wild: list[Item] = []
     if wildcard and not pins and open_slots > 0:
@@ -145,6 +160,8 @@ def build(
         q.add(item, "new")
     for item in revisits:
         q.add(item, "revisit")
+    for item in threaded:
+        q.add(item, "thread")
     for item in wild:
         q.add(item, "wildcard")
     return q.items

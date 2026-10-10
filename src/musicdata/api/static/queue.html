@@ -54,6 +54,9 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outlin
 .slot.revisit { background: var(--revisit-bg); color: var(--revisit); }
 .slot.wildcard { background: var(--wild-bg); color: var(--wild); }
 .slot.pinned { background: var(--pin-bg); color: var(--pin); }
+.slot.thread { background: color-mix(in srgb, #2f8f5b 16%, transparent); color: #2f8f5b; }
+.conn { font-size: 12.5px; grid-column: 2; color: var(--muted, #666); overflow-wrap: anywhere; }
+.conn div::before { content: "↳ "; opacity: .7; }
 .title { font-family: var(--display); font-weight: 700; font-size: 17px; line-height: 1.2; min-width: 0; overflow-wrap: anywhere; }
 .title .artist { font-weight: 500; color: var(--muted); }
 .meta { font-size: 12.5px; color: var(--muted); }
@@ -165,6 +168,8 @@ function card(a, i) {
     <div class="meta">${meta}</div>
     <div class="why">${a.why_lines && a.why_lines.length > 1
       ? a.why_lines.map(l => `<div>${esc(l)}</div>`).join("") : esc(a.why_line)}</div>
+    ${a.connections && a.connections.length
+      ? `<div class="conn">${a.connections.map(l => `<div>${esc(l)}</div>`).join("")}</div>` : ""}
     <div class="actions">
       <a class="btn play" href="${esc(a.play_url)}" target="_blank" rel="noopener">Play</a>
       ${pinBtn}
@@ -186,7 +191,7 @@ function render() {
     (shuffled ? `<button class="chip" id="top">Top picks</button>` : "") +
     `<button class="btn play" id="shuffle">Shuffle</button>`;
   const n = s => data.items.filter(i => i.slot === s).length;
-  const mix = [`${n("new")} new`, n("revisit") && `${n("revisit")} revisit`, n("wildcard") && `${n("wildcard")} wildcard`, n("pinned") && `${n("pinned")} pinned`].filter(Boolean).join(", ");
+  const mix = [`${n("new")} new`, n("revisit") && `${n("revisit")} revisit`, n("thread") && `${n("thread")} thread`, n("wildcard") && `${n("wildcard")} wildcard`, n("pinned") && `${n("pinned")} pinned`].filter(Boolean).join(", ");
   $("sub").textContent = shuffled
     ? `Shuffle ${presses} · ${mix} · drawn from your top ${data.shuffle_pool}, no repeats until you've seen them all`
     : `Top picks · ${mix}`;

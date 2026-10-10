@@ -13,6 +13,7 @@ from musicdata.graph.connections import (
     artist_parts,
     connect,
     damp,
+    role_text,
     role_weight,
 )
 
@@ -102,3 +103,10 @@ def test_the_candidates_own_artist_is_not_a_connection() -> None:
     g.add(Link(300, 1, "person", 1.0, "producer", 0.9, 1))
     g.add(Link(300, 2, "person", 1.0, "vocals", 0.9, 2))
     assert connect(g, cand, {2: heard}) == (0.0, [])
+
+
+def test_role_text_reads_plainly() -> None:
+    assert role_text(["guitar", "lead vocals"]) == "guitar, lead vocals"
+    assert role_text("Performer, Piano, Mellotron") == "piano, mellotron"
+    assert role_text("Written-By") == "songwriter"
+    assert role_text(None) == "credited"

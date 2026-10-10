@@ -204,7 +204,13 @@ score(g) = base(g)
          × (1 + p.affinity_weight × min(ln(1 + artist listens) / ln(501), 1))
          × lane_gap(g)        = 1 + 0.3 × (1 − heard share of g's atlas lane); 1 off the atlas
          × bump(g)            = 2.0 while queue_state.bumped_until > now, else 1.0
+         × graph_affinity(g)  = 1 + p.graph_weight × min(C(g) / 3, 1); 1.0 without a connection
 ```
+
+`C(g)` is the album's connection score to albums Matt has heard (`graph_connection`,
+`docs/graph/COMPANION_SPEC.md` section 4). `graph_weight`: default 0.3, home-genre 0.5, canon
+and popular 0. Lists stay the backbone: the graph only reorders what the lists supplied, by at
+most ×(1 + graph_weight).
 
 An album on three lists scores roughly three times one on a single list. That is intended:
 overlap between independent lists is the strongest signal of "you should hear this".
@@ -222,7 +228,11 @@ Input: profile, `n` (default 10, max 50), `shuffle` (default false), `seed` (opt
 2. **Revisit.** `round(n × composition.revisit_share)` slots (default 0.2 → 2 of 10), filled
    round-robin from the pools in section 9 in the order spaced → abandoned → unfinished, most
    overdue first. Slots a pool cannot fill pass to the next pool, then to new.
-3. **Wildcard.** `composition.wildcard` slots (default 1), only when there are no pins: one
+3. **Thread.** `composition.thread` slots (1 in default and home-genre, 0 elsewhere): from the
+   newest finished album with `graph_thread` rows, the highest-ranked album it reaches that is a
+   candidate under the profile; else the next newest finished album; else the slot goes to new.
+   Its why line reads `Because you finished <album>: <connection>`.
+3a. **Wildcard.** `composition.wildcard` slots (default 1), only when there are no pins: one
    candidate drawn at random from ranks 51–500 of the profile's scored list.
 4. **New.** The remaining slots: candidates by descending score.
 5. **One album per artist** across the whole queue (pins exempt): when an artist repeats, take
@@ -470,3 +480,10 @@ priority Essential. Matt has played other Ratboys records but no session of this
 - 2026-10-10 v15: Matt asked that a card's why line name every list the album is on: the
   "+3 more" ending gave him nothing to expand. `GET /next` items carry `why_lines` (one per
   list) beside `why_line` (all of them), and the page shows one list per line.
+- 2026-10-10 v16 (Matt: "I want to test functionality asap, even if we dont have data fully"):
+  the music graph's first queue effects (companion spec 5.1–5.3), in dev first. Each card shows
+  up to two connection lines from `graph_connection` (`/next` items carry `connections`); the
+  score gains `graph_affinity` by profile `graph_weight` (migration 0022); default and home-genre
+  gain one thread slot after revisits and before the wildcard. Prod's queue changes only with
+  Block H's tag on Matt's go. Generated lists, Follow and Walk back (5.4–5.6) come with the
+  album and hub pages.

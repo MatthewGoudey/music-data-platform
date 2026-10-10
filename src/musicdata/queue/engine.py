@@ -89,11 +89,13 @@ class ScoreContext:
     tags: dict[int, list[str]]
     list_sizes: dict[int, int]
     lane_shares: dict[str, float]
+    connections: dict[int, float]  # C(g) by release group (companion spec 4)
+    lines: dict[int, list[str]]  # card lines by release group
 
     def score(self, p: Profile, now: datetime) -> list[Item]:
         return score_candidates(
             self.entries, p, list_sizes=self.list_sizes, lane_shares=self.lane_shares,
-            tags=self.tags, now=now,
+            tags=self.tags, now=now, connections=self.connections,
         )  # fmt: skip
 
 
@@ -116,7 +118,44 @@ async def score_context(conn: asyncpg.Connection) -> ScoreContext:
             lane_total[e["lane_id"]] += 1
             lane_heard[e["lane_id"]] += e["status"] == "heard"
     lane_shares = {k: lane_heard[k] / v for k, v in lane_total.items()}
-    return ScoreContext(entries, tags, list_sizes, lane_shares)
+    connections: dict[int, float] = {}
+    lines: dict[int, list[str]] = {}
+    if await conn.fetchval("SELECT to_regclass('graph_connection') IS NOT NULL"):
+        for r in await conn.fetch(
+            "SELECT release_group_id, score, top::text FROM graph_connection"
+        ):
+            connections[r[0]] = float(r[1])
+            lines[r[0]] = [t["text"] for t in json.loads(r[2])][: config.CARD_LINES]
+    return ScoreContext(entries, tags, list_sizes, lane_shares, connections, lines)
+
+
+# Companion spec 5.3: the newest finished albums with threads, each thread's targets by rank.
+THREADS = """
+SELECT t.from_release_group_id, f.title AS finished, t.to_release_group_id, t.connection::text
+  FROM graph_thread t
+  JOIN release_group f ON f.release_group_id = t.from_release_group_id
+  JOIN (SELECT release_group_id, max(started_at) AS at FROM album_session
+         WHERE session_type = 'full' GROUP BY release_group_id) s
+    ON s.release_group_id = t.from_release_group_id
+ ORDER BY s.at DESC, t.rank
+"""
+
+
+async def thread_choices(
+    conn: asyncpg.Connection, candidates: list[Item]
+) -> list[tuple[Item, str]]:
+    """Candidates under the profile that a thread reaches, newest finished album first, each with
+    its why line (`Because you finished <album>: <connection>`)."""
+    if not await conn.fetchval("SELECT to_regclass('graph_thread') IS NOT NULL"):
+        return []
+    by_rg = {c.release_group_id: c for c in candidates}
+    out = []
+    for r in await conn.fetch(THREADS):
+        item = by_rg.get(r["to_release_group_id"])
+        if item is not None:
+            text = json.loads(r["connection"])["text"]
+            out.append((item, f"Because you finished {r['finished']}: {text}"))
+    return out
 
 
 async def load_profile(conn: asyncpg.Connection, name: str) -> Profile:
@@ -130,6 +169,7 @@ async def load_profile(conn: asyncpg.Connection, name: str) -> Profile:
         zone_weights=json.loads(r["zone_weights"]),
         composition=json.loads(r["composition"]),
         affinity_weight=float(r["affinity_weight"]),
+        graph_weight=float(r["graph_weight"]) if "graph_weight" in r.keys() else 0.0,
     )
 
 
@@ -211,6 +251,7 @@ async def next_queue(
             )
         )
 
+    thread = int(comp.get("thread", 0))
     items = build(
         candidates,
         ordered,
@@ -221,7 +262,11 @@ async def next_queue(
         seed=seed,
         shuffle=shuffle,
         exclude=exclude,
+        thread=thread,
+        threads=await thread_choices(conn, candidates) if thread else (),
     )
+    for item in items:
+        item.connections = sc.lines.get(item.release_group_id, [])
     return {
         "profile": p.name,
         "generated_at": now.isoformat(timespec="seconds"),
@@ -235,7 +280,11 @@ async def next_queue(
 def render_item(i: Item) -> dict[str, object]:
     d = asdict(i)
     d.pop("artist_id")
-    d["why_line"] = f"{i.pool} · {i.reason}" if i.pool else why_line(i.why) if i.why else "pinned"
-    d["why_lines"] = [] if i.pool else [why_part(w) for w in i.why]
+    d["why_line"] = (
+        i.because if i.because
+        else f"{i.pool} · {i.reason}" if i.pool
+        else why_line(i.why) if i.why else "pinned"
+    )  # fmt: skip
+    d["why_lines"] = [] if i.pool or i.because else [why_part(w) for w in i.why]
     d["play_url"] = play_url(i)
     return d

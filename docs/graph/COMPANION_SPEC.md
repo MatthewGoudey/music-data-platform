@@ -487,3 +487,10 @@ changes code ends with a version tag on Matt's go; the queue changes only with B
   numbers, the document loop (server-side fetches, leases and their sweep, versions, one citation
   format, labels, search-only credit reports), hub nodes outweighing real connections, joint-credit
   artists, checks C1–C5, tags per block, and the block order (documents before the queue change).
+- 2026-10-10 (Matt: "I want to test functionality asap, even if we dont have data fully"): the
+  build order is now A, B, C, D, H, E, F, G, I. Block H comes right after D in two parts: H1, the
+  queue effects Matt sees (5.1 card lines without the page link, 5.2 graph_affinity, 5.3 the
+  thread slot), tested in dev on the data the graph has; H2 (5.4 generated lists, 5.5 Follow,
+  5.6 Walk back, and the card's page link) lands with Block E, whose pages carry their buttons.
+  Migrations renumber in build order: 0022 is H1's profile settings (was 0023); documents,
+  follows and generated lists take the next numbers when their blocks land.
