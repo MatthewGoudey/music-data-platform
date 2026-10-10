@@ -210,3 +210,13 @@ async def test_load_claims_refuses_the_atlas_as_a_source(conn) -> None:
                    "inferred", "builds on Zz Old Band", source="map:v_atlas")  # fmt: skip
     with pytest.raises(ValueError, match="not a source"):
         await load_batch_claims(conn, StubMB(), "ZT1", [atlas], None)
+
+
+async def test_an_identical_correction_leaves_the_original_in_place(conn) -> None:
+    await _setup(conn)
+    await load_batch_claims(conn, StubMB(), "ZT1", CLAIMS[:1], None)
+    same = {**CLAIMS[0], "claim_id": "ZT1-L101", "replaces": "ZT1-L001"}
+    counts, _ = await load_batch_claims(conn, StubMB(), "ZT1", [same], None)
+    assert counts["correction_identical"] == 1 and not counts.get("loaded")
+    status = await conn.fetchval("SELECT status FROM assertion WHERE claim_label = 'ZT1-L001'")
+    assert status != "superseded"

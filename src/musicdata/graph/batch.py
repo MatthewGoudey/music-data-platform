@@ -462,9 +462,7 @@ async def load_batch_claims(
             old = None
             if c.get("replaces"):
                 old = await conn.fetchrow(
-                    """UPDATE assertion SET status = 'superseded', updated_at = now()
-                        WHERE claim_label = $1
-                    RETURNING assertion_id, reader_first""",
+                    "SELECT assertion_id, reader_first FROM assertion WHERE claim_label = $1",
                     c["replaces"],
                 )
                 if old is None:
@@ -497,6 +495,16 @@ async def load_batch_claims(
                 old["reader_first"] if old else None,
                 run_id,
             )
+            if old and new:  # retire the old claim only once its correction is in
+                await conn.execute(
+                    """UPDATE assertion SET status = 'superseded', updated_at = now()
+                        WHERE assertion_id = $1""",
+                    old["assertion_id"],
+                )
+            elif old:
+                counts["correction_identical"] += (
+                    1  # same edge, source and quote: nothing to replace
+                )
         counts["loaded" if new else "already_loaded"] += 1
     await conn.execute(
         """UPDATE graph_batch SET status = 'claims_loaded',
