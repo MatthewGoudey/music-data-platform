@@ -25,8 +25,15 @@ FACETS = {
     "credits": ("credited_on",),
     "recording": ("recorded_at",),
     "label": ("released_by",),
-    "people": ("member_of", "based_in"),
-    "lineage": ("influenced_by", "sounds_like", "covers", "samples", "associated_with"),
+    "people": ("member_of", "based_in", "performs_as", "renamed_from", "toured_with"),
+    "lineage": (
+        "influenced_by",
+        "sounds_like",
+        "covers",
+        "samples",
+        "interpolates",
+        "associated_with",
+    ),
 }
 
 

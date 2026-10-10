@@ -264,7 +264,7 @@ A failed fetch is a row with `ok = false` and the error: that is the gaps log.
 
 ## 5. Seeds
 
-- `seeds/graph/predicates.csv`: the 17 predicates of edge-vocabulary section 4, with facet,
+- `seeds/graph/predicates.csv`: the 21 predicates of edge-vocabulary section 4 (17, plus 4 in v7), with facet,
   subject and object types, `symmetric` (`associated_with`) and `lineage` (`influenced_by`,
   `sounds_like`, `covers`, `samples`). `person` counts as an `artist` subtype everywhere a
   predicate allows `artist`.
@@ -459,7 +459,8 @@ Add `GET /albums/{id}/brief`, `GET /entities/{id}/neighbors` and the two questio
 
 - `POST /graph/walk?from={release_group_id}&depth=2` builds a list from the album's lineage:
   ancestors through `sounds_like`, `influenced_by` and `covers` objects, the records of artists
-  linked by `member_of`, `associated_with` and `credited_on` (never the atlas's path steps: spec v5)
+  linked by `member_of`, `associated_with` and `credited_on` (never `toured_with`: spec v7; never the
+  atlas's path steps: spec v5)
   before it — weighted by edge confidence, two hops at most.
 - It replaces the entries of one list, slug `graph_walk`, ranked by walk score. Each entry is a
   complete `list_entry`: `raw_artist` and `raw_album` from the release group, `artist_key` and
@@ -587,3 +588,9 @@ Tests:
   album is a `sounds_like` claim for each artist it names; the skill's extraction rules and reader
   prompt say so. The three P01 RIYL claims the first reader marked NOT_A_CLAIM were sent back
   to a reader under the new prompt; their `reader_first` keeps the first verdict.
+- 2026-10-10: v7 (Matt). Four predicates join the vocabulary (21 in all): `toured_with`,
+  `performs_as`, `renamed_from`, `interpolates` (lineage). `associated_with` covers working, playing
+  and recording together only; its `touring` claims were re-filed: separate acts on one tour or bill
+  became `toured_with`, a player in another artist's band stayed `associated_with` (kind `backing`),
+  and every re-filed claim went back to a reader. The walk (section 11) does not follow
+  `toured_with`.

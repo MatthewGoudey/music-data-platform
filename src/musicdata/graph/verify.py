@@ -38,11 +38,15 @@ PRED: dict[str, tuple[set[str], set[str]]] = {
     "covers": ({"recording", "album"}, {"work", "recording", "album"}),
     "samples": ({"recording"}, {"recording"}),
     "associated_with": (ART, ART),
+    "toured_with": (ART, ART),
+    "performs_as": (ART, ART),
+    "renamed_from": (ART, ART),
+    "interpolates": ({"recording", "album"}, {"recording", "work"}),
     "path_next": ({"album"}, {"album"}),
     "has_tag": ({"album"}, {"tag"}),
     "on_list": ({"album"}, {"list"}),
 }
-LINEAGE = {"influenced_by", "sounds_like", "covers", "samples"}
+LINEAGE = {"influenced_by", "sounds_like", "covers", "samples", "interpolates"}
 DB = ("musicbrainz", "discogs", "wikidata")
 BASE = {
     ("musicbrainz", "documented"): 0.9,

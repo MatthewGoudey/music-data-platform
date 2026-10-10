@@ -140,8 +140,16 @@ Put the publication or critic a source cites in `qualifiers.via`. A corrected cl
   named album; use `role`. Artwork, photography, design, layout, liner notes and business roles
   (management, A&R) are not credits: skip them (Matt: "an album cover isn't really working on an album").
 - `member_of`: the source says the person was in, joined, or was a member of the group.
-- `associated_with`: two artists worked, toured or recorded together; give `kind` (collaborator, touring,
-  bandmate, label-mate, scene).
+- `associated_with`: two artists worked, played or recorded together, including one playing in the other's
+  band; give `kind` (collaborator, bandmate, backing). Touring or sharing a bill is not working together.
+- `toured_with`: two acts toured together or shared a bill as separate acts (opened for, supported,
+  co-headlined); give `role` (opener, support, co-headliner) when stated.
+- `performs_as`: a person records or performs under a stage name or solo project (Katie Crutchfield →
+  Waxahatchee; Zack James → Dari Bay).
+- `renamed_from`: a band or project was earlier known by another name; the newer name is the subject (Crazy
+  Horse → The Rockets; Dinosaur Jr. → Dinosaur).
+- `interpolates` (lineage, `direction: subject_newer`): a song borrows the melody or lyric of an older song
+  ("Borrowed Tune" → "Lady Jane"); the subject is the newer recording (or the album, with `track`).
 - `has_genre` and `from_scene`: only when the source says the album *is* that style or *came out of* that
   scene; "closer to", "nods to" and "hints of" are skipped.
 - A ranking or list placement routes to `on_list`, never to lineage.
@@ -190,7 +198,15 @@ What each relation means:
 - "worked or played on": the quote says the person or band played, sang, wrote, produced, engineered,
   mixed, mastered, backed or arranged that album. Artwork, photography, design and business work do not count.
 - "was a member of": the quote says the person was in, joined, or was a member of the group.
-- "worked with (kind)": the quote says they worked, played, or recorded together.
+- "worked with (kind)": the quote says they worked, played, or recorded together (one playing in the
+  other's band counts). Touring together or sharing a bill does not.
+- "toured with or shared a bill with": the quote says they toured together, one opened for or supported
+  the other, or they played the same bill.
+- "records or performs under the name": the quote says the person performs as, records as, or is the
+  project named.
+- "was earlier known as": the quote says the group or project had the other name before.
+- "borrows the melody or lyric of": the quote says the song borrows, adapts, interpolates or is set to the
+  other song's melody or words.
 - "is described as" / "came out of": the quote says the album is that style or came from that scene, not
   merely near it.
 

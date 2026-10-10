@@ -318,3 +318,9 @@ sentences judged.
   recorded it first.
 - 2026-10-10 (Matt, graph spec v6): a critic's "RIYL" or "for fans of" line about an album is a
   `sounds_like` claim for each artist it names.
+- 2026-10-10 (Matt, graph spec v7): `associated_with` means worked, played or recorded together
+  (kinds collaborator, bandmate, backing); touring is not working together. New predicates:
+  `toured_with` (artist ↔ artist, symmetric: toured or shared a bill as separate acts), `performs_as`
+  (person → stage name or solo project), `renamed_from` (newer name → earlier name) and
+  `interpolates` (lineage: a song borrowing an older song's melody or lyric). Matt: "add whatever
+  vocab you need".
