@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{TITLE}} · {{KIND}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column; a scoreboard-type masthead and jersey-number track list; sources as small tags after each sentence. */
+:root {
+  --bg: #eef1ee;
+  --surface: #f8faf8;
+  --ink: #1c2321;
+  --muted: #5b6763;
+  --line: #d3dad5;
+  --lake: #22557a;
+  --lake-soft: #dde7ee;
+  --score: #b8461f;
+  --display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111715; --surface: #171f1c; --ink: #e2e8e4; --muted: #9aa8a2; --line: #2b3632;
+    --lake: #8db8d8; --lake-soft: #1d2b35; --score: #e58a5f; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111715; --surface: #171f1c; --ink: #e2e8e4; --muted: #9aa8a2; --line: #2b3632;
+  --lake: #8db8d8; --lake-soft: #1d2b35; --score: #e58a5f; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 18px/1.62 var(--body); }
+.wrap { max-width: 42rem; margin: 0 auto; padding-inline: 18px; padding-block: 28px 64px; }
+header.mast { border-bottom: 3px solid var(--ink); padding-bottom: 18px; margin-bottom: 8px; }
+.kicker { font: 500 12px/1.4 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--score); }
+h1 { font: 800 clamp(3.4rem, 15vw, 6.2rem)/.86 var(--display); letter-spacing: .01em; text-transform: uppercase; margin: 10px 0 8px; text-wrap: balance; }
+.byline { font: 600 1.35rem/1.2 var(--display); text-transform: uppercase; letter-spacing: .04em; }
+.facts { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; font: 13px/1.4 var(--mono); color: var(--muted); }
+nav.tracks { margin: 22px 0 6px; display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 2px 18px; }
+nav.tracks a { display: flex; gap: 10px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--line); color: var(--ink); text-decoration: none; min-width: 0; }
+nav.tracks a span { font: 800 1.25rem/1 var(--display); color: var(--score); width: 1.6rem; flex: none; text-align: right; font-variant-numeric: tabular-nums; }
+nav.tracks a:hover, nav.tracks a:focus-visible { color: var(--lake); }
+.note { font: 13px/1.5 var(--mono); color: var(--muted); margin: 14px 0 0; }
+article h2 { font: 800 2rem/1.05 var(--display); text-transform: uppercase; letter-spacing: .02em; margin: 2.4em 0 .5em; padding-top: .5em; border-top: 1px solid var(--line); text-wrap: balance; }
+article h3 { font: 600 1.55rem/1.15 var(--display); text-transform: uppercase; letter-spacing: .03em; margin: 2em 0 .4em; display: flex; gap: 12px; align-items: baseline; scroll-margin-top: 16px; }
+article h3 .no { font-weight: 800; font-size: 2.1rem; color: var(--score); font-variant-numeric: tabular-nums; min-width: 1.6rem; }
+article p { margin: 0 0 1em; }
+article ul { padding-left: 1.2em; }
+article li { margin-bottom: .7em; }
+article em { font-style: italic; }
+article blockquote { margin: 1em 0; padding: .2em 0 .2em 1em; border-left: 3px solid var(--lake); color: var(--muted); }
+.srcs { white-space: normal; }
+a.src { display: inline-block; font: 500 10.5px/1 var(--mono); letter-spacing: .02em; color: var(--lake); background: var(--lake-soft); border-radius: 3px; padding: 3px 5px 2px; margin-left: 4px; text-decoration: none; vertical-align: 2px; }
+a.src:hover, a.src:focus-visible { background: var(--lake); color: var(--surface); }
+a:focus-visible { outline: 2px solid var(--lake); outline-offset: 2px; }
+section.sources { margin-top: 3em; padding: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; font-size: 15px; }
+section.sources h2 { font: 800 1.4rem/1 var(--display); text-transform: uppercase; margin: 0 0 .6em; }
+section.sources ol { padding-left: 1.3em; margin: 0 0 1em; }
+section.sources li { margin-bottom: .4em; overflow-wrap: anywhere; }
+section.sources a { color: var(--lake); }
+section.sources p { margin: 0 0 .6em; color: var(--muted); }
+@media (max-width: 480px) { body { font-size: 17px; } article h2 { font-size: 1.7rem; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+html { scroll-behavior: smooth; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="mast">
+    <div class="kicker">{{KIND}} · about {{MINUTES}} minutes</div>
+    <h1>{{TITLE}}</h1>
+    <div class="byline">{{ARTIST}}</div>
+    <div class="facts">{{FACTS}}</div>
+    <nav class="tracks" aria-label="Tracks">{{TRACKS}}</nav>
+    <p class="note">Each source tag links to the page or database the sentence comes from. {{CHECK}}</p>
+  </header>
+  <article>
+{{BODY}}
+  </article>
+  <section class="sources">
+    <h2>Sources</h2>
+    <p>Pages read for this piece:</p>
+    <ol>{{PAGES}}</ol>
+    <p>Plus {{NCLAIMS}} checked claims from the music graph (MusicBrainz and Discogs credits, and statements read from the pages above); each tag in the text links to its source.</p>
+  </section>
+</div>
+</body>
+</html>

@@ -19,6 +19,7 @@ from musicdata.api.deps import get_pool, require_token
 from musicdata.api.routers import (
     albums,
     artists,
+    documents,
     graph,
     ingest,
     listens,
@@ -77,6 +78,7 @@ for module in (
     next_queue,
     tags,
     graph,
+    documents,
 ):
     app.include_router(module.router)
 

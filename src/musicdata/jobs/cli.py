@@ -525,6 +525,28 @@ def venues_travel_cmd(
 lists_app = typer.Typer(no_args_is_help=True, help="Lists and the atlas (docs/QUEUE_SPEC.md).")
 app.add_typer(lists_app, name="lists")
 
+documents_app = typer.Typer(no_args_is_help=True, help="Album documents (companion spec 7).")
+app.add_typer(documents_app, name="documents")
+
+
+@documents_app.command("load")
+def documents_load_cmd(
+    mbid: str = typer.Argument(..., help="The album's MusicBrainz release-group ID."),
+    kind: str = typer.Argument(..., help="deep_dive or liner_notes."),
+    body: str = typer.Argument(..., help="The document's Markdown, with [c:]/[p:] markers."),
+    citations: str = typer.Argument(..., help="JSON: marker → {url, label, title, ...}."),
+    checks: str | None = typer.Option(None, help="JSON: the fact-check tally (spec 7.4)."),
+    model: str | None = typer.Option(None, help="The model that wrote it."),
+    credits: int = typer.Option(0, help="Firecrawl credits the research used."),
+) -> None:
+    """Store a written, fact-checked document as the album's next ready version."""
+    from musicdata.documents import load
+    from musicdata.jobs import runs
+
+    job = load(mbid, kind, Path(body), Path(citations), Path(checks) if checks else None, model,
+               credits)  # fmt: skip
+    raise typer.Exit(runs.run("documents_load", job, trigger=_trigger()))
+
 
 @lists_app.command("load")
 def lists_load(
