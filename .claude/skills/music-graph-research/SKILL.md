@@ -124,7 +124,8 @@ Put the publication or critic a source cites in `qualifiers.via`. A corrected cl
 
 **Predicates**
 - `sounds_like` (basis `inferred`): a curator or critic compares the album to, says it resembles, is
-  indebted to, or builds on another artist or album. One claim per object.
+  indebted to, or builds on another artist or album. One claim per object. A critic's "RIYL" (recommended
+  if you like) or "for fans of" line about the album counts: one claim per artist named (Matt, spec v6).
 - `influenced_by` (basis `reported` or `documented`): only when the source says influence or inspiration in
   so many words, or quotes the artist saying it. A critic's comparison is `sounds_like`.
 - `covers` (basis `reported`): the subject is the later recording, the object is the **first** recording of
@@ -179,7 +180,8 @@ album", "the band" (the album's artist) and the album's own songs refer to that 
 
 What each relation means:
 - "compared to, or said to sound like or build on": the quote says the album resembles, is compared with, is
-  indebted to, or builds on the other artist's sound. A bare co-mention is not enough.
+  indebted to, or builds on the other artist's sound. A critic's "RIYL" (recommended if you like) or "for
+  fans of" line about the album counts as this comparison. A bare co-mention is not enough.
 - "influenced or inspired by": the quote says influence or inspiration, not just resemblance.
 - "is a cover of X: a later recording of a song that X recorded first": the quote says the later artist
   covered, recorded or performed the song, and that X recorded or performed it earlier.

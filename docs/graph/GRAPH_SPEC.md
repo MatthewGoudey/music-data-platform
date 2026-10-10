@@ -583,3 +583,7 @@ Tests:
   isn't really working on an album"); imports skip them and the 332 such claims in dev were
   deleted. And a song written by someone else is not a cover unless the source names who
   recorded it first.
+- 2026-10-10: v6 (Matt). A critic's "RIYL" (recommended if you like) or "for fans of" line about an
+  album is a `sounds_like` claim for each artist it names; the skill's extraction rules and reader
+  prompt say so. The three P01 RIYL claims the first reader marked NOT_A_CLAIM were sent back
+  to a reader under the new prompt; their `reader_first` keeps the first verdict.

@@ -316,3 +316,5 @@ sentences judged.
   mastering, arranging); artwork, photography, design, liner notes and business roles are not
   credits. A song written by someone else is a `covers` claim only when the source names who
   recorded it first.
+- 2026-10-10 (Matt, graph spec v6): a critic's "RIYL" or "for fans of" line about an album is a
+  `sounds_like` claim for each artist it names.
