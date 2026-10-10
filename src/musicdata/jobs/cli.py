@@ -575,7 +575,7 @@ app.add_typer(documents_app, name="documents")
 @documents_app.command("load")
 def documents_load_cmd(
     mbid: str = typer.Argument(..., help="The album's MusicBrainz release-group ID."),
-    kind: str = typer.Argument(..., help="deep_dive or liner_notes."),
+    kind: str = typer.Argument(..., help="deep_dive."),
     body: str = typer.Argument(..., help="The document's Markdown, with [c:]/[p:] markers."),
     citations: str = typer.Argument(..., help="JSON: marker → {url, label, title, ...}."),
     checks: str | None = typer.Option(None, help="JSON: the fact-check tally (spec 7.4)."),

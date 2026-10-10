@@ -129,11 +129,11 @@ def test_document_flow(client) -> None:
     ids = _db(_setup)
     rg = ids["rg"]
     try:
-        r = client.post(f"/albums/{rg}/documents", params={"t": PAGE}, json={"kind": "liner_notes"})
+        r = client.post(f"/albums/{rg}/documents", params={"t": PAGE}, json={"kind": "deep_dive"})
         assert r.status_code == 200 and r.json()["created"] is True
         doc = r.json()["document_id"]
         again = client.post(
-            f"/albums/{rg}/documents", params={"t": PAGE}, json={"kind": "liner_notes"}
+            f"/albums/{rg}/documents", params={"t": PAGE}, json={"kind": "deep_dive"}
         )
         assert again.json() == r.json() | {"created": False}
         assert (
@@ -189,14 +189,17 @@ def test_document_flow(client) -> None:
             "checks": {"sentences": 1, "supported": 1}})  # fmt: skip
         assert done.status_code == 200 and done.json()["markers"] == 3
         states = client.get(f"/albums/{rg}/documents", params={"t": PAGE}).json()
-        assert states["liner_notes"]["status"] == "ready"
-        page = client.get(f"/albums/{rg}/documents/liner_notes", params={"t": PAGE})
+        assert states["deep_dive"]["status"] == "ready"
+        page = client.get(f"/albums/{rg}/documents/deep_dive", params={"t": PAGE})
         assert page.status_code == 200 and "Zz Doc Drummer plays drums here" in page.text
 
-        # a failed document retries once, then stays failed
+        # a rewrite is a new version; a failed one retries once, then stays failed
+        assert client.post(f"/albums/{rg}/documents", params={"t": PAGE},
+                           json={"kind": "liner_notes"}).status_code == 422  # dropped  # fmt: skip
         d2 = client.post(
             f"/albums/{rg}/documents", params={"t": PAGE}, json={"kind": "deep_dive"}
         ).json()
+        assert d2["version"] == 2
         for expected in ("requested", "failed"):
             tok = client.post(f"/documents/{d2['document_id']}/start", headers=AUTH).json()[
                 "lease_token"

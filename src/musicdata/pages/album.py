@@ -198,7 +198,7 @@ async def album_page(conn: asyncpg.Connection, release_group_id: int, t: str) ->
   <div class="actions"><span class="status {esc(status)}">{esc(status_text)}</span>
     <a class="btn play" href="{esc(play_url(ident["artist"], ident["title"]))}" target="_blank" rel="noopener">Play</a>
     <button class="btn" type="button" id="walk" data-rg="{release_group_id}">Walk back</button></div>
-  <nav class="tabs" aria-label="Album pages"><span class="tab" aria-current="page">Album</span>{tab("liner_notes", "Liner notes")}{tab("deep_dive", "Deep dive")}</nav>
+  <nav class="tabs" aria-label="Album pages"><span class="tab" aria-current="page">Album</span>{tab("deep_dive", "Deep dive")}</nav>
 </header>
 <div class="nowbar" id="nowbar" hidden></div>"""
     ]

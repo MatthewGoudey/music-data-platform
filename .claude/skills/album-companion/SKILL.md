@@ -1,11 +1,12 @@
 ---
 name: album-companion
-description: Use when writing Matt's requested album documents — liner notes or a deep dive — for music-data-platform, or when Matt says "write my requested documents". Works through the API's document endpoints; every sentence cited to a graph claim or a cached page and fact-checked by a separate agent.
+description: Use when writing Matt's requested album deep dives for music-data-platform, or when Matt says "write my requested documents". Works through the API's document endpoints; every sentence cited to a graph claim or a cached page and fact-checked by a separate agent.
 ---
 
-# Album companion: liner notes and deep dives
+# Album companion: deep dives
 
-You write documents Matt reads while an album plays. The spec is `docs/graph/COMPANION_SPEC.md`
+You write deep dives Matt reads while an album plays (liner notes were dropped on 2026-10-10: the album
+page already gives the facts, so the deep dive is the one document). The spec is `docs/graph/COMPANION_SPEC.md`
 sections 7 and 8; this skill is how to carry it out. The model for a good deep dive is the Boat Songs
 document (dev, `/albums/96/documents/deep_dive`): Matt called it "an excellent write up".
 
@@ -26,7 +27,7 @@ environment (`.env.prod` / `.env.dev` in the repo, or the task's settings). Send
    `connections` (albums the graph ties it to).
 4. Read the cached pages: `GET $API/fetches/{fetch_id}` (text and URL).
 
-## 2. Research (deep dives only)
+## 2. Research
 
 Find 4–8 more English sources: interviews with the artist about this record, features, reviews,
 oral histories, liner notes. Search with the Firecrawl connector (`firecrawl_search`); then have the
@@ -36,17 +37,15 @@ API fetch each page you will use:
 
 The API caches it, counts it against the document's budget (100 credits by default) and refuses
 non-English pages and Rate Your Music. Never cite a page you read some other way: a page is citable
-only by its `fetch_id`. Count your own searches (about 2 credits each) for the hand-in. Liner notes
-use only the brief, the claims and the cached pages: no searches, no fetches.
+only by its `fetch_id`. Count your own searches (about 2 credits each) for the hand-in.
 
 ## 3. Write
 
 Markdown, following the record as Matt hears it.
 
-| | Liner notes | Deep dive |
-| --- | --- | --- |
-| Length | 600–900 words | 3,000–6,000 words |
-| Sections | what this record is and where it sits · how it was made (who, where, when) · three to five tracks worth noticing, from the sources · where it leads | `## Before you press play` (two paragraphs) · `## The band and the moment` · `## Making the record` · `## Track by track` · `## Reception, then and now` · `## Where it comes from` · `## Where it leads` · `## The people` · `## Listen next` |
+3,000–6,000 words, in this order: `## Before you press play` (two paragraphs) · `## The band and the
+moment` · `## Making the record` · `## Track by track` · `## Reception, then and now` · `## Where it
+comes from` · `## Where it leads` · `## The people` · `## Listen next`.
 
 Track by track: one `### <n>. <title>` per track in tracklist order, each followed by its anchor line
 `<a id="track-<n>"></a>`: credits, writing, what sources say about it, covers and borrowings. Listen
@@ -67,7 +66,7 @@ Rules (always):
 - Write warmly and concretely, in plain sentences, with no hype words.
 - Leave out any `## Sources` section: the page builds its own from the markers.
 
-## 4. New claims (deep dives)
+## 4. New claims
 
 Facts you found on new pages that the graph lacks (a credit, where it was recorded, a comparison,
 an influence, a cover) go back to the graph. Post them in the music-graph-research skill's claim

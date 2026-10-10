@@ -16,7 +16,7 @@ from musicdata.documents import document_page
 from musicdata.graph.batch import store_reader_verdicts
 
 router = APIRouter(tags=["documents"])
-Kind = Literal["deep_dive", "liner_notes"]
+Kind = Literal["deep_dive"]  # liner notes dropped (companion spec change 2026-10-10)
 
 
 def _refuse(exc: Exception) -> HTTPException:
@@ -42,7 +42,7 @@ class RequestIn(BaseModel):
 
 @router.post("/albums/{release_group_id}/documents", dependencies=[Depends(page_or_bearer)])
 async def request_document(release_group_id: int, body: RequestIn, pool: Pool) -> dict:
-    """8.1: ask for liner notes or a deep dive; one open request per album and kind."""
+    """8.1: ask for a deep dive; one open request per album."""
     async with connection(pool) as conn:
         try:
             return await worker.request(conn, release_group_id, body.kind)

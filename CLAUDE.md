@@ -153,10 +153,13 @@ Matt's go.
       `graph_walk` with their profiles (migrations 0025-0026, `graph/generated.py`). Order is now A-B-C-D-H1-E-F-G-I; H1 (card lines, graph_affinity, three thread
       slots, migrations 0022-0023) is in dev; the album_document table (0024) and
       `/albums/{id}/documents/{kind}` hold the Boat Songs deep dive in dev.
-- [ ] Block F1 — migration 0022; document request and worker endpoints with leases and the
-      sweep, server-side fetches, marker checks and rendering, document tabs.
-- [ ] Block F2 — `.claude/skills/album-companion/SKILL.md`; one liner notes and one deep dive for
-      an album Matt picks, fact-checked by a separate agent.
+- [x] Block F1 — migration 0022; document request and worker endpoints with leases and the
+      sweep, server-side fetches, marker checks and rendering, document tabs. Done 2026-10-10 in dev
+      (`worker.py`, `api/routers/documents.py`; the table is migration 0024); the dev app has
+      `FIRECRAWL_API_KEY`.
+- [ ] Block F2 — `.claude/skills/album-companion/SKILL.md`; one deep dive for an album Matt picks,
+      fact-checked by a separate agent. Skill written 2026-10-10; liner notes dropped (Matt,
+      companion spec change 2026-10-10): the deep dive is the only document.
 - [ ] Block G — one manual worker run in a claude.ai cloud session; on Matt's go, the scheduled task.
 - [ ] Block H — migrations 0023–0025; card connection lines and page link, `graph_weight`, thread slot,
       generated-list handling, follow and walk back; the rules written into `docs/QUEUE_SPEC.md`;

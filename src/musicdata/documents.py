@@ -1,4 +1,4 @@
-"""Album documents: liner notes and deep dives (docs/graph/COMPANION_SPEC.md section 7).
+"""Album documents: deep dives (docs/graph/COMPANION_SPEC.md section 7).
 
 `render` turns a document's Markdown into its page (7.5): raw HTML in the text is escaped except
 the track anchors, and each run of citation markers (`[c:<assertion_id>]`, `[p:<page id>]`) becomes
@@ -21,7 +21,7 @@ from musicdata.db import connection
 from musicdata.jobs.runs import JobFn, RunContext
 
 TEMPLATE = Path(__file__).parent / "api" / "static" / "document.html"
-KINDS = {"deep_dive": "Deep dive", "liner_notes": "Liner notes"}
+KINDS = {"deep_dive": "Deep dive"}  # liner notes dropped (companion spec change 2026-10-10)
 MARKERS = re.compile(r"(?:\s*\[(?:c|p):[\w-]+\])+")
 ONE = re.compile(r"\[(c|p):([\w-]+)\]")
 ANCHOR = re.compile(r'<a id="track-(\d+)"></a>')

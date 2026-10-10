@@ -23,7 +23,7 @@ from musicdata.pages.common import source_label
 
 LEASE = "3 hours"
 MAX_ATTEMPTS = 2
-KINDS = ("liner_notes", "deep_dive")
+KINDS = ("deep_dive",)  # liner notes dropped (companion spec change 2026-10-10)
 MARK = re.compile(r"\[(c|p):(\d+)\]")
 
 
@@ -38,7 +38,7 @@ def batch_label(document_id: int) -> str:
 async def request(conn: asyncpg.Connection, release_group_id: int, kind: str) -> dict:
     """8.1: a new requested version, or the open one when a request is already waiting."""
     if kind not in KINDS:
-        raise DocumentError(f"kind is liner_notes or deep_dive, not {kind}")
+        raise DocumentError(f"the document kind is deep_dive, not {kind}")
     if not await conn.fetchval(
         "SELECT 1 FROM release_group WHERE release_group_id = $1", release_group_id
     ):

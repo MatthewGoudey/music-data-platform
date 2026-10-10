@@ -494,3 +494,10 @@ changes code ends with a version tag on Matt's go; the queue changes only with B
   5.6 Walk back, and the card's page link) lands with Block E, whose pages carry their buttons.
   Migrations renumber in build order: 0022 is H1's profile settings (was 0023); documents,
   follows and generated lists take the next numbers when their blocks land.
+- 2026-10-10 (Matt: "drop liner notes, leave the album page as is"): liner notes are dropped. Side
+  by side with the album page they told the same facts as prose, so the deep dive is the one
+  document: the album page's tabs are Album · Deep dive, requests take `kind: deep_dive` only, and
+  the `album-companion` skill writes deep dives. The album page stays as built in Block E (its
+  track list carries no critic notes). Section 7's liner-notes column and 7.2's liner-notes
+  outline no longer apply; `album_document.kind` keeps its check constraint, and the one test
+  version written on dev (document 4, Boat Songs) stays unreachable.
