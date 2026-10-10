@@ -23,6 +23,7 @@
   --wild: #c4a2ee; --wild-bg: #2f2440; --pin: #7fd1ad; --pin-bg: #1d3a2e; --toast: #e6ebe8; --toast-ink: #141917;
   color-scheme: dark } }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }  /* .toast's display: flex must not beat hidden */
 body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.45; }
 .wrap { max-width: 34rem; margin: 0 auto; padding-inline: 16px; padding-block: max(18px, env(safe-area-inset-top)) 96px; display: grid; gap: 18px; }
 header { display: grid; gap: 10px; }
@@ -226,9 +227,21 @@ function toast(text, undo) {
   clearTimeout(toastTimer);
   $("toast-text").textContent = text;
   $("toast-undo").hidden = !undo;
-  $("toast-undo").onclick = async () => { $("toast").hidden = true; await undo(); await load({ again: true }); };
+  $("toast-undo").onclick = async () => {
+    clearTimeout(toastTimer);
+    $("toast-undo").hidden = true;
+    $("toast-text").textContent = "Undoing…";
+    try {
+      const r = await undo();
+      if (r && r.ok === false) throw new Error(`${r.status}`);
+      await load({ again: true });
+      toast(`Undone: ${text.replace(/^[^:]+: /, "")} is back`);
+    } catch (err) {
+      toast(`Undo didn't save (${err.message}). Try again from the album's card.`);
+    }
+  };
   $("toast").hidden = false;
-  toastTimer = setTimeout(() => { $("toast").hidden = true; }, 7000);
+  toastTimer = setTimeout(() => { $("toast").hidden = true; }, undo ? 8000 : 4000);
 }
 
 async function act(id, action, params = {}) {
