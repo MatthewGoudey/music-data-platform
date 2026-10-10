@@ -140,6 +140,10 @@ profile working, and on Matt's go the graph copied to prod with G1–G8 green; t
       slice's 3,735 baseline claims verified in dev, all accepted.
 - [ ] Block E — the 181 albums in batches of 25; reading questions to Matt; first-pass reader
       SUPPORTS ≥ 90% per predicate type; G1–G8 green in dev (M2).
+      In progress: P01 (25 albums) verified 2026-10-09 (first-pass SUPPORTS 96%; Matt's answers
+      recorded with `musicdata graph answer`). Spec v5: the atlas is scope only, never a claim
+      source; credits are work on the music only. The skill lives in
+      `.claude/skills/music-graph-research/`. Next: P02.
 - [ ] Block F — graph API (spec section 10); Project instructions rows.
 - [ ] Block G — migration 0021, walk-back list, profile and card control; tag; on Matt's go:
       prod migrations, `graph copy --source dev`, `graph link` in `daily-sync`, G1–G8 green in
