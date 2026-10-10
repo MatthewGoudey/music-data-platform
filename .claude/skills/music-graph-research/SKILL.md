@@ -31,8 +31,8 @@ reading question, 12 Firecrawl credits. The run is the golden test in `tests/uni
 
 ## 1. Setup
 
-Work from the repo root. Every step is a `musicdata` command against an environment (dev until Matt gives the
-go for prod): `uv run musicdata --env dev --plain-logs graph …`. Claims, pages and checks live in the
+Work from the repo root. Every step is a `musicdata` command against prod, the graph's home since
+2026-10-10: `uv run musicdata --env prod --plain-logs graph …`. Claims, pages and checks live in the
 database; a reading batch's files live in `data/graph/batches/LABEL/` (gitignored):
 
 | Path | Holds |
@@ -248,7 +248,7 @@ Statuses: `accepted` (the source says it and every check passed), `rejected` (a 
 
 ## 5. Finish a batch
 
-- `musicdata --env dev dq`: checks G1–G8 green (G4: every accepted Claude claim has a reader SUPPORTS, or a
+- `musicdata --env prod dq`: checks G1–G8 green (G4: every accepted Claude claim has a reader SUPPORTS, or a
   PARTIAL backed by a database; G8: the month's credits under the ceiling).
 - Send Matt the report's reading questions as they appear in `report.md`: the quote, the claim, yes / no /
   skip. Record his answers as `matt` claims (`accepted` or `rejected`) with the quote as evidence; once the

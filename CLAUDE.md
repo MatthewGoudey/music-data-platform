@@ -85,8 +85,9 @@ Load or reload an environment with `gh workflow run full-load -f env=<dev|prod>`
 `musicdata shows --sweep` reads all ~600 Oh My Rockness venues once (~20 min); nightly
 runs read active venues plus a rotating 85.
 
-Current priority (Matt, 2026-10-10): finish P04 (Phase 5 Block E), then Phase 6
-(`docs/graph/COMPANION_SPEC.md` section 13) from Block A, while P05–P07 continue alongside.
+Current priority (Matt, 2026-10-10): Phase 6 (`docs/graph/COMPANION_SPEC.md` section 13);
+Blocks A and B are done and prod is the graph's home. Reading batches P05–P07 run against prod
+(`--env prod`); Block C (default scope, Firecrawl spend) waits for Matt's go.
 The queue's gate week continues untouched until Phase 6 Block H. Shows, venues and verdict work
 wait until the Phase 4 gate.
 
@@ -129,9 +130,13 @@ Matt's go.
       Done 2026-10-10 in dev (`api/routers/graph.py`, `graph/queries.py`): 1,025 MusicBrainz
       credits carry their track list after the re-import; G1–G8 green. Prod gets the code with
       the next `v*` tag.
-- [ ] Block B — `graph import --scope` with `rg` labels, `graph verify --pending`, the nightly
+- [x] Block B — `graph import --scope` with `rg` labels, `graph verify --pending`, the nightly
       graph workflow on prod; on Matt's go, `graph copy --source dev` and prod becomes the graph's
-      home (P05–P07 then run against prod).
+      home (P05–P07 then run against prod). Done 2026-10-10: v0.4.0 (Blocks A and B) in prod;
+      dev graph tables 26.7 MB before the copy, prod database 298.5 MB after it; G1–G8 green in
+      prod. The duplicate-entity merge rule is graph spec v10 (every merge logged in the kept
+      entity's `attrs.merged`; `graph unmerge KEPT MERGED` undoes one). Until Matt's go for
+      Block C, `graph-nightly.yml` runs `graph link`, `graph verify --pending` and `dq` only.
 - [ ] Block C — the near-queue set and default scope in the nightly workflow, on Matt's go for the
       Firecrawl spend; report coverage, credits and database size after three nights.
 - [ ] Block D — migration 0021; `graph connections` (nightly) and `graph threads` (end of

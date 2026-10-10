@@ -78,6 +78,5 @@ recorded, their labels, band memberships, and lineage (what critics compare them
 covers, borrowed melodies, tours). Every claim keeps its source and a verbatim quote or database
 field. Quote the evidence when you tell Matt a graph fact, and name its source. When Matt answers a
 reading question, judge nothing yourself: show him the claim and the quote, and post his yes, no or
-skip. Claims you post arrive as proposed and are checked before they count. The graph answers from
-dev until it moves to prod (Phase 6 Block B); until then these endpoints return empty results or
-404 in prod.
+skip. Claims you post arrive as proposed and are checked before they count; the nightly graph
+run resolves their names and checks them.

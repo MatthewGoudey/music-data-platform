@@ -157,7 +157,7 @@ All eight graph data checks (G1–G8) pass in dev. No reading questions are open
 
 ## 9. How a batch runs
 
-Commands run from the laptop against dev (`uv run musicdata --env dev graph …`), following the
+Commands run from the laptop against prod, the graph's home since 2026-10-10 (`uv run musicdata --env prod graph …`), following the
 `music-graph-research` skill in `.claude/skills/music-graph-research/SKILL.md`:
 
 1. `graph batch export --slice crazy_horse --size 25`: the next 25 albums, their pages, cue
