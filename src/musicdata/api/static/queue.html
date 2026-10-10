@@ -38,6 +38,9 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; letter-spac
 .mini a { color: var(--accent); font-weight: 700; }
 .headline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .profiles { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.search { display: flex; }
+.search input[type=search] { flex: 1; min-width: 0; font: 15px var(--body); padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); }
+.search input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .chip { font: 600 13px var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--ink);
   border-radius: 999px; padding: 6px 12px; cursor: pointer; }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
@@ -89,6 +92,10 @@ h2 { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercas
 <div class="wrap">
   <header>
     <div class="headline"><h1>Up next</h1><button class="chip" id="check" type="button">Check listens</button></div>
+    <form class="search" action="/pages/search" method="get" role="search">
+      <input type="hidden" name="t" id="search-t">
+      <input type="search" name="q" placeholder="Search albums, people, bands, songs" aria-label="Search">
+    </form>
     <div class="profiles" id="profiles"></div>
     <div class="sub" id="sub">Loading…</div>
   </header>
@@ -114,6 +121,7 @@ h2 { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercas
 
 <script>
 const T = new URLSearchParams(location.search).get("t") || "";
+document.getElementById("search-t").value = T;
 let profile = "default";
 try { profile = localStorage.getItem("queue.profile") || "default"; } catch (e) {}
 const asked = new URLSearchParams(location.search).get("profile");  // e.g. Walk back from a page
