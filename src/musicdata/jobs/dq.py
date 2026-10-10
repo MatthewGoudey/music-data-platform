@@ -327,6 +327,12 @@ CHECKS = (
     Check("G6_no_firecrawl_keys_stored", "= 0", graph.g6_no_keys),
     Check("G7_database_mb", "< 800", graph.g7_database_size),
     Check("G8_month_firecrawl_credits", "<= GRAPH_MONTHLY_CREDITS", graph.g8_credits),
+    Check(
+        "C3_connections_fresh",
+        "nightly within 36 h; threads after derive",
+        graph.c3_connections_fresh,
+    ),
+    Check("C5_connections_artists_disjoint", "= 0", graph.c5_connections_disjoint),
 )
 
 

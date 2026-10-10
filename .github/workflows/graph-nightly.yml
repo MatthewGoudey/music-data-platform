@@ -3,7 +3,7 @@ name: graph-nightly
 # Companion spec 3.7. Prod runs after daily-sync completes, on the latest v* tag; dev runs by
 # workflow_dispatch only. Phase 6 Block C (Matt's go, 2026-10-10): the near-queue set, then the
 # default scope's import (400 albums), fetch (500 credits a night, 15,000 in all) and facts, then
-# link, verify --pending and dq. The import stops at 650 MB of database (spec section 9).
+# link, verify --pending, connections (Block D) and dq. The import stops at 650 MB of database (spec section 9).
 on:
   workflow_run:
     workflows: ["daily-sync"]
@@ -64,6 +64,10 @@ jobs:
         id: verify
         if: always()
         run: uv run musicdata graph verify --pending
+      - name: connections
+        id: connections
+        if: always()
+        run: uv run musicdata graph connections
       - name: dq
         id: dq
         if: always()
@@ -77,7 +81,7 @@ jobs:
           if [ -n "$NTFY_TOPIC" ]; then
             curl -fsS -H "Title: musicdata ${{ env.MUSICDATA_ENV }} graph-nightly failed" \
                  -H "Priority: high" \
-                 -d "near=${{ steps.near.outcome }} import=${{ steps.import.outcome }} fetch=${{ steps.fetch.outcome }} facts=${{ steps.facts.outcome }} link=${{ steps.link.outcome }} verify=${{ steps.verify.outcome }} dq=${{ steps.dq.outcome }}
+                 -d "near=${{ steps.near.outcome }} import=${{ steps.import.outcome }} fetch=${{ steps.fetch.outcome }} facts=${{ steps.facts.outcome }} link=${{ steps.link.outcome }} verify=${{ steps.verify.outcome }} connections=${{ steps.connections.outcome }} dq=${{ steps.dq.outcome }}
           ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
                  "https://ntfy.sh/$NTFY_TOPIC" || true
           fi

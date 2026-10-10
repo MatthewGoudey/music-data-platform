@@ -130,7 +130,12 @@ def derive(
     from musicdata.derive.job import derive as derive_job
     from musicdata.jobs import runs
 
-    raise typer.Exit(runs.run("derive", derive_job(full=full), trigger=_trigger()))
+    code = runs.run("derive", derive_job(full=full), trigger=_trigger())
+    if code == 0:  # companion spec 4: threads follow every derive, as their own run
+        from musicdata.graph.connections import graph_threads
+
+        code = runs.run("graph_threads", graph_threads(), trigger=_trigger())
+    raise typer.Exit(code)
 
 
 @app.command()
@@ -262,6 +267,24 @@ def graph_link_cmd() -> None:
     from musicdata.jobs import runs
 
     raise typer.Exit(runs.run("graph_link", graph_link(), trigger=_trigger()))
+
+
+@graph_app.command("connections")
+def graph_connections_cmd() -> None:
+    """Connection scores and card lines for every list album (companion spec 4)."""
+    from musicdata.graph.connections import graph_connections
+    from musicdata.jobs import runs
+
+    raise typer.Exit(runs.run("graph_connections", graph_connections(), trigger=_trigger()))
+
+
+@graph_app.command("threads")
+def graph_threads_cmd() -> None:
+    """Threads from the albums finished in the last week (companion spec 4; also after derive)."""
+    from musicdata.graph.connections import graph_threads
+    from musicdata.jobs import runs
+
+    raise typer.Exit(runs.run("graph_threads", graph_threads(), trigger=_trigger()))
 
 
 @graph_app.command("near-queue")

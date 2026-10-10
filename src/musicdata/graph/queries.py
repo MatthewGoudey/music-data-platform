@@ -298,6 +298,11 @@ async def album_brief(conn: asyncpg.Connection, release_group_id: int) -> dict |
             WHERE s.release_group_id = $1 ORDER BY l.slug""",
         release_group_id,
     )
+    connected = await conn.fetchrow(
+        """SELECT score, top::text AS top, computed_at FROM graph_connection
+            WHERE release_group_id = $1""",
+        release_group_id,
+    )
     heard = (
         "heard" if stat and stat["full_sessions"]
         else "started" if stat and stat["partial_sessions"] else "unheard"
@@ -311,6 +316,13 @@ async def album_brief(conn: asyncpg.Connection, release_group_id: int) -> dict |
         "pages": pages,
         "links": links,
         "gaps": missing,
+        "connections": {  # companion spec 4: ties to albums Matt has heard (Block D)
+            "score": float(connected["score"]),
+            "top": json.loads(connected["top"]),
+            "computed_at": connected["computed_at"].isoformat(),
+        }
+        if connected
+        else None,
         "research_questions": research_questions(missing, rg["artist"], rg["title"]),
         "context": {
             "status": heard,

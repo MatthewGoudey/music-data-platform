@@ -39,3 +39,20 @@ LIST_LABELS = {
     "billboard_200": "Billboard 200",
     "rym_top_5000": "Rate Your Music",
 }
+
+# Graph connections (docs/graph/COMPANION_SPEC.md section 4)
+CONNECTION_WEIGHT = {
+    "person_core": 1.0,  # member, producer or songwriter on the candidate
+    "person_session": 0.6,  # engineer, mixer or session player
+    "person_mastering": 0.3,
+    "lineage": 1.0,  # the candidate sounds like or was influenced by a heard artist or album
+    "cover": 0.8,  # the candidate covers or borrows a heard artist's first recording
+    "studio": 0.3,  # both recorded at one studio
+}
+DAMP_ALBUMS = 10  # damp(n) = 1 / (1 + ln(1 + albums(n) / DAMP_ALBUMS)) for people and studios
+LISTEN_BASE = 0.5  # listen(n) = min(1, LISTEN_BASE + LISTEN_STEP × full sessions it reaches)
+LISTEN_STEP = 0.1
+CONNECTION_TOP = 3  # nodes kept per candidate for card lines
+THREAD_DAYS = 7  # threads start from albums finished in the last this-many days
+THREAD_FROM = 5  # the newest this-many of them
+THREAD_TO = 20  # connected unheard albums kept per finished album

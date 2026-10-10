@@ -29,7 +29,10 @@ async def _catch_up() -> None:
     from musicdata.jobs.runs import record
 
     if await record("ingest", ingest(), trigger="catch-up") == 0:
-        await record("derive", derive(), trigger="catch-up")
+        if await record("derive", derive(), trigger="catch-up") == 0:
+            from musicdata.graph.connections import graph_threads
+
+            await record("graph_threads", graph_threads(), trigger="catch-up")
 
 
 async def start_catch_up(pool) -> bool:

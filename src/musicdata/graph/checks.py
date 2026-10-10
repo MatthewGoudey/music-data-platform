@@ -166,3 +166,53 @@ async def g8_credits(conn: asyncpg.Connection) -> Result:
     limit = get_settings().graph_monthly_credits
     spent = int(await conn.fetchval(MONTH_SPENT))
     return float(spent), spent <= limit, {"limit": limit}
+
+
+# Companion spec section 12: connections and threads (Phase 6 Block D).
+C3 = """
+SELECT (SELECT max(finished_at) FROM pipeline_run
+         WHERE job = 'graph_connections' AND status = 'ok') AS connections_at,
+       (SELECT max(finished_at) FROM pipeline_run
+         WHERE job = 'graph_threads' AND status = 'ok') AS threads_at,
+       (SELECT max(finished_at) FROM pipeline_run WHERE job = 'derive' AND status = 'ok') AS derive_at,
+       now() - interval '36 hours' AS cutoff
+"""
+C5 = """
+SELECT c.release_group_id, a.name AS artist, (t ->> 'heard')::int AS heard, ha.name AS heard_artist
+  FROM graph_connection c
+  CROSS JOIN LATERAL jsonb_array_elements(c.top) t
+  JOIN release_group rg ON rg.release_group_id = c.release_group_id
+  JOIN artist a ON a.artist_id = rg.artist_id
+  JOIN release_group hg ON hg.release_group_id = (t ->> 'heard')::int
+  JOIN artist ha ON ha.artist_id = hg.artist_id
+"""
+
+
+async def c3_connections_fresh(conn: asyncpg.Connection) -> Result:
+    """The nightly connections ran in the last 36 hours and threads followed the latest derive.
+    Prod only: dev runs the nightly graph workflow by hand, so dev reports without failing."""
+    if not await conn.fetchval("SELECT to_regclass('graph_connection') IS NOT NULL"):
+        return NO_GRAPH
+    r = await conn.fetchrow(C3)
+    fresh = r["connections_at"] is not None and r["connections_at"] >= r["cutoff"]
+    threaded = r["derive_at"] is None or (
+        r["threads_at"] is not None and r["threads_at"] >= r["derive_at"]
+    )
+    details = {k: str(r[k]) for k in ("connections_at", "threads_at", "derive_at")}
+    if get_settings().musicdata_env != "prod":
+        return None, True, details | {"reason": "reported only outside prod"}
+    return None, fresh and threaded, details
+
+
+async def c5_connections_disjoint(conn: asyncpg.Connection) -> Result:
+    """Every card line joins albums whose artist parts share nothing."""
+    from musicdata.graph.connections import artist_parts
+
+    if not await conn.fetchval("SELECT to_regclass('graph_connection') IS NOT NULL"):
+        return NO_GRAPH
+    bad = [
+        r["release_group_id"]
+        for r in await conn.fetch(C5)
+        if artist_parts(r["artist"]) & artist_parts(r["heard_artist"])
+    ]
+    return float(len(bad)), not bad, {"release_groups": bad[:20]}
