@@ -26,6 +26,7 @@ from musicdata.db import connection
 from musicdata.graph import names
 from musicdata.graph.claims import claim_key
 from musicdata.graph.cues import cue_paragraphs
+from musicdata.graph.entities import upsert_entity
 from musicdata.graph.importer import slice_targets
 from musicdata.graph.verify import ART, DB
 from musicdata.identity import norm_key
@@ -233,32 +234,9 @@ class Resolver:
         status: str = "resolved",
         context: str = "",
     ) -> int:
-        key = norm_key(name) or name.casefold()
-        attrs_json = json.dumps(attrs or {}, default=str)
-        if mbid and type_ in ART:
-            sql = """INSERT INTO entity (type, name, norm_key, mbid, attrs)
-                     VALUES ($1, $2, $3, $4, $5::jsonb)
-                     ON CONFLICT (mbid) WHERE mbid IS NOT NULL AND type IN ('artist','person')
-                        DO UPDATE SET attrs = entity.attrs || EXCLUDED.attrs
-                     RETURNING entity_id"""
-            args = (type_, name, key, mbid, attrs_json)
-        elif mbid:
-            sql = """INSERT INTO entity (type, name, norm_key, mbid, attrs, context_key)
-                     VALUES ($1, $2, $3, $4, $5::jsonb, $6)
-                     ON CONFLICT (type, mbid) WHERE mbid IS NOT NULL
-                                              AND type NOT IN ('artist','person')
-                        DO UPDATE SET attrs = entity.attrs || EXCLUDED.attrs
-                     RETURNING entity_id"""
-            args = (type_, name, key, mbid, attrs_json, context)
-        else:
-            sql = """INSERT INTO entity (type, name, norm_key, attrs, resolve_status, context_key)
-                     VALUES ($1, $2, $3, $4::jsonb, $5, $6)
-                     ON CONFLICT (type, norm_key, context_key) WHERE mbid IS NULL AND local_key IS NULL
-                        DO UPDATE SET attrs = entity.attrs || EXCLUDED.attrs,
-                                      resolve_status = EXCLUDED.resolve_status
-                     RETURNING entity_id"""
-            args = (type_, name, key, attrs_json, status, context)
-        return await self.conn.fetchval(sql, *args)
+        return await upsert_entity(
+            self.conn, type_, name, mbid=mbid, attrs=attrs, status=status, context=context
+        )
 
     async def linked(self, album_id: int) -> list[asyncpg.Record]:
         if album_id not in self.known:

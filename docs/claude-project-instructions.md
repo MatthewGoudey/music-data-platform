@@ -46,6 +46,13 @@ Every listening endpoint takes the same window: `start_date` and `end_date`
 | Just announced | `GET /shows?match=true&just_announced_days=7` |
 | Presales and on-sales coming up | `GET /shows?presales=true&match=true` (next presale, its name, public on-sale) |
 | Mark a show | `PUT /shows/{show_id}/interest` with `{"status": "interested"}` or `"going"`; `DELETE` clears it |
+| Who made an album, where, and what it connects to | `GET /albums/{release_group_id}/brief` (tracks with their credits, edges by facet, cached pages, gaps, research questions, Matt's status) |
+| An album's graph only | `GET /albums/{release_group_id}/graph` |
+| Find a person, band, label, studio or song | `GET /entities?q=ralph%20molina` (add `type=person`, `label`, `place`, …) |
+| Everything the graph knows about one | `GET /entities/{entity_id}`; adjacent entities with `GET /entities/{entity_id}/neighbors?predicates=credited_on,member_of&direction=both` |
+| Reading questions for Matt | `GET /graph/questions`; record his answer with `POST /graph/questions/{assertion_id}/answer` and `{"answer": "yes"}` (or `"no"`, `"skip"`) |
+| Graph coverage of the pilot | `GET /graph/coverage?slice=crazy_horse` |
+| Add claims or links found in research | `POST /assertions` with a list of claims in the research skill's shape (each with its `claim_id`); `POST /links` with `{"entity_id", "kind", "url", "source"}` |
 | Anything else | `POST /query` with `{"sql": "SELECT ..."}` |
 
 `/query` runs one read-only SELECT with a 10-second limit and returns up to 1,000 rows.
@@ -65,3 +72,12 @@ score higher. Tribute nights never match. Times are Chicago time.
 When `/artists/batch` returns `match: candidate`, treat those rows as suggestions and
 confirm the right one with Matt. Use the artist and album IDs the API returns for
 follow-up calls.
+
+The music graph stores claims about albums: who played on and produced them, where they were
+recorded, their labels, band memberships, and lineage (what critics compare them to, influences,
+covers, borrowed melodies, tours). Every claim keeps its source and a verbatim quote or database
+field. Quote the evidence when you tell Matt a graph fact, and name its source. When Matt answers a
+reading question, judge nothing yourself: show him the claim and the quote, and post his yes, no or
+skip. Claims you post arrive as proposed and are checked before they count. The graph answers from
+dev until it moves to prod (Phase 6 Block B); until then these endpoints return empty results or
+404 in prod.
