@@ -13,19 +13,16 @@ page's verdict list stay, and nothing on the page or in the queue uses them.
 
 from __future__ import annotations
 
-import secrets
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
-from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 
-from musicdata.api.deps import Pool, bearer, render_object, require_token
+from musicdata.api.deps import Pool, check_page_token, page_or_bearer, render_object, require_token
 from musicdata.api.routers.next_queue import parse_ids
-from musicdata.config import Settings
 from musicdata.db import connection
 from musicdata.lists.progress import progress
 from musicdata.queue import config
@@ -37,24 +34,6 @@ Verdict = Literal["again", "later", "never"]
 Action = Literal["pin", "unpin", "bump", "snooze", "unsnooze", "hide", "unhide", "played"]
 PAGE = (Path(__file__).parents[1] / "static" / "queue.html").read_text(encoding="utf-8")
 UNDO_MINUTES = 60  # a manual session can be taken back this long after it was recorded
-
-
-def _check_page_token(request: Request, t: str) -> None:
-    settings: Settings = request.app.state.settings
-    if not secrets.compare_digest(t, settings.queue_page_token.get_secret_value()):
-        raise HTTPException(status_code=401, detail="bad or missing page token")
-
-
-def page_or_bearer(
-    request: Request,
-    creds: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)],
-    t: Annotated[str, Query()] = "",
-) -> None:
-    """The page token in the URL, or the API bearer token."""
-    if t:
-        _check_page_token(request, t)
-    else:
-        require_token(request, creds)
 
 
 async def _save(
@@ -123,7 +102,7 @@ def history_line(
 @router.get("/queue", response_class=HTMLResponse)
 async def queue_page(request: Request, pool: Pool, t: Annotated[str, Query()] = ""):
     """Up next: the queue for a profile, its actions, and progress through the lists."""
-    _check_page_token(request, t)
+    check_page_token(request, t)
     from musicdata.api.routers.ingest import start_catch_up
 
     await start_catch_up(pool)

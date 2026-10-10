@@ -8,8 +8,7 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import HTMLResponse
 
-from musicdata.api.deps import Pool
-from musicdata.api.routers.queue import page_or_bearer
+from musicdata.api.deps import Pool, page_or_bearer
 from musicdata.db import connection
 from musicdata.documents import document_page
 

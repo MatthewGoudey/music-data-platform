@@ -7,6 +7,7 @@ structured output; ISO dates; empty results rather than errors.
 
 from __future__ import annotations
 
+import secrets
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 from enum import StrEnum
@@ -30,6 +31,24 @@ def require_token(
     expected = settings.api_token.get_secret_value()
     if creds is None or creds.credentials != expected:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="bad or missing token")
+
+
+def check_page_token(request: Request, t: str) -> None:
+    settings: Settings = request.app.state.settings
+    if not secrets.compare_digest(t, settings.queue_page_token.get_secret_value()):
+        raise HTTPException(status_code=401, detail="bad or missing page token")
+
+
+def page_or_bearer(
+    request: Request,
+    creds: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)],
+    t: Annotated[str, Query()] = "",
+) -> None:
+    """The page token in the URL (?t=, so a phone bookmark opens it), or the API bearer token."""
+    if t:
+        check_page_token(request, t)
+    else:
+        require_token(request, creds)
 
 
 def get_pool(request: Request) -> asyncpg.Pool:

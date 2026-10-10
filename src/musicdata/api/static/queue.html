@@ -59,6 +59,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outlin
 .conn div::before { content: "↳ "; opacity: .7; }
 .title { font-family: var(--display); font-weight: 700; font-size: 17px; line-height: 1.2; min-width: 0; overflow-wrap: anywhere; }
 .title .artist { font-weight: 500; color: var(--muted); }
+.title a.page { color: inherit; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
 .meta { font-size: 12.5px; color: var(--muted); }
 .why { font-size: 13px; min-width: 0; grid-column: 2; overflow-wrap: anywhere; }
 .actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
@@ -164,7 +165,7 @@ function card(a, i) {
   return `<article class="card" id="card-${a.release_group_id}">
     <div class="sleeve" style="background:linear-gradient(135deg,hsl(${h} 45% 38%),hsl(${(h + 40) % 360} 50% 28%))" aria-hidden="true">${esc(initials(a.album))}</div>
     <div class="top"><span class="slot ${a.slot}">${a.slot}</span></div>
-    <div class="title">${esc(a.album)} <span class="artist">· ${esc(a.artist)}</span></div>
+    <div class="title"><a class="page" href="${esc(url(`/albums/${a.release_group_id}/page`))}">${esc(a.album)}</a> <span class="artist">· ${esc(a.artist)}</span></div>
     <div class="meta">${meta}</div>
     <div class="why">${a.why_lines && a.why_lines.length > 1
       ? a.why_lines.map(l => `<div>${esc(l)}</div>`).join("") : esc(a.why_line)}</div>

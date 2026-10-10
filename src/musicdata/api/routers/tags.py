@@ -14,8 +14,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from musicdata.api.deps import Format, FormatParam, Pool, render
-from musicdata.api.routers.queue import page_or_bearer
+from musicdata.api.deps import Format, FormatParam, Pool, page_or_bearer, render
 from musicdata.clients.listenbrainz import ListenBrainzClient
 from musicdata.config import get_settings
 from musicdata.db import connection

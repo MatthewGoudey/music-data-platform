@@ -25,6 +25,7 @@ from musicdata.api.routers import (
     listens,
     lists,
     next_queue,
+    pages,
     query,
     queue,
     sessions,
@@ -79,6 +80,7 @@ for module in (
     tags,
     graph,
     documents,
+    pages,
 ):
     app.include_router(module.router)
 
