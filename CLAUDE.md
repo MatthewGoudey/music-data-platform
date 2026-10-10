@@ -162,8 +162,11 @@ Matt's go.
       Matt from its page), 5,397 words, 11 pages fetched through the API, 16 new claims in batch D7
       (reader: 15 SUPPORTS, 1 PARTIAL), 249 passages checked, 8 rewritten. Liner notes dropped
       (companion spec change 2026-10-10).
-- Block G — setup in `docs/graph/WORKER_ROUTINE.md` (a Claude Code routine with a network secret);
-      waits for Matt to create the environment and the routine.
+- Block G — the worker is a Claude Code routine (`docs/graph/WORKER_ROUTINE.md`). First run done
+      2026-10-10: Matt requested The Velvet Underground & Nico (document 8) and pressed Run now; the
+      routine claimed it in 24 s and handed in a ready deep dive (4,645 words, 203 sentences checked,
+      17 Firecrawl credits) with no terminal. Requests now fire the routine at once (needs Matt's
+      ROUTINE_FIRE_URL / ROUTINE_FIRE_TOKEN on the dev app); a daily run is the safety net.
 - [ ] Block G — one manual worker run in a claude.ai cloud session; on Matt's go, the scheduled task.
 - [ ] Block H — migrations 0023–0025; card connection lines and page link, `graph_weight`, thread slot,
       generated-list handling, follow and walk back; the rules written into `docs/QUEUE_SPEC.md`;
