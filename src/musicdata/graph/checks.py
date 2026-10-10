@@ -1,5 +1,7 @@
 """Graph acceptance checks G1–G8 (GRAPH_SPEC 12), run by `musicdata dq`. Each passes with
-"no graph tables" in an environment whose database predates migration 0018."""
+"no graph tables" in an environment whose database predates migration 0018. G2 and G4 read
+text claims: those with a source URL (a page or an atlas note); the seeded lane structure
+has none."""
 
 from __future__ import annotations
 
@@ -42,6 +44,7 @@ SELECT a.claim_label FROM assertion a
 G4 = """
 SELECT claim_label FROM assertion
  WHERE status = 'accepted' AND extractor = 'claude' AND evidence NOT LIKE 'field:%'
+   AND source_url IS NOT NULL
    AND NOT (reader_verdict IS NOT DISTINCT FROM 'SUPPORTS'
             OR (reader_verdict = 'PARTIAL' AND support && ARRAY['musicbrainz', 'discogs']))
 """
@@ -83,7 +86,8 @@ async def g2_evidence(conn: asyncpg.Connection) -> Result:
                   a.source_url, s.name AS s_name, o.name AS o_name
              FROM assertion a JOIN entity s ON s.entity_id = a.subject_id
              LEFT JOIN entity o ON o.entity_id = a.object_id
-            WHERE a.status = 'accepted' AND a.extractor IN ('claude', 'firecrawl_json')"""
+            WHERE a.status = 'accepted' AND a.extractor IN ('claude', 'firecrawl_json')
+              AND a.source_url IS NOT NULL"""
     )
     claims = [
         {
