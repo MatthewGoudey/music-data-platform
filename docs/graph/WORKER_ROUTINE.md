@@ -74,7 +74,7 @@ word count, pages added, Firecrawl credits, and fact-check tally.
 4. In Claude Code on the laptop, set both as the dev app's secrets (the `!` runs it here; neither value
    goes into the repo):
    ```
-   ! "%USERPROFILE%\.flyinlyctl.exe" secrets set ROUTINE_FIRE_URL=<url> ROUTINE_FIRE_TOKEN=<token> -a musicdata-dev
+   ! ~/.fly/bin/flyctl.exe secrets set ROUTINE_FIRE_URL=<url> ROUTINE_FIRE_TOKEN=<token> -a musicdata-dev
    ```
 5. Change the schedule trigger to a daily safety net (keep **Daily**, any hour): requests start their
    own run within a minute; the daily run picks up anything a failed start left requested.
