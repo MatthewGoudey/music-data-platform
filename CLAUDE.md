@@ -157,9 +157,13 @@ Matt's go.
       sweep, server-side fetches, marker checks and rendering, document tabs. Done 2026-10-10 in dev
       (`worker.py`, `api/routers/documents.py`; the table is migration 0024); the dev app has
       `FIRECRAWL_API_KEY`.
-- [ ] Block F2 — `.claude/skills/album-companion/SKILL.md`; one deep dive for an album Matt picks,
-      fact-checked by a separate agent. Skill written 2026-10-10; liner notes dropped (Matt,
-      companion spec change 2026-10-10): the deep dive is the only document.
+- [x] Block F2 — `.claude/skills/album-companion/SKILL.md`; one deep dive for an album Matt picks,
+      fact-checked by a separate agent. Done 2026-10-10 in dev: Déjà vu (document 7, requested by
+      Matt from its page), 5,397 words, 11 pages fetched through the API, 16 new claims in batch D7
+      (reader: 15 SUPPORTS, 1 PARTIAL), 249 passages checked, 8 rewritten. Liner notes dropped
+      (companion spec change 2026-10-10).
+- Block G — setup in `docs/graph/WORKER_ROUTINE.md` (a Claude Code routine with a network secret);
+      waits for Matt to create the environment and the routine.
 - [ ] Block G — one manual worker run in a claude.ai cloud session; on Matt's go, the scheduled task.
 - [ ] Block H — migrations 0023–0025; card connection lines and page link, `graph_weight`, thread slot,
       generated-list handling, follow and walk back; the rules written into `docs/QUEUE_SPEC.md`;
