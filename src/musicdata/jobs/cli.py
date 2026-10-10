@@ -278,6 +278,34 @@ def graph_connections_cmd() -> None:
     raise typer.Exit(runs.run("graph_connections", graph_connections(), trigger=_trigger()))
 
 
+@graph_app.command("follow-lists")
+def graph_follow_lists_cmd() -> None:
+    """Rewrite the `following` list from what Matt follows (companion spec 5.5)."""
+    from musicdata.graph.generated import graph_follow_lists
+    from musicdata.jobs import runs
+
+    raise typer.Exit(runs.run("graph_follow_lists", graph_follow_lists(), trigger=_trigger()))
+
+
+@graph_app.command("walk")
+def graph_walk_cmd(
+    from_: int = typer.Option(..., "--from", help="The album's release_group_id."),
+) -> None:
+    """Walk back from an album into the `graph_walk` list (companion spec 5.6)."""
+    from musicdata.graph.generated import walk
+    from musicdata.jobs import runs
+
+    async def job(ctx) -> None:
+        from musicdata.db import connection
+
+        async with connection(ctx.pool) as conn:
+            out = await walk(conn, from_)
+        ctx.rows = int(out["entries"])
+        ctx.notes.update(out)
+
+    raise typer.Exit(runs.run("graph_walk", job, trigger=_trigger()))
+
+
 @graph_app.command("threads")
 def graph_threads_cmd() -> None:
     """Threads from the albums finished in the last week (companion spec 4; also after derive)."""

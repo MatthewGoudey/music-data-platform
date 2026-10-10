@@ -15,6 +15,7 @@ from musicdata.api.deps import Pool, page_or_bearer
 from musicdata.clients.listenbrainz import ListenBrainzClient
 from musicdata.config import get_settings
 from musicdata.db import connection
+from musicdata.graph.generated import rebuild_following, walk
 from musicdata.ingest.parse import parse_listen
 from musicdata.pages.album import album_page
 from musicdata.pages.common import link
@@ -54,6 +55,42 @@ async def entity(entity_id: int, pool: Pool, t: Annotated[str, Query()] = ""):
 async def search(pool: Pool, q: str = "", t: Annotated[str, Query()] = "") -> HTMLResponse:
     async with connection(pool) as conn:
         return HTMLResponse(await search_page(conn, q, t))
+
+
+FOLLOWABLE = ("person", "artist", "label", "place")
+
+
+@router.post("/entities/{entity_id}/follow")
+async def follow(entity_id: int, pool: Pool) -> dict[str, object]:
+    """Follow a person, band, label or studio (companion spec 5.5); rewrites `following`."""
+    async with connection(pool) as conn:
+        kind = await conn.fetchval("SELECT type FROM entity WHERE entity_id = $1", entity_id)
+        if kind not in FOLLOWABLE:
+            raise HTTPException(status_code=404, detail="only people, bands, labels and studios")
+        await conn.execute(
+            "INSERT INTO graph_follow (entity_id) VALUES ($1) ON CONFLICT DO NOTHING", entity_id
+        )
+        n = await rebuild_following(conn)
+    return {"entity_id": entity_id, "following": True, "entries": n}
+
+
+@router.post("/entities/{entity_id}/unfollow")
+async def unfollow(entity_id: int, pool: Pool) -> dict[str, object]:
+    async with connection(pool) as conn:
+        await conn.execute("DELETE FROM graph_follow WHERE entity_id = $1", entity_id)
+        n = await rebuild_following(conn)
+    return {"entity_id": entity_id, "following": False, "entries": n}
+
+
+@router.post("/graph/walk")
+async def graph_walk(pool: Pool, from_: Annotated[int, Query(alias="from")]) -> dict[str, object]:
+    """Walk back from an album (companion spec 5.6): rewrites `graph_walk` for the walk-back
+    profile."""
+    async with connection(pool) as conn:
+        try:
+            return await walk(conn, from_)
+        except LookupError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @router.get("/queue/now-playing")

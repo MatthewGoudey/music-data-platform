@@ -77,6 +77,7 @@ class Album:
     artist: str
     parts: frozenset[str]
     sessions: int = 0  # full sessions; > 0 means heard
+    year: int | None = None
 
 
 @dataclass
@@ -194,7 +195,7 @@ def connect(g: Graph, cand: Album, heard: dict[int, Album]) -> tuple[float, list
 
 ALBUMS = """
 SELECT e.entity_id, e.release_group_id, rg.title, a.name AS artist,
-       coalesce(s.full_sessions, 0) AS sessions
+       coalesce(s.full_sessions, 0) AS sessions, rg.first_release_year AS year
   FROM entity e
   JOIN release_group rg ON rg.release_group_id = e.release_group_id
   JOIN artist a ON a.artist_id = rg.artist_id
@@ -262,6 +263,7 @@ async def load_graph(conn: asyncpg.Connection) -> Graph:
             r["artist"],
             artist_parts(r["artist"]),
             int(r["sessions"]),
+            r["year"],
         )  # fmt: skip
         for r in await conn.fetch(ALBUMS)
     }

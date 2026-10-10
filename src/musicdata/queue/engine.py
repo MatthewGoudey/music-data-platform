@@ -28,7 +28,8 @@ SELECT e.entry_id, e.list_id, e.release_group_id, l.slug, l.name AS list_name, l
        st.status, st.tracks_heard, st.track_count, st.hidden, st.pinned, st.snoozed_until,
        rg.title, rg.mbid IS NOT NULL AS mapped, rg.first_release_year, rg.primary_type,
        rg.artist_id, a.name AS artist, coalesce(ast.listens, 0) AS artist_listens,
-       q.bumped_until
+       q.bumped_until, e.note,
+       coalesce(l.source LIKE 'generated:%', false) AS generated
   FROM list_entry_status st
   JOIN list_entry e USING (entry_id)
   JOIN list l ON l.list_id = e.list_id
@@ -50,9 +51,10 @@ WITH s AS (
 SELECT s.*, rs.listens, rs.last_listened_at, rs.best_completion, rs.tracks_heard,
        rs.track_count, rg.title, rg.first_release_year, rg.primary_type, rg.artist_id,
        a.name AS artist,
-       EXISTS (SELECT 1 FROM list_entry e
+       EXISTS (SELECT 1 FROM list_entry e JOIN list l USING (list_id)
                 WHERE e.release_group_id = s.release_group_id
-                  AND e.review_status = 'accepted' AND e.resolve_status = 'resolved') AS on_list
+                  AND e.review_status = 'accepted' AND e.resolve_status = 'resolved'
+                  AND coalesce(l.source NOT LIKE 'generated:%', true)) AS on_list
   FROM s
   JOIN release_group rg USING (release_group_id)
   JOIN artist a ON a.artist_id = rg.artist_id

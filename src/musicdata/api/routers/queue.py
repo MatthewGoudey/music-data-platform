@@ -315,7 +315,11 @@ async def queue_data(
         profiles = [
             dict(r)
             for r in await conn.fetch(
-                "SELECT name, description FROM queue_profile ORDER BY name <> 'default', name"
+                """SELECT p.name, p.description,
+                          CASE p.name WHEN 'walk-back' THEN (SELECT l.name FROM list l
+                                                              WHERE l.slug = 'graph_walk')
+                          END AS label
+                     FROM queue_profile p ORDER BY p.name <> 'default', p.name"""
             )
         ]
         tag_names = [

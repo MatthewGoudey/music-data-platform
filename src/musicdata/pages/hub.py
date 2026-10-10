@@ -79,8 +79,18 @@ async def entity_page(conn: asyncpg.Connection, entity_id: int, t: str) -> str |
     parts = []
     sub = " · ".join(str(x) for x in (TYPE_WORD.get(kind, kind), attrs.get("area"),
                                        attrs.get("year"), attrs.get("disambiguation")) if x)  # fmt: skip
+    follow = ""
+    if kind in ("person", "artist", "label", "place") and await conn.fetchval(
+        "SELECT to_regclass('graph_follow') IS NOT NULL"
+    ):
+        on = await conn.fetchval("SELECT 1 FROM graph_follow WHERE entity_id = $1", entity_id)
+        follow = (
+            f'<div class="actions"><button class="btn{" play" if not on else ""}" type="button" '
+            f'data-follow="{"unfollow" if on else "follow"}">{"Following ✓" if on else "Follow"}</button>'
+            f'<a class="btn" href="{esc(link("/queue", t, profile="following"))}">Open the following queue</a></div>'
+        )
     parts.append(
-        f'<header class="box"><div class="meta">{esc(sub)}</div><h1>{esc(d["name"])}</h1></header>'
+        f'<header class="box"><div class="meta">{esc(sub)}</div><h1>{esc(d["name"])}</h1>{follow}</header>'
     )
 
     albums: dict[int, dict] = {}
@@ -162,7 +172,15 @@ async def entity_page(conn: asyncpg.Connection, entity_id: int, t: str) -> str |
         )
     if len(parts) == 1:
         parts.append('<p class="lack">The graph knows this name but nothing more about it yet.</p>')
-    return shell(d["name"], "\n".join(parts), t)
+    script = f"""<script>
+document.querySelectorAll("[data-follow]").forEach(b => b.addEventListener("click", async () => {{
+  b.disabled = true;
+  const t = new URLSearchParams(location.search).get("t") || "";
+  const r = await fetch(`/entities/{entity_id}/${{b.dataset.follow}}?t=${{encodeURIComponent(t)}}`, {{method: "POST"}});
+  if (r.ok) location.reload(); else {{ b.disabled = false; b.textContent = "Try again"; }}
+}}));
+</script>"""
+    return shell(d["name"], "\n".join(parts), t, script=script)
 
 
 async def search_page(conn: asyncpg.Connection, q: str, t: str) -> str:

@@ -32,6 +32,7 @@ SELECT {select},
   LEFT JOIN atlas_lane al ON al.lane_id = e.lane_id
  WHERE e.review_status = 'accepted'
    AND ($1::text IS NULL OR l.slug = $1)
+   AND (l.slug = $1 OR coalesce(l.source NOT LIKE 'generated:%', true))  -- companion 5.4
    AND ($2::text IS NULL OR l.goal = $2)
    AND ($3::text IS NULL OR e.lane_id = $3)
    AND ($4::text IS NULL OR e.zone = $4)

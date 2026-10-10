@@ -116,6 +116,8 @@ h2 { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercas
 const T = new URLSearchParams(location.search).get("t") || "";
 let profile = "default";
 try { profile = localStorage.getItem("queue.profile") || "default"; } catch (e) {}
+const asked = new URLSearchParams(location.search).get("profile");  // e.g. Walk back from a page
+if (asked) { profile = asked; try { localStorage.setItem("queue.profile", profile); } catch (e) {} }
 const openTags = new Set();
 let shuffled = false, presses = 0, seen = new Set(), data = null, toastTimer = null, lastParams = null;
 
@@ -187,7 +189,7 @@ function card(a, i) {
 
 function render() {
   $("profiles").innerHTML = data.profiles.map(p =>
-    `<button class="chip" aria-pressed="${p.name === profile}" data-profile="${esc(p.name)}" title="${esc(p.description || "")}">${esc(p.name)}</button>`).join("") +
+    `<button class="chip" aria-pressed="${p.name === profile}" data-profile="${esc(p.name)}" title="${esc(p.description || "")}">${esc(p.label || p.name)}</button>`).join("") +
     `<span class="spacer"></span>` +
     (shuffled ? `<button class="chip" id="top">Top picks</button>` : "") +
     `<button class="btn play" id="shuffle">Shuffle</button>`;

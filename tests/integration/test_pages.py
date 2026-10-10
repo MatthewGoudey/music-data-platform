@@ -47,6 +47,7 @@ def _db(coro_fn):
 
 
 async def _cleanup(conn: asyncpg.Connection) -> None:
+    await conn.execute("DELETE FROM list_entry WHERE raw_album LIKE 'Zz Page%'")
     ents = [
         r[0] for r in await conn.fetch("SELECT entity_id FROM entity WHERE name LIKE 'Zz Page%'")
     ]
@@ -125,6 +126,21 @@ def test_pages(client) -> None:
         assert (
             hub.status_code == 200 and "Zz Page Record" in hub.text and "heard 0 of 1" in hub.text
         )
+
+        f = client.post(f"/entities/{ids['band']}/follow", params={"t": PAGE})
+        assert f.status_code == 200 and f.json()["entries"] >= 1
+        q = client.get("/next", params={"profile": "following", "n": 50},
+                       headers={"Authorization": "Bearer test-token"}).json()  # fmt: skip
+        mine = [i for i in q["items"] if i["release_group_id"] == ids["rg"]]
+        assert mine and mine[0]["why_line"] == "Following Zz Page Band"
+        default = client.get("/next", params={"profile": "default", "n": 50},
+                             headers={"Authorization": "Bearer test-token"}).json()  # fmt: skip
+        assert all(i["release_group_id"] != ids["rg"] for i in default["items"])
+        assert "Following ✓" in client.get(f"/entities/{ids['band']}/page", params={"t": PAGE}).text
+        assert (
+            client.post(f"/entities/{ids['band']}/unfollow", params={"t": PAGE}).status_code == 200
+        )
+        assert client.post("/graph/walk", params={"from": -1, "t": PAGE}).status_code == 404
 
         found = client.get("/pages/search", params={"t": PAGE, "q": "Zz Page"})
         assert found.status_code == 200 and "Zz Page Record" in found.text

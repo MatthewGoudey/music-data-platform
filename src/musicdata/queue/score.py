@@ -129,12 +129,15 @@ def why_of(e: Mapping[str, object]) -> dict[str, object]:
         "lane_name": e["lane_name"],
         "zone": e["zone"],
         "start_here": bool(e["start_here"]),
+        "note": e["note"] if e.get("generated") else None,  # Following Ralph Molina · drums
     }
 
 
 def why_part(w: Mapping[str, object]) -> str:
     """One list's part of the why line: `V Atlas · C1 Indie twang · Essential · start here`,
     `Rolling Stone #2` or `1001 Albums`."""
+    if w.get("note"):
+        return str(w["note"])
     if w["lane"]:
         bits = [w["label"], f"{w['lane']} {w['lane_name'] or ''}".strip(), w["priority"]]
         bits.append("start here" if w["start_here"] else None)
@@ -170,6 +173,8 @@ def score_candidates(
             continue
         if not passes(e, p.filters, tags.get(rg, ())):
             continue
+        if e.get("generated") and e["slug"] not in (p.filters.get("lists") or ()):
+            continue  # a generated list counts only where the profile names it (companion 5.4)
         base[rg] = base.get(rg, 0.0) + entry_weight(e, p, list_sizes[e["list_id"]])
         if rg not in items:
             items[rg] = item_of(e, tags.get(rg, []))

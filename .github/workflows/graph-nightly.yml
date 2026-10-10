@@ -68,6 +68,10 @@ jobs:
         id: connections
         if: always()
         run: uv run musicdata graph connections
+      - name: follow lists
+        id: follow
+        if: always()
+        run: uv run musicdata graph follow-lists
       - name: dq
         id: dq
         if: always()

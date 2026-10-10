@@ -112,6 +112,15 @@ def _roles(roles) -> str:
 
 
 NOW_SCRIPT = """<script>
+document.getElementById("walk")?.addEventListener("click", async e => {
+  const b = e.currentTarget, t = new URLSearchParams(location.search).get("t") || "";
+  b.disabled = true; b.textContent = "Walking back…";
+  const r = await fetch(`/graph/walk?from=${b.dataset.rg}&t=${encodeURIComponent(t)}`, {method: "POST"});
+  if (!r.ok) { b.disabled = false; b.textContent = "Walk back failed — try again"; return; }
+  const w = await r.json();
+  if (!w.entries) { b.textContent = "Nothing older is connected yet"; return; }
+  location.href = `/queue?t=${encodeURIComponent(t)}&profile=walk-back`;
+});
 const T = new URLSearchParams(location.search).get("t") || "";
 let last = "";
 async function poll() {
@@ -183,7 +192,8 @@ async def album_page(conn: asyncpg.Connection, release_group_id: int, t: str) ->
   <h1>{esc(ident["title"])}</h1>
   <div class="by">{artist_html}</div>
   <div class="actions"><span class="status {esc(status)}">{esc(status_text)}</span>
-    <a class="btn play" href="{esc(play_url(ident["artist"], ident["title"]))}" target="_blank" rel="noopener">Play</a></div>
+    <a class="btn play" href="{esc(play_url(ident["artist"], ident["title"]))}" target="_blank" rel="noopener">Play</a>
+    <button class="btn" type="button" id="walk" data-rg="{release_group_id}">Walk back</button></div>
   <nav class="tabs" aria-label="Album pages"><span class="tab" aria-current="page">Album</span>{tab("liner_notes", "Liner notes")}{tab("deep_dive", "Deep dive")}</nav>
 </header>
 <div class="nowbar" id="nowbar" hidden></div>"""
