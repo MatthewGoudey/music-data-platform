@@ -26,14 +26,15 @@
 [hidden] { display: none !important; }  /* .toast's display: flex must not beat hidden */
 body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.45; }
 .wrap { max-width: 34rem; margin: 0 auto; padding-inline: 16px; padding-block: 0 96px; display: grid; gap: 18px; }
-header { display: grid; gap: 10px; position: sticky; top: 0; z-index: 5; background: var(--bg); margin-inline: -16px; padding: max(10px, env(safe-area-inset-top)) 16px 10px; transition: transform .2s ease; border-bottom: 1px solid var(--line); }
+header { display: grid; gap: 6px; position: sticky; top: 0; z-index: 5; background: var(--bg); margin-inline: -16px; padding: max(8px, env(safe-area-inset-top)) 16px 8px; transition: transform .2s ease; border-bottom: 1px solid var(--line); }
 @media (prefers-reduced-motion: reduce) { header { transition: none; } }
 .tabs { display: flex; gap: 4px; overflow-x: auto; }
-.tab { font: 600 13px var(--body); border: 0; background: none; color: var(--muted); padding: 6px 10px; border-radius: 7px; cursor: pointer; white-space: nowrap; }
+.tab { font: 600 13px var(--body); border: 0; background: none; color: var(--muted); padding: 4px 9px; border-radius: 7px; cursor: pointer; white-space: nowrap; }
 .tab[aria-selected="true"] { background: var(--ink); color: var(--bg); }
+.panel { display: grid; gap: 12px; min-width: 0; }
 .panel[hidden] { display: none; }
 .more { text-align: center; color: var(--muted); font-size: 13px; padding: 14px 0; }
-h1 { font-family: var(--display); font-weight: 700; font-size: 30px; letter-spacing: -0.02em; margin: 0; }
+h1 { font-family: var(--display); font-weight: 700; font-size: 20px; letter-spacing: -0.02em; margin: 0; white-space: nowrap; }
 .sub { color: var(--muted); font-size: 13px; min-height: 1.4em; }
 .extra { display: grid; gap: 8px; }
 .mini { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 10px 12px;
@@ -43,9 +44,12 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; letter-spac
 .mini .when { font: 400 12px var(--mono); color: var(--muted); text-align: right; white-space: nowrap; }
 .mini .detail { grid-column: 1 / -1; font-size: 12.5px; color: var(--muted); overflow-wrap: anywhere; }
 .mini a { color: var(--accent); font-weight: 700; }
-.headline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.profiles { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.nowplaying { display: flex; gap: 10px; align-items: baseline; padding: 10px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); font-size: 14px; min-width: 0; }
+.headline { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.headline .search { flex: 1; min-width: 0; }
+.profiles { display: flex; flex-wrap: nowrap; gap: 6px; align-items: center; overflow-x: auto; scrollbar-width: none; }
+.profiles::-webkit-scrollbar { display: none; }
+.profiles .chip { flex: none; padding: 4px 10px; font-size: 12.5px; }
+.nowplaying { display: flex; gap: 10px; align-items: baseline; padding: 6px 10px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); font-size: 14px; min-width: 0; }
 .nowplaying .label { font: 600 10.5px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--accent); flex: none; }
 .nowplaying .what { min-width: 0; overflow-wrap: anywhere; }
 .nowplaying a { color: inherit; font-weight: 700; }
@@ -58,7 +62,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; letter-spac
 .ready .note a { color: inherit; font-weight: 700; flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .ready .note button { font: 600 13px var(--body); background: none; border: 0; color: inherit; cursor: pointer; }
 .search { display: flex; }
-.search input[type=search] { flex: 1; min-width: 0; font: 15px var(--body); padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); }
+.search input[type=search] { flex: 1; min-width: 0; font: 15px var(--body); padding: 6px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); }
 .search input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .chip { font: 600 13px var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--ink);
   border-radius: 999px; padding: 6px 12px; cursor: pointer; }
@@ -113,11 +117,12 @@ h2 { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercas
 <body>
 <div class="wrap">
   <header>
-    <div class="headline"><h1>Up next</h1><button class="chip" id="check" type="button">Check listens</button></div>
-    <form class="search" action="/pages/search" method="get" role="search">
-      <input type="hidden" name="t" id="search-t">
-      <input type="search" name="q" placeholder="Search albums, people, bands, songs" aria-label="Search">
-    </form>
+    <div class="headline"><h1>Up next</h1>
+      <form class="search" action="/pages/search" method="get" role="search">
+        <input type="hidden" name="t" id="search-t">
+        <input type="search" name="q" placeholder="Search" aria-label="Search albums, people, bands, songs">
+      </form>
+      <button class="chip" id="check" type="button" title="Check listens">Check</button></div>
     <nav class="tabs" role="tablist" aria-label="Sections">
       <button class="tab" role="tab" data-tab="upnext" aria-selected="true">Up next</button>
       <button class="tab" role="tab" data-tab="recent" aria-selected="false">Recent listens</button>
@@ -125,12 +130,12 @@ h2 { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercas
       <button class="tab" role="tab" data-tab="progress" aria-selected="false">Progress</button>
     </nav>
     <div class="profiles" id="profiles"></div>
-    <div class="sub" id="sub">Loading…</div>
-    <div class="ready" id="ready" hidden></div>
-    <div class="inprogress" id="inprogress" hidden></div>
     <div class="nowplaying" id="nowplaying" hidden></div>
   </header>
   <div class="panel" data-panel="upnext">
+    <div class="sub" id="sub">Loading…</div>
+    <div class="ready" id="ready" hidden></div>
+    <div class="inprogress" id="inprogress" hidden></div>
     <section class="list" id="list" aria-label="Queue" aria-live="polite"></section>
     <div class="more" id="more">Loading more…</div>
   </div>
@@ -242,7 +247,7 @@ window.addEventListener("scroll", () => {
 function showTab(name) {
   document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.tab === name)));
   document.querySelectorAll(".panel").forEach(p => { p.hidden = p.dataset.panel !== name; });
-  $("profiles").hidden = $("sub").hidden = name !== "upnext";
+  $("profiles").hidden = name !== "upnext";
   try { localStorage.setItem("queue.tab", name); } catch (e) {}
   window.scrollTo(0, 0);
 }
@@ -469,7 +474,7 @@ async function checkListens() {
     toast(`Couldn't check listens (${err.message}). Try again in a minute.`);
   }
   b.disabled = false;
-  b.textContent = "Check listens";
+  b.textContent = "Check";
 }
 $("check").addEventListener("click", checkListens);
 
