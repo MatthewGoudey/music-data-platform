@@ -130,15 +130,20 @@ async def _playing_album(pool, p) -> int | None:
             )
             if rg:
                 return rg
-        # A player's short album name ("II" for Meat Puppets II): the artist's album holding the
-        # track, one whose title ends with the reported name first.
+        # A player's short album name ("II" for Meat Puppets II): the artist's album whose title
+        # ends with the reported name (a reissue's bonus track is on no tracklist), else the one
+        # holding the track; both first.
         return await conn.fetchval(
-            """SELECT rg.release_group_id FROM release_group rg JOIN artist a USING (artist_id)
-                WHERE a.norm_key = ANY($1::text[])
-                  AND EXISTS (SELECT 1 FROM release_group_track t
-                               WHERE t.release_group_id = rg.release_group_id AND t.norm_title = $2)
-                ORDER BY ($3 <> '' AND rg.norm_key LIKE '%' || $3) DESC, rg.mbid IS NULL,
-                         rg.release_group_id
+            """WITH c AS (
+                 SELECT rg.release_group_id, rg.mbid,
+                        ($3 <> '' AND rg.norm_key LIKE '% ' || $3) AS ends,
+                        EXISTS (SELECT 1 FROM release_group_track t
+                                 WHERE t.release_group_id = rg.release_group_id
+                                   AND t.norm_title = $2) AS has
+                   FROM release_group rg JOIN artist a USING (artist_id)
+                  WHERE a.norm_key = ANY($1::text[]))
+               SELECT release_group_id FROM c WHERE ends OR has
+                ORDER BY ends DESC, has DESC, mbid IS NULL, release_group_id
                 LIMIT 1""",
             artists,
             p.norm_title,
