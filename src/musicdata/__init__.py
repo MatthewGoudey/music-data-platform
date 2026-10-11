@@ -3,4 +3,4 @@
 ListenBrainz in, a queue out. See README.md and docs/adr/ for the design.
 """
 
-__version__ = "0.5.0"
+__version__ = "0.5.1"

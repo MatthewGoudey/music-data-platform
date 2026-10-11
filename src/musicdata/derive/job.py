@@ -17,7 +17,14 @@ from musicdata.db import connection
 from musicdata.derive.fold import fold_untracked
 from musicdata.derive.redirects import apply_redirects
 from musicdata.derive.reported import go_home
-from musicdata.derive.sessions import Play, Session, TrackRef, detect_sessions, eligible
+from musicdata.derive.sessions import (
+    Play,
+    Session,
+    TrackRef,
+    _Matcher,
+    detect_sessions,
+    eligible,
+)
 from musicdata.jobs.runs import JobFn, RunContext
 from musicdata.log import get_logger
 
@@ -29,6 +36,70 @@ LAST_RUN = """
     SELECT max(started_at) FROM pipeline_run
      WHERE job = 'derive' AND status = 'ok' AND notes ? 'sessions_written'
 """
+
+# Albums whose played titles include some no track matched exactly (the SQL above counts those as
+# bonus titles): the loose matcher sessions use gets a second look at them.
+UNMATCHED = """
+    SELECT l.release_group_id, l.norm_title, min(l.track_name) AS track_name
+      FROM listen l
+      JOIN release_group_tracklist tl
+        ON tl.release_group_id = l.release_group_id AND tl.source <> 'unresolved'
+     WHERE NOT EXISTS (SELECT 1 FROM release_group_track t
+                        WHERE t.release_group_id = l.release_group_id
+                          AND (t.recording_mbid = l.recording_mbid OR t.norm_title = l.norm_title))
+     GROUP BY l.release_group_id, l.norm_title
+"""
+HEARD_POSITIONS = """
+    SELECT l.release_group_id, array_agg(DISTINCT t.position) AS positions
+      FROM listen l
+      JOIN release_group_track t
+        ON t.release_group_id = l.release_group_id
+       AND (t.recording_mbid = l.recording_mbid OR t.norm_title = l.norm_title)
+     WHERE l.release_group_id = ANY($1::int[])
+     GROUP BY l.release_group_id
+"""
+
+
+async def loose_heard(conn: asyncpg.Connection) -> int:
+    """Correct release_group_stat for titles only the loose matcher places ("Country Girl" for
+    "Country Girl: Whiskey Boot Hill – …"): they count as heard tracks, not bonus titles."""
+    unmatched: dict[int, list[tuple[str, str | None]]] = defaultdict(list)
+    for r in await conn.fetch(UNMATCHED):
+        unmatched[r["release_group_id"]].append((r["norm_title"], r["track_name"]))
+    if not unmatched:
+        return 0
+    ids = list(unmatched)
+    tracks: dict[int, list[TrackRef]] = defaultdict(list)
+    for r in await conn.fetch(
+        """SELECT release_group_id, position, recording_mbid, norm_title, title
+             FROM release_group_track WHERE release_group_id = ANY($1::int[])""",
+        ids,
+    ):
+        tracks[r["release_group_id"]].append(
+            TrackRef(r["position"], r["recording_mbid"], r["norm_title"], r["title"])
+        )
+    heard = {r[0]: set(r[1]) for r in await conn.fetch(HEARD_POSITIONS, ids)}
+    fixes = []
+    for rg, titles in unmatched.items():
+        matcher = _Matcher(tracks.get(rg, []))
+        placed, still = set(), 0
+        for norm_title, track_name in titles:
+            pos = matcher.position(Play(None, None, norm_title, track_name))
+            if pos is None:
+                still += 1
+            else:
+                placed.add(pos)
+        if not placed:
+            continue
+        positions = heard.get(rg, set()) | placed
+        fixes.append((rg, len(positions), len(positions) + still))
+    await conn.executemany(
+        """UPDATE release_group_stat SET tracks_heard = $2, distinct_tracks = $3
+            WHERE release_group_id = $1""",
+        fixes,
+    )
+    return len(fixes)
+
 
 CHANGED_SINCE = """
     SELECT release_group_id FROM listen
@@ -184,6 +255,7 @@ def derive(*, full: bool = False) -> JobFn:
         async with connection(ctx.pool) as conn:
             async with conn.transaction():
                 await conn.execute(REBUILD_STATS)
+                loose_fixed = await loose_heard(conn)
             totals = await conn.fetchrow(
                 """SELECT count(*) FILTER (WHERE session_type = 'full') AS full,
                           count(*) FILTER (WHERE session_type = 'partial') AS partial
@@ -192,6 +264,7 @@ def derive(*, full: bool = False) -> JobFn:
         ctx.rows = written
         ctx.notes.update(
             mode="full" if since is None else "incremental",
+            stats_loose_fixed=loose_fixed,
             since=since,
             release_groups_rebuilt=len(rg_ids),
             sessions_written=written,
