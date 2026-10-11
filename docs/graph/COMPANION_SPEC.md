@@ -75,6 +75,9 @@ import, `R124-rg4567-W001` from facts).
 2. the **near-queue set**, so the albums Matt sees next are covered;
 3. **heard albums** (911), so connections have something to reach;
 4. the **V atlas** (2,838 resolved).
+5. **neighbours** (added 2026-10-10): albums one step from a heard album — the other records of the
+   people, bands and studios on it, the bands its people were in, and the albums and artists critics
+   compare it to or name as influences — ranked by how many heard albums reach each.
 About 4,500 albums; the rest of the 15,735 list albums join as they enter the near-queue set or
 their page opens. `graph fetch` (Wikipedia in `facts` mode, registered review pages) follows the same
 order for groups 1–3; the atlas's pages follow at the pace section 9 allows.
@@ -506,3 +509,7 @@ changes code ends with a version tag on Matt's go; the queue changes only with B
   document fires the routine's API trigger at once (`ROUTINE_FIRE_URL`, `ROUTINE_FIRE_TOKEN`); a
   daily scheduled run is the safety net for a failed start. The API token reaches the routine as a
   network secret, so the session never holds it. Section 8.2's four fixed runs no longer apply.
+- 2026-10-10 (Matt: "yes add the neighbours scope"): the default scope gains a fifth group,
+  neighbours (3.3): the graph grows outward from what Matt has heard, not only along his lists, so
+  connections, Walk back and Follow reach further. Ranked by the number of heard albums that reach
+  each; built after the atlas, within the same nightly limits (400 imports, 500 credits).

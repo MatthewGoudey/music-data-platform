@@ -137,7 +137,45 @@ async def ensure_album(conn: asyncpg.Connection, release_group_id: int) -> dict 
 # near-queue set by rank, 3 heard albums (a full session), 4 the V atlas by priority — each release
 # group once, at its earliest place. `$1` picks the step an album still needs.
 DEFAULT_ORDER = """
-WITH src AS (
+WITH heard AS (
+    SELECT e.entity_id FROM entity e JOIN release_group_stat s USING (release_group_id)
+     WHERE e.type = 'album' AND s.full_sessions > 0
+), nodes AS (  -- who and what ties to a heard album: its people, studios, comparisons, influences
+    SELECT a.subject_id AS node, a.object_id AS album FROM assertion a
+     WHERE a.predicate = 'credited_on' AND a.status = 'accepted'
+       AND a.object_id IN (SELECT entity_id FROM heard)
+    UNION
+    SELECT a.object_id, a.subject_id FROM assertion a
+     WHERE a.predicate IN ('recorded_at', 'sounds_like', 'influenced_by') AND a.status = 'accepted'
+       AND a.subject_id IN (SELECT entity_id FROM heard)
+), reach AS (  -- the albums each node leads to
+    SELECT n.node, al.release_group_id AS rg
+      FROM nodes n
+      JOIN assertion a ON a.subject_id = n.node AND a.predicate = 'credited_on' AND a.status = 'accepted'
+      JOIN entity al ON al.entity_id = a.object_id AND al.type = 'album'
+    UNION
+    SELECT n.node, al.release_group_id
+      FROM nodes n
+      JOIN assertion a ON a.object_id = n.node AND a.predicate = 'recorded_at' AND a.status = 'accepted'
+      JOIN entity al ON al.entity_id = a.subject_id AND al.type = 'album'
+    UNION
+    SELECT n.node, n.node_rg FROM (SELECT n.node, ne.release_group_id AS node_rg FROM nodes n
+                                     JOIN entity ne ON ne.entity_id = n.node AND ne.type = 'album') n
+    UNION  -- a band or artist: its albums; a person: the albums of the bands they were in
+    SELECT n.node, rg.release_group_id
+      FROM nodes n
+      JOIN entity ne ON ne.entity_id = n.node
+      LEFT JOIN assertion m ON m.subject_id = n.node AND m.predicate = 'member_of' AND m.status = 'accepted'
+      LEFT JOIN entity b ON b.entity_id = m.object_id
+      JOIN release_group rg ON rg.artist_id IN (ne.artist_id, b.artist_id)
+     WHERE rg.primary_type = 'Album'
+       AND NOT ('Compilation' = ANY(coalesce(rg.secondary_types, '{}'))
+                OR 'Live' = ANY(coalesce(rg.secondary_types, '{}')))
+), neighbours AS (  -- companion spec 3.3 group 5, ranked by how many heard albums reach each
+    SELECT r.rg, count(DISTINCT n.album) AS touches
+      FROM nodes n JOIN reach r USING (node)
+     WHERE r.rg IS NOT NULL GROUP BY r.rg
+), src AS (
     SELECT en.release_group_id AS rg, 1 AS grp, 0 AS ord, NULL::text AS priority,
            false AS start_here
       FROM graph_album g JOIN entity en USING (entity_id)
@@ -156,6 +194,8 @@ WITH src AS (
            e.priority, e.start_here
       FROM list_entry e JOIN list l USING (list_id)
      WHERE l.slug = 'v_atlas' AND e.resolve_status = 'resolved' AND e.review_status = 'accepted'
+    UNION ALL
+    SELECT rg, 5, -touches::int, NULL, false FROM neighbours
 ), first AS (
     SELECT DISTINCT ON (rg) rg, grp, ord, priority, start_here
       FROM src WHERE rg IS NOT NULL ORDER BY rg, grp, ord
