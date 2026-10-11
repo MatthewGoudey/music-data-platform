@@ -183,35 +183,119 @@ document.querySelectorAll("[data-follow]").forEach(b => b.addEventListener("clic
     return shell(d["name"], "\n".join(parts), t, script=script)
 
 
+LIST_SEARCH = r"""
+WITH hits AS (
+    SELECT e.release_group_id, e.artist_key, e.album_key, e.raw_album, e.raw_artist, e.year, l.name
+      FROM list_entry e JOIN list l USING (list_id)
+     WHERE e.review_status <> 'rejected'
+       AND (e.raw_album ILIKE '%' || $1 || '%' OR e.raw_artist ILIKE '%' || $1 || '%'
+            OR ($2 <> '' AND (e.album_key LIKE '%' || $2 || '%' OR e.artist_key LIKE '%' || $2 || '%')))
+    UNION ALL  -- albums heard but on no list
+    SELECT rg.release_group_id, a.norm_key, rg.norm_key, rg.title, a.name, rg.first_release_year, NULL
+      FROM release_group rg JOIN artist a USING (artist_id)
+     WHERE rg.title ILIKE '%' || $1 || '%' OR a.name ILIKE '%' || $1 || '%'
+)
+SELECT h.release_group_id,
+       coalesce(min(rg.title), min(h.raw_album)) AS title,
+       coalesce(min(a.name), min(h.raw_artist)) AS artist,
+       coalesce(min(rg.first_release_year), min(h.year)) AS year,
+       array_remove(array_agg(DISTINCT h.name), NULL) AS lists
+  FROM hits h
+  LEFT JOIN release_group rg ON rg.release_group_id = h.release_group_id
+  LEFT JOIN artist a ON a.artist_id = rg.artist_id
+ GROUP BY h.release_group_id,
+          CASE WHEN h.release_group_id IS NULL THEN h.artist_key || '|' || h.album_key END
+ ORDER BY count(h.name) DESC, 2
+ LIMIT 80
+"""
+
+
+async def _list_albums(conn: asyncpg.Connection, q: str, t: str, shown: set[int]) -> list[str]:
+    """Every album on Matt's lists (and every album he has heard) whose title or artist matches,
+    whether or not the graph has met it; one an album page cannot show yet (no match to
+    MusicBrainz) is listed without a link."""
+    from musicdata.identity import norm_key
+
+    lis = []
+    for r in await conn.fetch(LIST_SEARCH, q, norm_key(q) or ""):
+        if r["release_group_id"] in shown:
+            continue
+        year = f" ({r['year']})" if r["year"] else ""
+        n = len(r["lists"])
+        lists = f" · on {n} list{'s' if n > 1 else ''}" if n else ""
+        meta = (f'<span class="meta" title="{esc(", ".join(r["lists"]))}">'
+                f'Album · {esc(r["artist"])}{year}{lists}</span>')  # fmt: skip
+        if r["release_group_id"]:
+            href = esc(link(f"/albums/{r['release_group_id']}/page", t))
+            lis.append(f'<li><a href="{href}">{esc(r["title"])}</a> {meta}</li>')
+        else:
+            lis.append(f"<li>{esc(r['title'])} {meta} "
+                       f'<span class="meta">· not matched yet</span></li>')  # fmt: skip
+    return lis
+
+
+# The best-known names first: a word of the name starts with what was typed, ranked by the
+# accepted claims that touch it (Neil Young before a session player named Neil).
+SUGGEST_NAMES = r"""
+WITH c AS (
+    SELECT entity_id, type, name FROM entity
+     WHERE type IN ('person', 'artist', 'label', 'place')
+       AND (name ILIKE $1 || '%' OR name ILIKE '% ' || $1 || '%')
+     LIMIT 200
+)
+SELECT c.entity_id, c.type, c.name,
+       (SELECT count(*) FROM assertion a
+         WHERE a.status = 'accepted' AND (a.subject_id = c.entity_id OR a.object_id = c.entity_id)) AS n
+  FROM c ORDER BY n DESC, c.name LIMIT 3
+"""
+
+
+async def suggest(conn: asyncpg.Connection, q: str, t: str, n: int = 8) -> list[dict]:
+    """Autocomplete: people, bands, labels and studios the graph knows, then albums from the
+    lists and listening, names that start with what was typed first."""
+    from musicdata.identity import norm_key
+
+    q = q.strip()
+    if len(q) < 2:
+        return []
+    lo = q.casefold()
+    out = []
+    for r in await conn.fetch(SUGGEST_NAMES, q):
+        out.append({"label": r["name"], "meta": TYPE_WORD.get(r["type"], r["type"]),
+                    "href": link(f"/entities/{r['entity_id']}/page", t)})  # fmt: skip
+    for s in out:
+        s["first"] = s["label"].casefold().startswith(lo)
+    albums = []
+    for r in await conn.fetch(LIST_SEARCH, q, norm_key(q) or ""):
+        year = f" · {r['year']}" if r["year"] else ""
+        href = (link(f"/albums/{r['release_group_id']}/page", t) if r["release_group_id"]
+                else link("/pages/search", t, q=r["title"]))  # fmt: skip
+        first = r["title"].casefold().startswith(lo) or r["artist"].casefold().startswith(lo)
+        albums.append({"label": r["title"], "meta": f"{r['artist']}{year}", "href": href,
+                       "first": first})  # fmt: skip
+    albums.sort(key=lambda s: not s["first"])  # stable: list count order within each group
+    return [{k: v for k, v in s.items() if k != "first"} for s in (out + albums)[:n]]
+
+
 async def search_page(conn: asyncpg.Connection, q: str, t: str) -> str:
     from musicdata.graph.queries import search_entities
 
     q = q.strip()
     lis = []
+    shown: set[int] = set()  # albums already listed through the graph
     if q:
         for r in await search_entities(conn, q, None, 40):
             if r["type"] in ("lane", "map", "list", "tag"):
                 continue
+            if r["release_group_id"]:
+                shown.add(r["release_group_id"])
             target = (link(f"/albums/{r['release_group_id']}/page", t) if r["release_group_id"]
                       else link(f"/entities/{r['entity_id']}/page", t))  # fmt: skip
             lis.append(
                 f'<li><a href="{esc(target)}">{esc(r["name"])}</a> '
                 f'<span class="meta">{esc(TYPE_WORD.get(r["type"], r["type"]))}</span></li>'
             )
-        # albums the graph has not met yet: straight from the listening tables
-        known = {r for r in lis}
-        for r in await conn.fetch(
-            """SELECT rg.release_group_id, rg.title, a.name AS artist FROM release_group rg
-                 JOIN artist a ON a.artist_id = rg.artist_id
-                WHERE rg.title ILIKE '%' || $1 || '%'
-                  AND NOT EXISTS (SELECT 1 FROM entity e WHERE e.release_group_id = rg.release_group_id)
-                ORDER BY rg.title LIMIT 15""",
-            q,
-        ):
-            li = (f'<li><a href="{esc(link(f"/albums/{r["release_group_id"]}/page", t))}">{esc(r["title"])}</a> '
-                  f'<span class="meta">Album · {esc(r["artist"])}</span></li>')  # fmt: skip
-            if li not in known:
-                lis.append(li)
+        lis += await _list_albums(conn, q, t, shown)
     body = (f'<header class="box"><h1>Search</h1><div class="meta">{esc(q) or "Type a name above."}</div></header>'
             + (f'<section><div class="box"><ul class="plain">{"".join(lis)}</ul></div></section>' if lis
                else (f'<p class="lack">Nothing found for “{esc(q)}”.</p>' if q else "")))  # fmt: skip

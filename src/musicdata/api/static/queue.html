@@ -167,6 +167,8 @@ h2 { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercas
 <script>
 const T = new URLSearchParams(location.search).get("t") || "";
 document.getElementById("search-t").value = T;
+{ const s = document.createElement("script");  // autocomplete for the search box
+  s.src = `/pages/suggest.js?t=${encodeURIComponent(T)}`; document.body.appendChild(s); }
 let profile = "default";
 try { profile = localStorage.getItem("queue.profile") || "default"; } catch (e) {}
 const asked = new URLSearchParams(location.search).get("profile");  // e.g. Walk back from a page

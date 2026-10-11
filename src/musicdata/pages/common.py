@@ -118,6 +118,66 @@ a:focus-visible, .btn:focus-visible, input:focus-visible { outline: 2px solid va
 """
 
 
+# Autocomplete for every search box (input[name=q] in a /pages/search form): served at
+# /pages/suggest.js, it asks /pages/suggest as Matt types and lists up to 8 names under the box.
+SUGGEST_JS = """
+(() => {
+  const css = document.createElement("style");
+  css.textContent = `
+.sg-wrap { position: relative; }
+.sg { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 50; margin: 0; padding: 4px;
+  list-style: none; background: var(--surface, #fff); border: 1px solid var(--line, #ccc); border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.18); max-height: 60vh; overflow-y: auto; min-width: 240px; }
+.sg[hidden] { display: none !important; }
+.sg a { display: block; padding: 8px 10px; border-radius: 7px; text-decoration: none; color: var(--ink, #111); }
+.sg a.on, .sg a:hover { background: var(--hi, rgba(0,0,0,.06)); }
+.sg .l { font-weight: 700; display: block; overflow-wrap: anywhere; }
+.sg .m { font-size: 12.5px; color: var(--muted, #666); }`;
+  document.head.appendChild(css);
+  const t = new URLSearchParams(location.search).get("t") || "";
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"})[c]);
+  document.querySelectorAll('form[action="/pages/search"] input[name=q]').forEach(input => {
+    const form = input.form;
+    form.classList.add("sg-wrap");
+    input.setAttribute("autocomplete", "off");
+    const box = document.createElement("ul");
+    box.className = "sg"; box.hidden = true; box.setAttribute("role", "listbox");
+    form.appendChild(box);
+    let timer = 0, seq = 0, active = -1;
+    const items = () => [...box.querySelectorAll("a")];
+    const mark = () => items().forEach((a, i) => a.classList.toggle("on", i === active));
+    input.addEventListener("input", () => {
+      clearTimeout(timer);
+      const q = input.value.trim();
+      if (q.length < 2) { box.hidden = true; return; }
+      timer = setTimeout(async () => {
+        const mine = ++seq;
+        try {
+          const r = await fetch(`/pages/suggest?q=${encodeURIComponent(q)}&t=${encodeURIComponent(t)}`);
+          if (!r.ok || mine !== seq) return;
+          const list = await r.json();
+          active = -1;
+          box.innerHTML = list.map(s => `<li><a href="${esc(s.href)}"><span class="l">${esc(s.label)}</span>`
+            + `<span class="m">${esc(s.meta)}</span></a></li>`).join("");
+          box.hidden = !list.length;
+        } catch (e) {}
+      }, 150);
+    });
+    input.addEventListener("keydown", e => {
+      const a = items();
+      if (box.hidden || !a.length) return;
+      if (e.key === "ArrowDown") { active = (active + 1) % a.length; mark(); e.preventDefault(); }
+      else if (e.key === "ArrowUp") { active = (active - 1 + a.length) % a.length; mark(); e.preventDefault(); }
+      else if (e.key === "Enter" && active >= 0) { location.href = a[active].href; e.preventDefault(); }
+      else if (e.key === "Escape") { box.hidden = true; }
+    });
+    input.addEventListener("blur", () => setTimeout(() => { box.hidden = true; }, 200));
+    input.addEventListener("focus", () => { if (box.innerHTML && input.value.trim().length > 1) box.hidden = false; });
+  });
+})();
+"""
+
+
 def shell(title: str, body: str, t: str, *, script: str = "") -> str:
     return f"""<!doctype html>
 <html lang="en">
@@ -141,5 +201,6 @@ def shell(title: str, body: str, t: str, *, script: str = "") -> str:
 {body}
 </div>
 {script}
+<script src="{esc(link("/pages/suggest.js", t))}" defer></script>
 </body>
 </html>"""

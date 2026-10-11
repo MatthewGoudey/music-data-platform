@@ -515,3 +515,8 @@ changes code ends with a version tag on Matt's go; the queue changes only with B
   wait for the Phase 4 gate. Phase 6 ships to prod as v0.5.0; prod builds the graph once and dev is
   refilled from prod (`graph copy --source prod --replace`); the deep dives written in dev move to
   prod (`documents copy --source dev`).
+- 2026-10-10 (Matt: "all album names and artists names from all my lists into the search … give it
+  auto complete too"): search finds every album on every list and every album heard, by title or
+  artist, whether or not the graph has met it (an album with no MusicBrainz match shows as "not
+  matched yet", without a link). Every search box autocompletes (`GET /pages/suggest`): up to 3
+  people, bands, labels or studios, the best known first, then albums.

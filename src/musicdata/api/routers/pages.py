@@ -9,7 +9,7 @@ from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from musicdata.api.deps import Pool, page_or_bearer
 from musicdata.clients.listenbrainz import ListenBrainzClient
@@ -18,8 +18,8 @@ from musicdata.db import connection
 from musicdata.graph.generated import rebuild_following, walk
 from musicdata.ingest.parse import parse_listen
 from musicdata.pages.album import album_page
-from musicdata.pages.common import link
-from musicdata.pages.hub import entity_page, search_page
+from musicdata.pages.common import SUGGEST_JS, link
+from musicdata.pages.hub import entity_page, search_page, suggest
 
 router = APIRouter(tags=["pages"], dependencies=[Depends(page_or_bearer)])
 NOW_CACHE_SECONDS = 20
@@ -55,6 +55,19 @@ async def entity(entity_id: int, pool: Pool, t: Annotated[str, Query()] = ""):
 async def search(pool: Pool, q: str = "", t: Annotated[str, Query()] = "") -> HTMLResponse:
     async with connection(pool) as conn:
         return HTMLResponse(await search_page(conn, q, t))
+
+
+@router.get("/pages/suggest")
+async def suggestions(pool: Pool, q: str = "", t: Annotated[str, Query()] = "") -> list[dict]:
+    """Autocomplete for every search box: up to 8 names with a link each."""
+    async with connection(pool) as conn:
+        return await suggest(conn, q, t)
+
+
+@router.get("/pages/suggest.js")
+async def suggest_js() -> Response:
+    return Response(SUGGEST_JS, media_type="text/javascript",
+                    headers={"Cache-Control": "max-age=300"})  # fmt: skip
 
 
 FOLLOWABLE = ("person", "artist", "label", "place")
