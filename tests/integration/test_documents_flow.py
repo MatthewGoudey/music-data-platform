@@ -26,6 +26,7 @@ URL = "https://example.com/zz-doc-review"
 def _tokens(monkeypatch):
     monkeypatch.setenv("API_TOKEN", "test-token")
     monkeypatch.setenv("QUEUE_PAGE_TOKEN", PAGE)
+    monkeypatch.delenv("ROUTINE_FIRE_URL", raising=False)  # a test never starts the real worker
     from musicdata.config import get_settings
 
     get_settings.cache_clear()
@@ -135,7 +136,9 @@ def test_document_flow(client) -> None:
         again = client.post(
             f"/albums/{rg}/documents", params={"t": PAGE}, json={"kind": "deep_dive"}
         )
-        assert again.json() == r.json() | {"created": False}
+        first = {k: v for k, v in r.json().items() if k != "worker"}
+        assert r.json()["worker"]["fired"] is False  # no trigger configured here
+        assert again.json() == first | {"created": False}
         assert (
             "requested, usually ready" in client.get(f"/albums/{rg}/page", params={"t": PAGE}).text
         )
