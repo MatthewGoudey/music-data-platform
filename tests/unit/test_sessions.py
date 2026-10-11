@@ -103,3 +103,24 @@ def test_a_joined_track_answers_to_either_half() -> None:
     plays = [Play(T0 + timedelta(minutes=8 * n), None, "", name) for n, name in enumerate(names)]
     [s] = detect_sessions(plays, supreme)
     assert (s.session_type, s.tracks_played, s.completion) == ("full", 3, 1.0)
+
+
+def test_a_medley_answers_to_the_title_before_its_colon() -> None:
+    """Spotify reports "Country Girl"; MusicBrainz names the medley in full (Déjà vu, track 9)."""
+    from musicdata.derive.sessions import _Matcher
+
+    long = "Country Girl: Whiskey Boot Hill – Down, Down, Down – “Country Girl” (I Think You’re Pretty)"
+    tracks = [TrackRef(1, None, "carry on", "Carry On"),
+              TrackRef(9, None, "country girl whiskey boot hill", long)]  # fmt: skip
+    m = _Matcher(tracks)
+    assert m.position(Play(T0, None, "country girl", "Country Girl")) == 9
+
+
+def test_a_name_two_tracks_share_matches_neither() -> None:
+    from musicdata.derive.sessions import _Matcher
+
+    tracks = [TrackRef(3, None, "interlude bricks", "Interlude: Bricks"),
+              TrackRef(7, None, "interlude rain", "Interlude: Rain")]  # fmt: skip
+    m = _Matcher(tracks)
+    assert m.position(Play(T0, None, "interlude", "Interlude")) is None
+    assert m.position(Play(T0, None, "interlude rain", "Interlude: Rain")) == 7

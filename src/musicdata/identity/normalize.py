@@ -172,7 +172,10 @@ def loose_title_keys(title: str) -> set[str]:
     - a trailing live-recording description goes: "Folsom Prison Blues (Live at Folsom
       State Prison, Folsom, CA (1st Show) - January 1968)" → "folsom prison blues";
     - a track MusicBrainz joins with " / " also answers to each half ("Part 3: Pursuance
-      / Part 4: Psalm").
+      / Part 4: Psalm");
+    - a medley or suite named "Title: subtitles" also answers to the part before the colon,
+      as players often report it ("Country Girl: Whiskey Boot Hill – Down, Down, Down –
+      “Country Girl” (I Think You’re Pretty)" → "country girl").
     """
     if not title:
         return set()
@@ -185,6 +188,8 @@ def loose_title_keys(title: str) -> set[str]:
         out.add(key)
         if stripped := _LIVE_TAIL.sub("", key).strip():
             out.add(stripped)
+        if ":" in part and (head := _NUMBERED.sub(_numbered, title_key(part.split(":", 1)[0]))):
+            out.add(head)
     return out
 
 
