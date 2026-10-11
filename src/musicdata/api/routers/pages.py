@@ -105,14 +105,31 @@ async def _playing_album(pool, p) -> int | None:
             )
             if rg:
                 return rg
-        if not p.release_name:
-            return None
+        artists = [k for k in (norm_key(p.album_artist.name), norm_key(p.artist_name)) if k]
+        key = album_key(p.release_name) if p.release_name else ""
+        if key:
+            rg = await conn.fetchval(
+                """SELECT rg.release_group_id FROM release_group rg JOIN artist a USING (artist_id)
+                    WHERE rg.norm_key = $1 AND a.norm_key = ANY($2::text[])
+                    ORDER BY rg.mbid IS NULL, rg.release_group_id LIMIT 1""",
+                key,
+                artists,
+            )
+            if rg:
+                return rg
+        # A player's short album name ("II" for Meat Puppets II): the artist's album holding the
+        # track, one whose title ends with the reported name first.
         return await conn.fetchval(
             """SELECT rg.release_group_id FROM release_group rg JOIN artist a USING (artist_id)
-                WHERE rg.norm_key = $1 AND a.norm_key = ANY($2::text[])
-                ORDER BY rg.mbid IS NULL, rg.release_group_id LIMIT 1""",
-            album_key(p.release_name),
-            [k for k in (norm_key(p.album_artist.name), norm_key(p.artist_name)) if k],
+                WHERE a.norm_key = ANY($1::text[])
+                  AND EXISTS (SELECT 1 FROM release_group_track t
+                               WHERE t.release_group_id = rg.release_group_id AND t.norm_title = $2)
+                ORDER BY ($3 <> '' AND rg.norm_key LIKE '%' || $3) DESC, rg.mbid IS NULL,
+                         rg.release_group_id
+                LIMIT 1""",
+            artists,
+            p.norm_title,
+            key,
         )
 
 
