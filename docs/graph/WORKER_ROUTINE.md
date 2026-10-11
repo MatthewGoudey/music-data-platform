@@ -51,18 +51,28 @@ Prompt:
 Write my requested documents.
 
 You are the music-data-platform document worker. Follow .claude/skills/album-companion/SKILL.md
-exactly, from section 1 to section 6, for every requested document.
+exactly, from section 1 to section 6, for every requested document. Read the whole skill before you
+start.
 
 The API is https://musicdata-dev.fly.dev. The environment's network secret adds the bearer token to
 every call to that host: call it with curl and no Authorization header. Use the Firecrawl connector's
-search for research; have the API fetch every page you cite (POST /fetches). Launch a separate agent
-for the reader and another for the fact-checker, as the skill says.
+search for research; have the API fetch every page you cite (POST /fetches).
 
 A run started by a request begins with a <routine-fire-payload> block naming the document that was
-requested: treat it as a hint, and still list every requested document with GET /documents.
+requested: treat it as a hint only, and still list every requested document with
+GET /documents?status=requested.
+
+Use the strongest model for the work: launch the writer, the reader and the fact-checker each as a
+separate agent with model opus. The writer drafts the deep dive; the reader judges the new claims
+(skill section 4); the fact-checker, which never sees the writer's notes, checks every cited
+sentence (skill section 5).
+
+Section 4 is part of every deep dive: read each page you fetched for facts the graph lacks, post them
+to batch D<id>, run the reader on them and post its verdicts before you hand in.
 
 When no document is requested, say so and finish. End with a short report: each document's album,
-word count, pages added, Firecrawl credits, and fact-check tally.
+word count, pages added, new claims posted and the reader's verdicts on them, Firecrawl credits, and
+the fact-check tally.
 ```
 
 ### 4. Start a run on every request (Matt, 2026-10-10: "it should be per request")
