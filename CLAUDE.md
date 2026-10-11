@@ -58,7 +58,16 @@ any of these files, and log the change at its bottom.
   No Docker: integration tests run against Neon dev with `--env dev` or `DATABASE_URL` set (ADR 0005).
 - Run any job against an environment from the laptop: `uv run musicdata --env dev --plain-logs <job>`.
 
-## Current state (2026-10-09, Phase 4 live in prod; Matt's week on the page has begun)
+## Current state (2026-10-10, v0.5.0: Phase 6 live in prod)
+Prod is the home of everything: the graph is built once there every night (near-queue, heard
+albums, atlas, neighbours; 400 imports and 500 credits a night) and dev is refilled from it with
+`musicdata --env dev graph copy --source prod --replace`. Deep dives are requested from album pages
+in prod and written by the Claude Code routine (`docs/graph/WORKER_ROUTINE.md`), which a request
+starts at once; a finished one pushes to ntfy and shows on Up next. Up next also shows what is
+playing and the deep dives in progress. Hotfixes v0.4.4–v0.4.5 came from `hotfix/0.4.4` before the
+gate was dropped.
+
+Earlier state (2026-10-09, Phase 4 live in prod):
 `v0.3.1` is in prod: lists and the atlas, `/next`, the Up next page with Shuffle, Undo,
 tags and Check listens. Prod lists were settled by `lists copy-resolutions --source dev`
 (22,156 matched), prod ran `full-load -f mode=repair` with the reported-album rule (At

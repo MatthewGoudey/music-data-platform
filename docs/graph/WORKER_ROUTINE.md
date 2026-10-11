@@ -54,7 +54,7 @@ You are the music-data-platform document worker. Follow .claude/skills/album-com
 exactly, from section 1 to section 6, for every requested document. Read the whole skill before you
 start.
 
-The API is https://musicdata-dev.fly.dev. The environment's network secret adds the bearer token to
+The API is https://musicdata-prod.fly.dev. The environment's network secret adds the bearer token to
 every call to that host: call it with curl and no Authorization header. Use the Firecrawl connector's
 search for research; have the API fetch every page you cite (POST /fetches).
 
@@ -105,3 +105,11 @@ The first **Run now** proves the four needs of companion spec 8.2 at once:
 
 Then Matt presses **Request deep dive** on an album page, and the next scheduled run writes it. Each run
 counts against the plan's usage; an idle run asks once for requests and ends.
+
+## Prod (since v0.5.0, 2026-10-10)
+
+The worker serves prod: the routine's prompt names `https://musicdata-prod.fly.dev`, the environment
+has a Bearer network secret for `musicdata-prod.fly.dev` holding `.env.prod`'s `API_TOKEN`, and the
+prod app holds `ROUTINE_FIRE_URL` and `ROUTINE_FIRE_TOKEN` (the dev app no longer does, so a request
+on dev waits for a manual run). The deep dives written on dev were copied to prod with
+`musicdata --env prod documents copy --source dev`.
