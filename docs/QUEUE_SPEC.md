@@ -7,8 +7,8 @@
 
 ## 0. Priorities and what happens first
 
-**The queue is the top priority.** It is what the whole system exists for. Everything else
-waits until the Phase 4 gate, except the short Step 0 below.
+**The queue is the top priority.** It is what the whole system exists for. Work proceeds on
+proven functionality; no step waits on a period of use (gates dropped 2026-10-10).
 
 **Step 0 — clean up before Block A (small, one commit each, report when done):**
 1. Remove the "Upcoming shows for you" section from the `/queue` page. Shows stay available
@@ -28,8 +28,8 @@ waits until the Phase 4 gate, except the short Step 0 below.
 
 **Then Phase 4, Blocks A–G (section 15).**
 
-**Waiting until after the Phase 4 gate:** venue travel times, festivals, any further shows work,
-and any further verdict work.
+**Open whenever Matt wants them:** venue travel times, festivals, further shows work, and further
+verdict work.
 
 **Data exports are Claude Code's job, not Matt's.** The atlas and the published lists are
 already in `seeds/`. The old-database tables (the Claude canon, venues, manual tracklists) come
@@ -293,7 +293,7 @@ Every action is one tap on a queue card, and every one is optional.
 Suggested tags stay `suggested` until Matt confirms them on the page.
 
 Verdicts are dormant: the `verdict` table, `POST /verdicts` and the album page's list stay as
-they are, and the queue reads nothing from them. Revisit them with Matt after the Phase 4 gate.
+they are, and the queue reads nothing from them. Revisit them when Matt asks.
 
 ## 12. API
 
@@ -369,8 +369,8 @@ history alone fails it.
   shuffle, pin, bump, snooze, mark played, not for me; the progress strip.
 - **Block F — tags.** The Tag control on cards, `POST /tags/{name}/apply` and `/remove`,
   `POST /tag-now-playing`.
-- **Block G — the gate.** Dev green on L1–L5 and Q1–Q5 → Matt says go → tag → prod load and
-  resolve → Matt uses the page for a week. In `docs/claude-project-instructions.md`, add rows for
+- **Block G — the release.** Dev green on L1–L5 and Q1–Q5 → Matt says go → tag → prod load and
+  resolve. In `docs/claude-project-instructions.md`, add rows for
   `/next`, `/gaps` and `/lists`, remove the "Record a verdict" row, and tell Matt to paste the
   update into the Project instructions.
 
@@ -500,3 +500,6 @@ priority Essential. Matt has played other Ratboys records but no session of this
   0027). Heard albums there carry a "heard" slot tag. Everywhere else heard albums stay out of new
   and wildcard slots (section 7). Also from Matt the same day: the Walk back chip shows only while
   on a walk and leads back to its album; any other chip leaves the walk.
+- 2026-10-10 v19 (Matt: "Drop the gate entirely and remove it from the spec. Tag now."): no phase waits on a period of use. The Phase 4 gate's
+  week on the page is dropped; Phase 6's queue changes ship to prod now (v0.5.0); shows, venues and
+  verdicts are open whenever Matt wants them.

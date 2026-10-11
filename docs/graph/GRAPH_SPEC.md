@@ -13,15 +13,14 @@
 
 ## 0. Priorities and what happens first
 
-**Matt said start now (2026-10-09).** The queue's Phase 4 gate (Matt's week on the page) runs in
-parallel, exactly as it is:
+**Matt said start now (2026-10-09).** (The Phase 4 gate's week of use was dropped on 2026-10-10;
+the rules below held until then.)
 - Always run graph jobs and keep graph data in **dev** until Phase 6 Block B
   (`docs/graph/COMPANION_SPEC.md`). Migrations may reach prod with any queue fix tagged meanwhile:
   empty tables change nothing there. Graph jobs, graph data and the nightly graph workflow reach
   prod only in Phase 6 Block B, on Matt's go.
 - Always keep the queue code (`src/musicdata/queue/`, `/next`, the `/queue` page) as it is until
   Phase 6 Block H.
-- Shows, venues and verdict work still wait for the Phase 4 gate.
 - The old pipeline and its Task Scheduler task keep running.
 
 Read first, in this order: `docs/graph/edge-vocabulary.md` (sections 1–4 and 13), this file,
@@ -628,3 +627,5 @@ Tests:
 - 2026-10-10: v12 (Matt's v11 go). From the P07 gaps: `arrangement_from`, `compiles`,
   `companion_to` (lineage facet, not lineage edges), and `renamed_from` for places and labels;
   30 predicates.
+- 2026-10-10 (Matt: "Drop the gate entirely and remove it from the spec. Tag now."): no graph work waits on a period of use; prod builds the graph
+  once and dev is refilled from prod.

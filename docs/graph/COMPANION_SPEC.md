@@ -17,8 +17,7 @@
   (Claude on his plan, Sonnet or Opus, and Firecrawl searches and pages) to write.
 
 What happens first: finish P04 under Phase 5 (load, verify, read, reading questions). P05–P07
-continue alongside this phase. Graph data stays in dev until Block B; the queue's code changes in
-Block H, after the documents, because the queue's gate week is under way.
+continue alongside this phase. Graph data stays in dev until Block B.
 
 Always ask Matt before: promoting the graph to prod (Block B), the default scope's Firecrawl spend
 (Block C), the worker's schedule (Block G), the queue tag (Block H), anything that costs money, and
@@ -468,8 +467,7 @@ changes code ends with a version tag on Matt's go; the queue changes only with B
 - **Block H — Queue.** Migrations 0023–0025; connection lines and the page link on cards, `graph_weight`,
   the thread slot, generated-list handling (5.4), follow and walk back with their page buttons; the
   rules written into `docs/QUEUE_SPEC.md`; tests; tag on Matt's go.
-- **Block I — Sign-off.** C1–C5 and G1–G8 green in prod; Matt has used the cards, pages and one deep
-  dive while listening for a week.
+- **Block I — Sign-off.** C1–C5 and G1–G8 green in prod.
 
 ## 14. What Matt does
 
@@ -513,3 +511,7 @@ changes code ends with a version tag on Matt's go; the queue changes only with B
   neighbours (3.3): the graph grows outward from what Matt has heard, not only along his lists, so
   connections, Walk back and Follow reach further. Ranked by the number of heard albums that reach
   each; built after the atlas, within the same nightly limits (400 imports, 500 credits).
+- 2026-10-10 (Matt: "Drop the gate entirely and remove it from the spec. Tag now."): Block I's week of use is dropped, and the queue changes no longer
+  wait for the Phase 4 gate. Phase 6 ships to prod as v0.5.0; prod builds the graph once and dev is
+  refilled from prod (`graph copy --source prod --replace`); the deep dives written in dev move to
+  prod (`documents copy --source dev`).

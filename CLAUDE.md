@@ -88,8 +88,9 @@ runs read active venues plus a rotating 85.
 Current priority (Matt, 2026-10-10): Phase 6 (`docs/graph/COMPANION_SPEC.md` section 13);
 Blocks A and B are done and prod is the graph's home. Reading batches P05–P07 run against prod
 (`--env prod`); Block C (default scope, Firecrawl spend) waits for Matt's go.
-The queue's gate week continues untouched until Phase 6 Block H. Shows, venues and verdict work
-wait until the Phase 4 gate.
+No phase waits on a period of use (Matt dropped the gates 2026-10-10): proven functionality ships.
+Prod builds the graph once; dev is refilled from prod. Shows, venues and verdicts are open when Matt
+asks.
 
 Open items that need Matt:
 - Done: `docs/claude-project-instructions.md` pasted into the claude.ai Project (gate step 19).
@@ -121,9 +122,7 @@ Notes for the next session:
   Chicago, and clean up their rows.
 
 ## Phase 6 checklist — the graph in the queue, and the album companion (spec: `docs/graph/COMPANION_SPEC.md`)
-Gate: C1–C5 and G1–G8 green in prod, and Matt has used the cards, pages and one deep dive while
-listening for a week. Prod runs only `v*` tags, so each block that changes code ends with a tag on
-Matt's go.
+Gate: C1–C5 and G1–G8 green in prod. Prod runs only `v*` tags; Phase 6 ships as v0.5.0 (2026-10-10).
 
 - [x] Block A — graph API (Block A rows of spec section 11), the brief with `pages` and per-track
       credits, the import's qualifier upsert and the pilot's re-import, Project instructions rows.
@@ -171,7 +170,7 @@ Matt's go.
 - [ ] Block H — migrations 0023–0025; card connection lines and page link, `graph_weight`, thread slot,
       generated-list handling, follow and walk back; the rules written into `docs/QUEUE_SPEC.md`;
       tag on Matt's go.
-- [ ] Block I — sign-off: C1–C5 and G1–G8 green in prod; a week of use.
+- [ ] Block I — sign-off: C1–C5 and G1–G8 green in prod.
 
 ## Phase 5 checklist — the music graph (spec: `docs/graph/GRAPH_SPEC.md`)
 Gate (milestone M2): the pilot slice verified (Block E) at the first-pass reader bar with G1–G8
@@ -205,7 +204,7 @@ green. Blocks F and G moved to Phase 6 (2026-10-10). The prototype (`scripts/gra
 
 ## Phase 4 checklist — lists, the atlas and the queue (spec: `docs/QUEUE_SPEC.md`)
 Gate: dev green on checks L1–L5 and tests Q1–Q5, the version tagged and live in prod with
-lists loaded and resolved, and Matt using the `/queue` page for a week.
+lists loaded and resolved.
 
 The seed data is in the working tree, uncommitted (added 2026-10-09): `seeds/lists/_lists.csv`
 registers five lists — `v_atlas` (2,942, `seeds/atlas/albums.csv` + `album_notes.csv`),
@@ -235,9 +234,9 @@ section and the verdict cards off it, and Block E puts "Up next" there. Verdicts
       `POST /queue/{id}/{action}`), Undo on played / hide / snooze (spec v5), progress strip.
 - [x] Block F — Tag control, `GET /tags`, `POST /tags/{name}/apply` and `/remove`,
       `POST /tag-now-playing`.
-- [ ] Block G — the gate. Done: v0.3.1 tagged and live in prod, lists loaded and resolved,
-      prod checks green, `docs/claude-project-instructions.md` updated (Matt pastes it into
-      the Project). Left: Matt uses the `/queue` page for a week (from 2026-10-09).
+- [x] Block G — the release. v0.3.1 tagged and live in prod, lists loaded and resolved, prod
+      checks green, `docs/claude-project-instructions.md` updated. (The week of use was dropped,
+      2026-10-10.)
 
 ## Phase 3 checklist — Chicago shows
 Gate (plan): E1 and E3 at 0, E2 ≥ 95%, shows endpoints in prod.
