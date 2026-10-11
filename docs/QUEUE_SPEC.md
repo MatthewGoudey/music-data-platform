@@ -519,3 +519,6 @@ priority Essential. Matt has played other Ratboys records but no session of this
 - 2026-10-10 v21 (Matt: "Can you mix the cards all up? The ratio we have is fine but I like the cards
   being mixed"): pins stay first; every other card interleaves in an order the page's seed draws,
   each kind keeping its own order. The Tastebreaker's genres drop bracketed notes before splitting.
+- 2026-10-10 v22 (Matt: "Slow scroll doesnt pull the header but fast scroll does"): the header
+  returns on a fast flick up (upward speed above 1.2 px/ms over the last 120 ms) or near the top of
+  the page; a slow scroll up leaves it away.

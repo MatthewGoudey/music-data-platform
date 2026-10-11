@@ -231,13 +231,21 @@ function watchMore() {
   moreObserver.observe($("more"));
 }
 
-// The header slides away while scrolling down and returns on any scroll up.
-let lastY = window.scrollY;
+// The header slides away while scrolling down and returns on a fast flick up (Matt: a slow
+// scroll up leaves it away), or near the top of the page.
+const FLICK = 1.2;  // px per ms of upward speed, measured over the last 120 ms
+let lastY = window.scrollY, away = false, samples = [];
 window.addEventListener("scroll", () => {
-  const y = window.scrollY;
+  const y = window.scrollY, t = performance.now();
+  samples.push([t, y]);
+  while (samples.length > 2 && t - samples[0][0] > 120) samples.shift();
+  const [t0, y0] = samples[0];
+  const up = t > t0 ? (y0 - y) / (t - t0) : 0;
+  if (y < 160) away = false;
+  else if (y > lastY) away = true;
+  else if (up > FLICK) away = false;
   // the header slides up but leaves Now playing showing at the top (Matt: keep it up at all times)
   const head = document.querySelector("header"), np = $("nowplaying");
-  const away = y > lastY && y > 160;
   const keep = np.hidden ? 0 : np.offsetHeight + 10;
   head.style.transform = away ? `translateY(-${head.offsetHeight - keep}px)` : "";
   lastY = y;
