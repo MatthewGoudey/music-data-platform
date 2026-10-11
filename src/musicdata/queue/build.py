@@ -13,7 +13,7 @@
 6. One album per artist across the queue, pins exempt.
 7. The same profile, Chicago day and data give the same queue: every draw uses `seed`.
 
-The queue reads pins, new, revisits, thread, wildcard, in that order.
+The queue reads pins, new, revisits, thread, tastebreaker, wildcard, in that order.
 """
 
 from __future__ import annotations
@@ -138,6 +138,8 @@ def build(
     exclude: Collection[int] = (),
     thread: int = 0,
     threads: Sequence[tuple[Item, str, int]] = (),
+    tastebreaker: int = 0,
+    breakers: Sequence[tuple[Item, str]] = (),
 ) -> list[Item]:
     rng = random.Random(seed)
     q = _Queue()
@@ -161,6 +163,17 @@ def build(
 
     threaded = _threads(q, threads, min(thread, open_slots), skip, rng if shuffle else None)
     open_slots -= len(threaded)
+
+    broke: list[Item] = []  # queue spec v20: a genre not played lately
+    for item, because in breakers:
+        if len(broke) >= min(tastebreaker, open_slots):
+            break
+        if q.fits(item) and item.release_group_id not in skip:
+            item.because = because
+            broke.append(item)
+            q.groups.add(item.release_group_id)
+            q.artists.add(item.artist_id)
+    open_slots -= len(broke)
 
     wild: list[Item] = []
     if wildcard and not pins and open_slots > 0:
@@ -194,6 +207,8 @@ def build(
         q.add(item, "revisit")
     for item in threaded:
         q.add(item, "thread")
+    for item in broke:
+        q.add(item, "tastebreaker")
     for item in wild:
         q.add(item, "wildcard")
     return q.items

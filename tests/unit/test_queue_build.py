@@ -256,3 +256,20 @@ def test_graph_affinity_is_bounded() -> None:
     assert graph_affinity(1.5, 0.3) == 1.15
     assert graph_affinity(99, 0.3) == 1.3  # never more than ×(1 + graph_weight)
     assert graph_affinity(99, 0.0) == 1.0  # profiles without the graph score as before
+
+
+def test_tastebreaker_takes_its_slot_before_the_wildcard() -> None:
+    cands = _cands()
+    by_rg = {i.release_group_id: i for i in cands}
+    breakers = [(by_rg[400], "Tastebreaker · bossa nova — nothing like it in your last 60 days"),
+                (by_rg[401], "Tastebreaker · zydeco — nothing like it in your last 60 days")]  # fmt: skip
+    items = _build(cands=cands, wildcard=0, tastebreaker=1, breakers=breakers)
+    tb = [i for i in items if i.slot == "tastebreaker"]
+    assert [i.release_group_id for i in tb] == [400]
+    assert tb[0].because.startswith("Tastebreaker · bossa nova")
+    assert [i.slot for i in items].count("new") == 7 and len(items) == 10
+
+
+def test_no_breaker_means_the_slot_goes_to_new() -> None:
+    items = _build(wildcard=0, tastebreaker=1, breakers=[])
+    assert [i.slot for i in items].count("new") == 8

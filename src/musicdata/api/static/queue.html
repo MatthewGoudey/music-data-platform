@@ -25,8 +25,15 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }  /* .toast's display: flex must not beat hidden */
 body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.45; }
-.wrap { max-width: 34rem; margin: 0 auto; padding-inline: 16px; padding-block: max(18px, env(safe-area-inset-top)) 96px; display: grid; gap: 18px; }
-header { display: grid; gap: 10px; }
+.wrap { max-width: 34rem; margin: 0 auto; padding-inline: 16px; padding-block: 0 96px; display: grid; gap: 18px; }
+header { display: grid; gap: 10px; position: sticky; top: 0; z-index: 5; background: var(--bg); margin-inline: -16px; padding: max(10px, env(safe-area-inset-top)) 16px 10px; transition: transform .2s ease; border-bottom: 1px solid var(--line); }
+header.away { transform: translateY(-100%); }
+@media (prefers-reduced-motion: reduce) { header { transition: none; } }
+.tabs { display: flex; gap: 4px; overflow-x: auto; }
+.tab { font: 600 13px var(--body); border: 0; background: none; color: var(--muted); padding: 6px 10px; border-radius: 7px; cursor: pointer; white-space: nowrap; }
+.tab[aria-selected="true"] { background: var(--ink); color: var(--bg); }
+.panel[hidden] { display: none; }
+.more { text-align: center; color: var(--muted); font-size: 13px; padding: 14px 0; }
 h1 { font-family: var(--display); font-weight: 700; font-size: 30px; letter-spacing: -0.02em; margin: 0; }
 .sub { color: var(--muted); font-size: 13px; min-height: 1.4em; }
 .extra { display: grid; gap: 8px; }
@@ -70,6 +77,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outlin
 .slot.new { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
 .slot.revisit { background: var(--revisit-bg); color: var(--revisit); }
 .slot.wildcard { background: var(--wild-bg); color: var(--wild); }
+.slot.tastebreaker { background: var(--wild-bg); color: var(--wild); }
 .slot.pinned { background: var(--pin-bg); color: var(--pin); }
 .slot.heard { background: var(--pin-bg); color: var(--pin); }
 .slot.thread { background: color-mix(in srgb, #2f8f5b 16%, transparent); color: #2f8f5b; }
@@ -111,29 +119,44 @@ h2 { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercas
       <input type="hidden" name="t" id="search-t">
       <input type="search" name="q" placeholder="Search albums, people, bands, songs" aria-label="Search">
     </form>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab" role="tab" data-tab="upnext" aria-selected="true">Up next</button>
+      <button class="tab" role="tab" data-tab="recent" aria-selected="false">Recent listens</button>
+      <button class="tab" role="tab" data-tab="shows" aria-selected="false">Shows</button>
+      <button class="tab" role="tab" data-tab="progress" aria-selected="false">Progress</button>
+    </nav>
     <div class="profiles" id="profiles"></div>
     <div class="sub" id="sub">Loading…</div>
     <div class="nowplaying" id="nowplaying" hidden></div>
     <div class="ready" id="ready" hidden></div>
     <div class="inprogress" id="inprogress" hidden></div>
   </header>
-  <section class="list" id="list" aria-label="Queue" aria-live="polite"></section>
-  <section class="extra" id="recent-wrap" hidden aria-label="Recently finished">
-    <h2>Recently finished</h2>
-    <div id="recent"></div>
-  </section>
-  <section class="extra" id="sales-wrap" hidden aria-label="Not on sale yet">
-    <h2>Not on sale yet</h2>
-    <div id="sales"></div>
-  </section>
-  <section class="extra" id="shows-wrap" hidden aria-label="Shows">
-    <h2>Shows you might like</h2>
-    <div id="shows"></div>
-  </section>
-  <section class="progress" aria-label="Progress">
-    <h2>Heard so far</h2>
-    <div id="progress"></div>
-  </section>
+  <div class="panel" data-panel="upnext">
+    <section class="list" id="list" aria-label="Queue" aria-live="polite"></section>
+    <div class="more" id="more">Loading more…</div>
+  </div>
+  <div class="panel" data-panel="recent" hidden>
+    <section class="extra" id="recent-wrap" hidden aria-label="Recently finished">
+      <h2>Recently finished</h2>
+      <div id="recent"></div>
+    </section>
+  </div>
+  <div class="panel" data-panel="shows" hidden>
+    <section class="extra" id="sales-wrap" hidden aria-label="Not on sale yet">
+      <h2>Not on sale yet</h2>
+      <div id="sales"></div>
+    </section>
+    <section class="extra" id="shows-wrap" hidden aria-label="Shows">
+      <h2>Shows you might like</h2>
+      <div id="shows"></div>
+    </section>
+  </div>
+  <div class="panel" data-panel="progress" hidden>
+    <section class="progress" aria-label="Progress">
+      <h2>Heard so far</h2>
+      <div id="progress"></div>
+    </section>
+  </div>
 </div>
 <div class="toast" id="toast" hidden><span id="toast-text"></span><button id="toast-undo" type="button">Undo</button></div>
 
@@ -145,7 +168,8 @@ try { profile = localStorage.getItem("queue.profile") || "default"; } catch (e) 
 const asked = new URLSearchParams(location.search).get("profile");  // e.g. Walk back from a page
 if (asked) { profile = asked; try { localStorage.setItem("queue.profile", profile); } catch (e) {} }
 const openTags = new Set();
-let shuffled = false, presses = 0, seen = new Set(), data = null, toastTimer = null, lastParams = null;
+let data = null, toastTimer = null, lastParams = null, moreBusy = false, moreDone = false;
+const HIDDEN_PROFILES = new Set(["following"]);  // Matt: hidden until its purpose is clearer
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -159,12 +183,7 @@ function url(path, params = {}) {
 async function load(opts = {}) {
   $("sub").textContent = "Loading…";
   let params = { profile };
-  if (opts.again && lastParams) {
-    params = { ...lastParams };  // the same draw again (same seed), minus what just left
-  } else if (opts.shuffle) {
-    params.shuffle = "true";
-    if (seen.size) params.exclude = [...seen].join(",");
-  }
+  if (opts.again && lastParams) params = { ...lastParams };
   try {
     const r = await fetch(url("/queue/data", params));
     if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
@@ -174,15 +193,57 @@ async function load(opts = {}) {
     return;
   }
   lastParams = { ...params };
-  if (data.shuffle && !params.seed) lastParams.seed = String(data.seed);
-  if (opts.shuffle) {
-    // every shuffled card (new, revisit, wildcard) counts as seen; pins stay put
-    const shown = data.items.filter(i => i.slot !== "pinned").map(i => i.release_group_id);
-    if (shown.some(id => seen.has(id))) seen = new Set();  // went through the pool: start over
-    shown.forEach(id => seen.add(id));
-  }
+  moreDone = false;
   render();
+  watchMore();
 }
+
+// Queue spec v20: the list scrolls on. Near the bottom, the next best albums not yet shown.
+async function loadMore() {
+  if (moreBusy || moreDone || !data) return;
+  moreBusy = true;
+  $("more").textContent = "Loading more…";
+  try {
+    const exclude = data.items.map(i => i.release_group_id).join(",");
+    const r = await fetch(url("/queue/more", { profile, exclude }));
+    if (!r.ok) throw new Error(`${r.status}`);
+    const m = await r.json();
+    if (!m.items.length) { moreDone = true; $("more").textContent = "That's everything this profile holds."; return; }
+    data.items.push(...m.items);
+    $("list").insertAdjacentHTML("beforeend", m.items.map(card).join(""));
+    $("more").textContent = m.remaining ? "" : "That's everything this profile holds.";
+    if (!m.remaining) moreDone = true;
+  } catch (e) {
+    $("more").textContent = `Couldn't load more (${e.message}). Scroll again to retry.`;
+  } finally {
+    moreBusy = false;
+  }
+}
+let moreObserver = null;
+function watchMore() {
+  if (moreObserver) moreObserver.disconnect();
+  moreObserver = new IntersectionObserver(es => { if (es.some(x => x.isIntersecting)) loadMore(); },
+                                          { rootMargin: "600px" });
+  moreObserver.observe($("more"));
+}
+
+// The header slides away while scrolling down and returns on any scroll up.
+let lastY = window.scrollY;
+window.addEventListener("scroll", () => {
+  const y = window.scrollY;
+  document.querySelector("header").classList.toggle("away", y > lastY && y > 160);
+  lastY = y;
+}, { passive: true });
+
+// Tabs: Up next, Recent listens, Shows, Progress.
+function showTab(name) {
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.tab === name)));
+  document.querySelectorAll(".panel").forEach(p => { p.hidden = p.dataset.panel !== name; });
+  $("profiles").hidden = $("sub").hidden = name !== "upnext";
+  try { localStorage.setItem("queue.tab", name); } catch (e) {}
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => showTab(t.dataset.tab)));
 
 function card(a, i) {
   const h = hue(a.artist);
@@ -269,6 +330,7 @@ function render() {
   renderReady();
   renderInProgress();
   $("profiles").innerHTML = data.profiles.map(p => {
+    if (HIDDEN_PROFILES.has(p.name)) return "";
     if (p.name === "walk-back") {
       // a walk is entered from an album page; while on it, its chip leads back to that album
       if (profile !== "walk-back") return "";
@@ -277,15 +339,10 @@ function render() {
         : `<span class="chip walk" aria-current="page">${esc(p.label || "Walk back")}</span>`;
     }
     return `<button class="chip" aria-pressed="${p.name === profile}" data-profile="${esc(p.name)}" title="${esc(p.description || "")}">${esc(p.label || p.name)}</button>`;
-  }).join("") +
-    `<span class="spacer"></span>` +
-    (shuffled ? `<button class="chip" id="top">Top picks</button>` : "") +
-    `<button class="btn play" id="shuffle">Shuffle</button>`;
+  }).join("");
   const n = s => data.items.filter(i => i.slot === s).length;
-  const mix = [`${n("new")} new`, n("revisit") && `${n("revisit")} revisit`, n("thread") && `${n("thread")} thread`, n("wildcard") && `${n("wildcard")} wildcard`, n("pinned") && `${n("pinned")} pinned`].filter(Boolean).join(", ");
-  $("sub").textContent = shuffled
-    ? `Shuffle ${presses} · ${mix} · drawn from your top ${data.shuffle_pool}, no repeats until you've seen them all`
-    : `Top picks · ${mix}`;
+  const mix = [`${n("new")} new`, n("revisit") && `${n("revisit")} revisit`, n("thread") && `${n("thread")} thread`, n("tastebreaker") && `${n("tastebreaker")} tastebreaker`, n("pinned") && `${n("pinned")} pinned`].filter(Boolean).join(", ");
+  $("sub").textContent = `${mix} · keep scrolling for more`;
   $("list").innerHTML = data.items.length ? data.items.map(card).join("")
     : `<p class="meta">Nothing to suggest for this profile yet. Lists may still be matching to albums.</p>`;
   $("progress").innerHTML = data.progress.map(g =>
@@ -417,14 +474,12 @@ document.addEventListener("click", async e => {
   const b = e.target.closest("button");
   if (!b || !data) return;
   if (b.dataset.profile) {
-    profile = b.dataset.profile; shuffled = false; presses = 0; seen = new Set();
+    profile = b.dataset.profile;
     try { localStorage.setItem("queue.profile", profile); } catch (err) {}
     const u = new URL(location.href);  // leaving a walk: a reload stays on the chosen queue
     if (u.searchParams.has("profile")) { u.searchParams.delete("profile"); history.replaceState(null, "", u); }
     return load();
   }
-  if (b.id === "shuffle") { shuffled = true; presses++; return load({ shuffle: true }); }
-  if (b.id === "top") { shuffled = false; presses = 0; seen = new Set(); return load(); }
   const id = b.dataset.id, action = b.dataset.act;
   if (id && b.dataset.tag) {
     const item = data.items.find(i => String(i.release_group_id) === id);
@@ -461,8 +516,11 @@ document.addEventListener("click", async e => {
     } else {
       await act(id, action);
     }
-    // refill the list, keeping the current shuffle's albums
-    setTimeout(() => load({ again: true }), action === "pin" || action === "unpin" ? 0 : 400);
+    if (action === "pin" || action === "unpin") {  // redraw that card only; the scroll stays put
+      if (item) item.pinned = action === "pin";
+      const el = $(`card-${id}`);
+      if (el && item) el.outerHTML = card(item);
+    }
   } catch (err) {
     b.disabled = false;
     toast(`That didn't save (${err.message}). Try again.`);
@@ -470,6 +528,7 @@ document.addEventListener("click", async e => {
 });
 load();
 loadExtras();
+try { const t = localStorage.getItem("queue.tab"); if (t && t !== "upnext") showTab(t); } catch (e) {}
 </script>
 </body>
 </html>

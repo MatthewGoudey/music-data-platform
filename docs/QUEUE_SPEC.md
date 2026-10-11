@@ -503,3 +503,12 @@ priority Essential. Matt has played other Ratboys records but no session of this
 - 2026-10-10 v19 (Matt: "Drop the gate entirely and remove it from the spec. Tag now."): no phase waits on a period of use. The Phase 4 gate's
   week on the page is dropped; Phase 6's queue changes ship to prod now (v0.5.0); shows, venues and
   verdicts are open whenever Matt wants them.
+- 2026-10-10 v20 (Matt's UI test list): the page scrolls on instead of shuffling — near the bottom it
+  loads the next 20 best albums not yet shown (`GET /queue/more`, one album per artist, artists
+  already shown included); Shuffle is gone. Recent listens, Shows and Progress are tabs beside Up
+  next; the header (tabs, profile chips, search) slides away while scrolling down and returns on any
+  scroll up. The `following` chip is hidden. A **Tastebreaker** card replaces the wildcard in every
+  profile that had one (migration 0028): a candidate whose genres (list genre fields and the
+  graph's has_genre claims) share nothing with what Matt played in the last 60 days, the Claude
+  canon first ("my most varied"), the day's seed picking one of the best 25; its why line names the
+  genres. Matt: "We could just convert that [the wildcard] into the tastebreaker".

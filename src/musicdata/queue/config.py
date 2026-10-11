@@ -58,3 +58,9 @@ THREAD_FROM = 10  # the newest this-many of them
 THREAD_TO = 20  # connected unheard albums kept per finished album
 C_CAP = 3  # C(g) at which graph affinity stops growing (spec 5.2)
 CARD_LINES = 2  # connection lines on a card (spec 5.1)
+
+# Tastebreaker (queue spec v20): a genre Matt has not played lately, the Claude canon first
+TASTEBREAKER_DAYS = 60  # "lately": albums with a session in the last this-many days
+TASTEBREAKER_POOL = 25  # the day's pick is drawn from the best this-many breakers
+TASTEBREAKER_FIRST = "claude_canon"  # tier 1: Matt's most varied list
+MORE_N = 20  # albums per page when the list scrolls on (spec v20)

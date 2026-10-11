@@ -143,6 +143,92 @@ SELECT t.from_release_group_id, f.title AS finished, t.to_release_group_id, t.co
 """
 
 
+# An album's genres: list genre fields (RYM, Acclaimed Music) and the graph's has_genre claims.
+ALBUM_GENRES = """
+SELECT e.release_group_id AS rg, lower(trim(x)) AS genre
+  FROM list_entry e, unnest(string_to_array(e.facets ->> 'genre', ',')) x
+ WHERE e.facets ? 'genre' AND e.release_group_id = ANY($1::int[]) AND trim(x) <> ''
+UNION
+SELECT en.release_group_id, lower(o.name)
+  FROM assertion a
+  JOIN entity en ON en.entity_id = a.subject_id AND en.type = 'album'
+  JOIN entity o ON o.entity_id = a.object_id
+ WHERE a.predicate = 'has_genre' AND a.status = 'accepted'
+   AND en.release_group_id = ANY($1::int[])
+"""
+RECENT = """
+SELECT DISTINCT release_group_id FROM album_session
+ WHERE started_at > now() - make_interval(days => $1)
+"""
+
+
+async def album_genres(conn: asyncpg.Connection, rgs: list[int]) -> dict[int, set[str]]:
+    out: dict[int, set[str]] = defaultdict(set)
+    if not rgs:
+        return out
+    if not await conn.fetchval("SELECT to_regclass('assertion') IS NOT NULL"):
+        q = ALBUM_GENRES.split("UNION")[0]
+    else:
+        q = ALBUM_GENRES
+    for r in await conn.fetch(q, rgs):
+        out[r["rg"]].add(r["genre"])
+    return out
+
+
+async def tastebreaker_choices(
+    conn: asyncpg.Connection, candidates: list[Item], seed: int
+) -> list[tuple[Item, str]]:
+    """Queue spec v20: candidates whose genres share nothing with what Matt played in the last
+    TASTEBREAKER_DAYS days, the Claude canon first; the day's seed picks one of the best
+    TASTEBREAKER_POOL, the rest follow as fallbacks."""
+    import random
+
+    recent = [r[0] for r in await conn.fetch(RECENT, config.TASTEBREAKER_DAYS)]
+    lately = set().union(*(await album_genres(conn, recent)).values()) if recent else set()
+    pool = candidates[: max(config.TASTEBREAKER_POOL * 40, 1000)]
+    genres = await album_genres(conn, [c.release_group_id for c in pool])
+    eligible = [c for c in pool if genres.get(c.release_group_id)
+                and not (genres[c.release_group_id] & lately)]  # fmt: skip
+    first = [c for c in eligible if any(w["list"] == config.TASTEBREAKER_FIRST for w in c.why)]
+    ranked = first or eligible
+    if not ranked:
+        return []
+    top = ranked[: config.TASTEBREAKER_POOL]
+    pick = random.Random(seed).choice(top)
+    order = [pick] + [c for c in ranked if c is not pick]
+
+    def because(c: Item) -> str:
+        g = ", ".join(sorted(genres[c.release_group_id])[:3])
+        return f"Tastebreaker · {g} — nothing like it in your last {config.TASTEBREAKER_DAYS} days"
+
+    return [(c, because(c)) for c in order]
+
+
+async def more_items(
+    conn: asyncpg.Connection, profile_name: str, exclude: frozenset[int], n: int,
+    now: datetime | None = None,
+) -> dict[str, object]:  # fmt: skip
+    """Queue spec v20, the list scrolling on: the next best candidates not yet shown, one album
+    per artist (artists already shown included)."""
+    now = now or datetime.now(CHICAGO)
+    p = await load_profile(conn, profile_name)
+    sc = await score_context(conn)
+    candidates = sc.score(p, now)
+    shown_artists = {c.artist_id for c in candidates if c.release_group_id in exclude}
+    out: list[Item] = []
+    for c in candidates:
+        if len(out) >= n:
+            break
+        if c.release_group_id in exclude or c.artist_id in shown_artists:
+            continue
+        c.slot = "new"
+        c.connections = sc.lines.get(c.release_group_id, [])
+        out.append(c)
+        shown_artists.add(c.artist_id)
+    left = sum(1 for c in candidates if c.release_group_id not in exclude) - len(out)
+    return {"profile": p.name, "items": [render_item(i) for i in out], "remaining": max(left, 0)}
+
+
 async def thread_choices(
     conn: asyncpg.Connection, candidates: list[Item]
 ) -> list[tuple[Item, str, int]]:
@@ -262,6 +348,7 @@ async def next_queue(
         )
 
     thread = int(comp.get("thread", 0))
+    breaker = int(comp.get("tastebreaker", 0))
     items = build(
         candidates,
         ordered,
@@ -274,6 +361,8 @@ async def next_queue(
         exclude=exclude,
         thread=thread,
         threads=await thread_choices(conn, candidates) if thread else (),
+        tastebreaker=breaker,
+        breakers=await tastebreaker_choices(conn, candidates, seed) if breaker else (),
     )
     for item in items:
         item.connections = sc.lines.get(item.release_group_id, [])

@@ -26,7 +26,7 @@ from musicdata.api.routers.next_queue import parse_ids
 from musicdata.db import connection
 from musicdata.lists.progress import progress
 from musicdata.queue import config
-from musicdata.queue.engine import UnknownProfileError, next_queue
+from musicdata.queue.engine import UnknownProfileError, more_items, next_queue
 
 router = APIRouter(tags=["queue"])
 
@@ -275,6 +275,50 @@ async def queue_sales(pool: Pool):
             break
     items.sort(key=lambda s: (s.get("presale_now") is None, s["sale_at"]))
     return render_object({"items": items})
+
+
+async def _decorate(conn, items: list[dict]) -> None:
+    """Each card's history line and pin state."""
+    ids = [i["release_group_id"] for i in items]
+    stats = {
+        r["release_group_id"]: r
+        for r in await conn.fetch(
+            """SELECT release_group_id, full_sessions, best_completion, tracks_heard, track_count
+                 FROM release_group_stat WHERE release_group_id = ANY($1::int[])""",
+            ids,
+        )
+    }
+    pinned = {
+        r[0]
+        for r in await conn.fetch(
+            """SELECT release_group_id FROM queue_state
+                WHERE pinned_at IS NOT NULL AND release_group_id = ANY($1::int[])""",
+            ids,
+        )
+    }
+    for item in items:
+        s = stats.get(item["release_group_id"])
+        item["history"] = (
+            history_line(
+                s["full_sessions"], s["best_completion"], s["tracks_heard"], s["track_count"]
+            )
+            if s
+            else "Never played"
+        )
+        item["pinned"] = item["release_group_id"] in pinned
+
+
+@router.get("/queue/more", dependencies=[Depends(page_or_bearer)])
+async def queue_more(pool: Pool, profile: str = "default", exclude: str | None = None,
+                     n: Annotated[int, Query(ge=1, le=50)] = config.MORE_N):  # fmt: skip
+    """The list scrolling on (queue spec v20): the next best albums not yet on the page."""
+    async with connection(pool) as conn:
+        try:
+            out = await more_items(conn, profile, parse_ids(exclude), n)
+        except UnknownProfileError as exc:
+            raise HTTPException(status_code=404, detail=f"no profile {exc}") from exc
+        await _decorate(conn, out["items"])
+    return out
 
 
 @router.get("/queue/data", dependencies=[Depends(page_or_bearer)])
