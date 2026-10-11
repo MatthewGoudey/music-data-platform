@@ -70,11 +70,11 @@ async def copy_graph(
         "SELECT mbid::text, artist_id FROM artist WHERE mbid IS NOT NULL")}  # fmt: skip
     async with target.transaction():
         if replace:
-            for table in DEPENDENT:
-                if await target.fetchval("SELECT to_regclass($1) IS NOT NULL", table):
-                    await target.execute(f"DELETE FROM {table}")
-            for table in reversed(TABLES):  # children first: assertion … entity, predicate
-                await target.execute(f"DELETE FROM {table}")
+            # TRUNCATE empties tens of thousands of rows at once (DELETE ran past the pool's
+            # 60-second statement limit); every table that points at a graph row goes with them.
+            present = [t for t in DEPENDENT
+                       if await target.fetchval("SELECT to_regclass($1) IS NOT NULL", t)]  # fmt: skip
+            await target.execute(f"TRUNCATE {', '.join(TABLES + present)}", timeout=600)
             counts["replaced_entities_and_claims"] = int(held)
         await target.execute("DELETE FROM predicate")  # the seed's rows, replaced by the source's
         for table in TABLES:
