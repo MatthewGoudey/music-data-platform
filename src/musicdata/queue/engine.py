@@ -204,31 +204,6 @@ async def tastebreaker_choices(
     return [(c, because(c)) for c in order]
 
 
-async def more_items(
-    conn: asyncpg.Connection, profile_name: str, exclude: frozenset[int], n: int,
-    now: datetime | None = None,
-) -> dict[str, object]:  # fmt: skip
-    """Queue spec v20, the list scrolling on: the next best candidates not yet shown, one album
-    per artist (artists already shown included)."""
-    now = now or datetime.now(CHICAGO)
-    p = await load_profile(conn, profile_name)
-    sc = await score_context(conn)
-    candidates = sc.score(p, now)
-    shown_artists = {c.artist_id for c in candidates if c.release_group_id in exclude}
-    out: list[Item] = []
-    for c in candidates:
-        if len(out) >= n:
-            break
-        if c.release_group_id in exclude or c.artist_id in shown_artists:
-            continue
-        c.slot = "new"
-        c.connections = sc.lines.get(c.release_group_id, [])
-        out.append(c)
-        shown_artists.add(c.artist_id)
-    left = sum(1 for c in candidates if c.release_group_id not in exclude) - len(out)
-    return {"profile": p.name, "items": [render_item(i) for i in out], "remaining": max(left, 0)}
-
-
 async def thread_choices(
     conn: asyncpg.Connection, candidates: list[Item]
 ) -> list[tuple[Item, str, int]]:
@@ -282,13 +257,19 @@ async def next_queue(
     seed: int | None = None,
     exclude: frozenset[int] = frozenset(),
     now: datetime | None = None,
+    more: bool = False,
 ) -> dict[str, object]:
+    """The queue for a profile. `more` builds the next page the list scrolls on to (queue spec
+    v20): the same mix of slots, leaving out every album in `exclude` (those already on the page)
+    and their artists, with no pins and a seed of its own."""
     now = now or datetime.now(CHICAGO)
     p = await load_profile(conn, profile_name)
     comp = p.composition
     n = max(1, min(n or int(comp.get("n", config.DEFAULT_N)), config.MAX_N))
     if seed is None:
         seed = secrets.randbits(40) if shuffle else day_seed(p.name, now.astimezone(CHICAGO).date())
+        if more:  # each page draws its own revisit order, thread and Tastebreaker
+            seed += len(exclude)
 
     sc = await score_context(conn)
     entries, tags = sc.entries, sc.tags
@@ -349,6 +330,16 @@ async def next_queue(
 
     thread = int(comp.get("thread", 0))
     breaker = int(comp.get("tastebreaker", 0))
+    shown_artists: set[int] = set()
+    if more:
+        pins = []
+        shown_artists = {
+            r[0]
+            for r in await conn.fetch(
+                "SELECT artist_id FROM release_group WHERE release_group_id = ANY($1::int[])",
+                list(exclude),
+            )
+        }
     items = build(
         candidates,
         ordered,
@@ -363,6 +354,7 @@ async def next_queue(
         threads=await thread_choices(conn, candidates) if thread else (),
         tastebreaker=breaker,
         breakers=await tastebreaker_choices(conn, candidates, seed) if breaker else (),
+        shown_artists=shown_artists,
     )
     for item in items:
         item.connections = sc.lines.get(item.release_group_id, [])
@@ -372,6 +364,7 @@ async def next_queue(
         "seed": seed,
         "shuffle": shuffle,
         "candidates": len(candidates),
+        "remaining": max(sum(1 for c in candidates if c.release_group_id not in exclude) - n, 0),
         "items": [render_item(i) for i in items],
     }
 

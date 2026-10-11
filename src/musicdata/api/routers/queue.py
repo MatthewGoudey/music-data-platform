@@ -26,7 +26,7 @@ from musicdata.api.routers.next_queue import parse_ids
 from musicdata.db import connection
 from musicdata.lists.progress import progress
 from musicdata.queue import config
-from musicdata.queue.engine import UnknownProfileError, more_items, next_queue
+from musicdata.queue.engine import UnknownProfileError, next_queue
 
 router = APIRouter(tags=["queue"])
 
@@ -311,10 +311,11 @@ async def _decorate(conn, items: list[dict]) -> None:
 @router.get("/queue/more", dependencies=[Depends(page_or_bearer)])
 async def queue_more(pool: Pool, profile: str = "default", exclude: str | None = None,
                      n: Annotated[int, Query(ge=1, le=50)] = config.MORE_N):  # fmt: skip
-    """The list scrolling on (queue spec v20): the next best albums not yet on the page."""
+    """The list scrolling on (queue spec v20): the next page, built like the first — new albums,
+    revisits, a thread and a Tastebreaker — from what is not yet on the page."""
     async with connection(pool) as conn:
         try:
-            out = await more_items(conn, profile, parse_ids(exclude), n)
+            out = await next_queue(conn, profile, n=n, exclude=parse_ids(exclude), more=True)
         except UnknownProfileError as exc:
             raise HTTPException(status_code=404, detail=f"no profile {exc}") from exc
         await _decorate(conn, out["items"])

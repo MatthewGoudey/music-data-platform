@@ -273,3 +273,12 @@ def test_tastebreaker_takes_its_slot_before_the_wildcard() -> None:
 def test_no_breaker_means_the_slot_goes_to_new() -> None:
     items = _build(wildcard=0, tastebreaker=1, breakers=[])
     assert [i.slot for i in items].count("new") == 8
+
+
+def test_a_later_page_mixes_slots_and_skips_what_is_shown() -> None:
+    shown = {1, 2, 3, 9001}  # three new albums and a revisit already on the page
+    items = _build(exclude=frozenset(shown), shown_artists={1, 2, 3, 9001}, wildcard=0)
+    ids = [i.release_group_id for i in items]
+    assert not set(ids) & shown
+    assert [i.slot for i in items].count("revisit") >= 1  # revisits still come
+    assert ids[0] == 4  # new picks continue below what was shown

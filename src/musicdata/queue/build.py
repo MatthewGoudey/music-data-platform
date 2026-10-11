@@ -140,14 +140,21 @@ def build(
     threads: Sequence[tuple[Item, str, int]] = (),
     tastebreaker: int = 0,
     breakers: Sequence[tuple[Item, str]] = (),
+    shown_artists: Collection[int] = (),
 ) -> list[Item]:
+    """`exclude` leaves out albums already on the page, in every slot (queue spec v20: each page
+    the list scrolls on to is built like the first); `shown_artists` keeps the one-album-per-artist
+    rule across pages."""
     rng = random.Random(seed)
     q = _Queue()
+    q.artists.update(shown_artists)
     for item in pins[:n]:
         q.add(item, "pinned", artist_rule=False)  # pins never block another album
     open_slots = n - len(q.items)
 
-    skip = set(exclude) if shuffle else set()
+    skip = set(exclude)
+    pools = {name: [i for i in items if i.release_group_id not in skip]
+             for name, items in pools.items()}  # fmt: skip
     if shuffle:
         # Shuffle re-draws every slot but the pins: each pool in random order (not most
         # overdue first), leaving out what this round of shuffles already showed.
@@ -196,7 +203,7 @@ def build(
     for item in candidates:  # in rank order: all of them without shuffle, the rest with it
         if len(fresh) >= open_slots:
             break
-        if q.fits(item) and not (shuffle and item.release_group_id in exclude):
+        if q.fits(item) and item.release_group_id not in skip:
             fresh.append(item)
             q.groups.add(item.release_group_id)
             q.artists.add(item.artist_id)

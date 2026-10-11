@@ -512,3 +512,7 @@ priority Essential. Matt has played other Ratboys records but no session of this
   graph's has_genre claims) share nothing with what Matt played in the last 60 days, the Claude
   canon first ("my most varied"), the day's seed picking one of the best 25; its why line names the
   genres. Matt: "We could just convert that [the wildcard] into the tastebreaker".
+- 2026-10-10 v20 amendment (Matt: "make it so that the scroll doesnt populate just new albums? It
+  should still grab tastebreakers and revisits"): each page the list scrolls on to is built like the
+  first — new albums, revisits, a thread and a Tastebreaker in the profile's composition — leaving
+  out every album already on the page and their artists, with no pins and a seed of its own.
