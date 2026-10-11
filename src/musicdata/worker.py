@@ -383,6 +383,10 @@ SELECT d.document_id, d.kind, d.body_md, d.citations::text AS citations, d.check
  WHERE d.status = 'ready' AND d.kind = 'deep_dive' AND rg.mbid IS NOT NULL
  ORDER BY d.document_id
 """
+SOURCE_PAGES = """
+SELECT DISTINCT ON (url) url, mode, schema_version, title, body, facts::text AS facts, fetched_at
+  FROM source_fetch WHERE ok AND url = ANY($1::text[]) ORDER BY url, fetched_at DESC
+"""
 SOURCE_CLAIMS = """
 SELECT a.claim_label, a.predicate, a.qualifiers::text AS qualifiers, a.source, a.basis, a.evidence,
        a.source_url, a.direction, a.extractor, a.reader_verdict, a.reader_reason,
@@ -454,6 +458,18 @@ async def copy_documents(source: asyncpg.Connection, target: asyncpg.Connection)
             if r["reader_verdict"]:
                 verdicts.append({"claim_id": claim_id, "verdict": r["reader_verdict"],
                                  "reason": r["reader_reason"]})  # fmt: skip
+        # the pages the claims quote come too, or every claim fails the Evidence check there
+        urls = sorted({c["source_url"] for c in claims if c["source_url"]})
+        for p in await source.fetch(SOURCE_PAGES, urls):
+            await target.execute(
+                """INSERT INTO source_fetch (url, mode, schema_version, credits, ok, title, body,
+                                             facts, fetched_at)
+                   SELECT $1, $2, $3, 0, true, $4, $5, $6::jsonb, $7
+                    WHERE NOT EXISTS (SELECT 1 FROM source_fetch WHERE url = $1 AND ok)""",
+                p["url"], p["mode"], p["schema_version"], p["title"], p["body"], p["facts"],
+                p["fetched_at"],
+            )  # fmt: skip
+        out["pages"] = out.get("pages", 0) + len(urls)
         if claims:
             await post_assertions(target, claims)
         if verdicts:

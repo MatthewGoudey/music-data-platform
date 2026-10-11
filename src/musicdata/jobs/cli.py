@@ -381,6 +381,24 @@ def graph_verify_cmd(
     )
 
 
+@graph_app.command("refetch-missing")
+def graph_refetch_missing_cmd(
+    max_credits: int = typer.Option(100, help="Firecrawl credits this run may spend."),
+) -> None:
+    """Fetch again the pages claims quote but the database lacks; their Evidence-rejected claims
+    go back to proposed for `graph verify --pending`."""
+    from musicdata.graph.refetch import graph_refetch_missing
+    from musicdata.jobs import runs
+
+    raise typer.Exit(
+        runs.run(
+            "graph_refetch_missing",
+            graph_refetch_missing(max_credits=max_credits),
+            trigger=_trigger(),
+        )  # fmt: skip
+    )
+
+
 @graph_app.command("copy")
 def graph_copy_cmd(
     source: str = typer.Option(..., help="Environment to copy from, e.g. dev (.env.<source>)."),
