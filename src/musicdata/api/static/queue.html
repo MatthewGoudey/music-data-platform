@@ -27,7 +27,6 @@
 body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.45; }
 .wrap { max-width: 34rem; margin: 0 auto; padding-inline: 16px; padding-block: 0 96px; display: grid; gap: 18px; }
 header { display: grid; gap: 10px; position: sticky; top: 0; z-index: 5; background: var(--bg); margin-inline: -16px; padding: max(10px, env(safe-area-inset-top)) 16px 10px; transition: transform .2s ease; border-bottom: 1px solid var(--line); }
-header.away { transform: translateY(-100%); }
 @media (prefers-reduced-motion: reduce) { header { transition: none; } }
 .tabs { display: flex; gap: 4px; overflow-x: auto; }
 .tab { font: 600 13px var(--body); border: 0; background: none; color: var(--muted); padding: 6px 10px; border-radius: 7px; cursor: pointer; white-space: nowrap; }
@@ -127,9 +126,9 @@ h2 { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercas
     </nav>
     <div class="profiles" id="profiles"></div>
     <div class="sub" id="sub">Loading…</div>
-    <div class="nowplaying" id="nowplaying" hidden></div>
     <div class="ready" id="ready" hidden></div>
     <div class="inprogress" id="inprogress" hidden></div>
+    <div class="nowplaying" id="nowplaying" hidden></div>
   </header>
   <div class="panel" data-panel="upnext">
     <section class="list" id="list" aria-label="Queue" aria-live="polite"></section>
@@ -231,7 +230,11 @@ function watchMore() {
 let lastY = window.scrollY;
 window.addEventListener("scroll", () => {
   const y = window.scrollY;
-  document.querySelector("header").classList.toggle("away", y > lastY && y > 160);
+  // the header slides up but leaves Now playing showing at the top (Matt: keep it up at all times)
+  const head = document.querySelector("header"), np = $("nowplaying");
+  const away = y > lastY && y > 160;
+  const keep = np.hidden ? 0 : np.offsetHeight + 10;
+  head.style.transform = away ? `translateY(-${head.offsetHeight - keep}px)` : "";
   lastY = y;
 }, { passive: true });
 

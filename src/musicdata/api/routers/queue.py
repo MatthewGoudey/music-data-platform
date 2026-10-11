@@ -403,7 +403,8 @@ async def queue_data(
                          FROM album_document d
                          JOIN release_group rg USING (release_group_id)
                          JOIN artist a ON a.artist_id = rg.artist_id
-                        WHERE d.status = 'ready' AND d.finished_at > now() - interval '7 days'
+                        WHERE d.status = 'ready' AND d.kind = 'deep_dive'
+                          AND d.finished_at > now() - interval '7 days'
                         ORDER BY d.finished_at DESC LIMIT 5"""
                 )
             ]

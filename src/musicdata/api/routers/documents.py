@@ -14,8 +14,10 @@ from musicdata.api.deps import Pool, page_or_bearer, require_token
 from musicdata.db import connection
 from musicdata.documents import document_page
 from musicdata.graph.batch import store_reader_verdicts
+from musicdata.log import get_logger
 
 router = APIRouter(tags=["documents"])
+log = get_logger(__name__)
 Kind = Literal["deep_dive"]  # liner notes dropped (companion spec change 2026-10-10)
 
 
@@ -53,6 +55,7 @@ async def request_document(release_group_id: int, body: RequestIn, pool: Pool) -
             f"Document {out['document_id']} was requested: a {body.kind} for release group "
             f"{release_group_id}."
         )
+        log.info("document requested", extra={"document_id": out["document_id"], **out["worker"]})
     return out
 
 
