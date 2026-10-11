@@ -6,7 +6,9 @@ ids and all (`OVERRIDING SYSTEM VALUE`), then resets each identity sequence. Lis
 not shared between environments, so `entity.release_group_id` and `entity.artist_id` are remapped
 by MBID in the target (NULL where the target has no such row; `graph link` fills them later), and
 `pipeline_run_id` columns are cleared (they name the source's runs). One transaction: the target
-gets everything or nothing. Refuses a target whose graph tables already hold entities or claims.
+gets everything or nothing. Refuses a target whose graph tables already hold entities or claims,
+unless `replace` (dev only: `graph copy --source prod --replace` refills dev from prod, companion
+spec 3.1) empties them first, inside the same transaction.
 """
 
 from __future__ import annotations
@@ -44,11 +46,17 @@ async def graph_tables_mb(conn: asyncpg.Connection) -> float:
     return round(int(total or 0) / 1048576, 1)
 
 
-async def copy_graph(source: asyncpg.Connection, target: asyncpg.Connection) -> dict:
+# Tables that point at graph rows and are emptied with them on --replace, children first.
+DEPENDENT = ["graph_follow", "graph_connection", "graph_thread"]
+
+
+async def copy_graph(
+    source: asyncpg.Connection, target: asyncpg.Connection, replace: bool = False
+) -> dict:
     held = await target.fetchval(
         "SELECT (SELECT count(*) FROM entity) + (SELECT count(*) FROM assertion)"
     )
-    if held:
+    if held and not replace:
         raise RuntimeError(f"the target's graph tables are not empty ({held} entities and claims)")
     counts: Counter = Counter()
     # listening rows by MBID in the source, then by MBID in the target
@@ -61,6 +69,13 @@ async def copy_graph(source: asyncpg.Connection, target: asyncpg.Connection) -> 
     tgt_artist = {r[0]: r[1] for r in await target.fetch(
         "SELECT mbid::text, artist_id FROM artist WHERE mbid IS NOT NULL")}  # fmt: skip
     async with target.transaction():
+        if replace:
+            for table in DEPENDENT:
+                if await target.fetchval("SELECT to_regclass($1) IS NOT NULL", table):
+                    await target.execute(f"DELETE FROM {table}")
+            for table in reversed(TABLES):  # children first: assertion … entity, predicate
+                await target.execute(f"DELETE FROM {table}")
+            counts["replaced_entities_and_claims"] = int(held)
         await target.execute("DELETE FROM predicate")  # the seed's rows, replaced by the source's
         for table in TABLES:
             cols = await _columns(target, table)
@@ -122,13 +137,15 @@ async def copy_graph(source: asyncpg.Connection, target: asyncpg.Connection) -> 
     return dict(counts)
 
 
-def graph_copy(source_url: str) -> JobFn:
+def graph_copy(source_url: str, replace: bool = False) -> JobFn:
     async def _run(ctx: RunContext) -> None:
+        if replace and ctx.env == "prod":
+            raise RuntimeError("--replace empties the target's graph: never in prod")
         source = await asyncpg.connect(source_url)
         try:
             source_mb = await graph_tables_mb(source)
             async with connection(ctx.pool) as target:
-                counts = await copy_graph(source, target)
+                counts = await copy_graph(source, target, replace)
                 target_db_mb = round(
                     int(await target.fetchval("SELECT pg_database_size(current_database())"))
                     / 1048576,

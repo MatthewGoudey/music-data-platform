@@ -349,7 +349,7 @@ async def queue_data(
     ]
     strip += [{"label": "V Atlas · Core", "heard": r["heard"], "total": r["total"]} for r in core]
     async with connection(pool) as conn:
-        ready = []
+        ready, in_progress = [], []
         if await conn.fetchval("SELECT to_regclass('album_document') IS NOT NULL"):
             ready = [
                 dict(r)
@@ -363,6 +363,18 @@ async def queue_data(
                         ORDER BY d.finished_at DESC LIMIT 5"""
                 )
             ]
+            in_progress = [
+                dict(r)
+                for r in await conn.fetch(
+                    """SELECT d.document_id, d.release_group_id, d.kind, d.status, rg.title,
+                              a.name AS artist, d.requested_at
+                         FROM album_document d
+                         JOIN release_group rg USING (release_group_id)
+                         JOIN artist a ON a.artist_id = rg.artist_id
+                        WHERE d.status IN ('requested', 'writing')
+                        ORDER BY d.requested_at"""
+                )
+            ]
     return render_object(
         q
         | {
@@ -371,6 +383,7 @@ async def queue_data(
             "tags": tag_names,
             "shuffle_pool": config.SHUFFLE_POOL,
             "documents_ready": ready,  # the page's "Deep dive ready" banner (companion spec 8)
+            "documents_in_progress": in_progress,  # deep dives requested or being written
         }
     )
 

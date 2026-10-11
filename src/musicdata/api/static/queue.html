@@ -39,6 +39,14 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; letter-spac
 .mini a { color: var(--accent); font-weight: 700; }
 .headline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .profiles { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.nowplaying { display: flex; gap: 10px; align-items: baseline; padding: 10px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); font-size: 14px; min-width: 0; }
+.nowplaying .label { font: 600 10.5px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--accent); flex: none; }
+.nowplaying .what { min-width: 0; overflow-wrap: anywhere; }
+.nowplaying a { color: inherit; font-weight: 700; }
+.inprogress { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.inprogress .item { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+.inprogress .state { font: 600 10.5px var(--mono); letter-spacing: .05em; text-transform: uppercase; flex: none; }
+.inprogress a { color: var(--ink); overflow-wrap: anywhere; }
 .ready { display: grid; gap: 6px; }
 .ready .note { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 10px; background: var(--pin-bg); color: var(--pin); font-size: 14px; }
 .ready .note a { color: inherit; font-weight: 700; flex: 1; min-width: 0; overflow-wrap: anywhere; }
@@ -105,7 +113,9 @@ h2 { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercas
     </form>
     <div class="profiles" id="profiles"></div>
     <div class="sub" id="sub">Loading…</div>
+    <div class="nowplaying" id="nowplaying" hidden></div>
     <div class="ready" id="ready" hidden></div>
+    <div class="inprogress" id="inprogress" hidden></div>
   </header>
   <section class="list" id="list" aria-label="Queue" aria-live="polite"></section>
   <section class="extra" id="recent-wrap" hidden aria-label="Recently finished">
@@ -223,8 +233,41 @@ document.addEventListener("click", e => {
   if (x) { markSeen(Number(x.dataset.dismiss)); renderReady(); }
 });
 
+function renderInProgress() {
+  const docs = data.documents_in_progress || [];
+  $("inprogress").hidden = !docs.length;
+  $("inprogress").innerHTML = docs.map(d =>
+    `<div class="item"><span class="state">${d.status === "writing" ? "Writing" : "Requested"}</span><a href="${esc(url(`/albums/${d.release_group_id}/page`))}">Deep dive: ${esc(d.title)} · ${esc(d.artist)}</a></div>`).join("");
+}
+
+let lastNow = "";
+async function pollNow() {
+  if (document.hidden) return;
+  try {
+    const r = await fetch(url("/queue/now-playing"));
+    if (!r.ok) return;
+    const n = await r.json();
+    const box = $("nowplaying");
+    if (!n || !n.track) { box.hidden = true; lastNow = ""; return; }
+    const key = `${n.track}|${n.artist}|${n.release}`;
+    if (key === lastNow) return;
+    lastNow = key;
+    const album = n.release
+      ? (n.release_group_id
+          ? ` · <a href="${esc(url(`/albums/${n.release_group_id}/page`))}">${esc(n.release)}</a>`
+          : ` · ${esc(n.release)}`)
+      : "";
+    box.innerHTML = `<span class="label">Now playing</span><span class="what">${esc(n.track)} · ${esc(n.artist)}${album}</span>`;
+    box.hidden = false;
+  } catch (e) {}
+}
+pollNow();
+setInterval(pollNow, 30000);
+document.addEventListener("visibilitychange", pollNow);
+
 function render() {
   renderReady();
+  renderInProgress();
   $("profiles").innerHTML = data.profiles.map(p => {
     if (p.name === "walk-back") {
       // a walk is entered from an album page; while on it, its chip leads back to that album

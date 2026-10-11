@@ -93,8 +93,31 @@ async def graph_walk(pool: Pool, from_: Annotated[int, Query(alias="from")]) -> 
             raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
+async def _playing_album(pool, p) -> int | None:
+    """The album the player reports, by its MBID or by artist and album keys."""
+    from musicdata.identity import album_key, norm_key
+
+    async with connection(pool) as conn:
+        if p.release_group_mbid:
+            rg = await conn.fetchval(
+                "SELECT release_group_id FROM release_group WHERE mbid = $1::uuid",
+                p.release_group_mbid,
+            )
+            if rg:
+                return rg
+        if not p.release_name:
+            return None
+        return await conn.fetchval(
+            """SELECT rg.release_group_id FROM release_group rg JOIN artist a USING (artist_id)
+                WHERE rg.norm_key = $1 AND a.norm_key = ANY($2::text[])
+                ORDER BY rg.mbid IS NULL, rg.release_group_id LIMIT 1""",
+            album_key(p.release_name),
+            [k for k in (norm_key(p.album_artist.name), norm_key(p.artist_name)) if k],
+        )
+
+
 @router.get("/queue/now-playing")
-async def now_playing() -> dict | None:
+async def now_playing(pool: Pool) -> dict | None:
     """What ListenBrainz reports as playing (artist, track, release, title_key), cached 20 s."""
     if time.monotonic() - float(_now["at"]) < NOW_CACHE_SECONDS:
         return _now["value"]  # type: ignore[return-value]
@@ -112,6 +135,7 @@ async def now_playing() -> dict | None:
             p = parse_listen({**listen, "listened_at": int(datetime.now(UTC).timestamp())})
             if p is not None:
                 value = {"artist": p.artist_name, "track": p.track_name,
-                         "release": p.release_name, "title_key": p.norm_title}  # fmt: skip
+                         "release": p.release_name, "title_key": p.norm_title,
+                         "release_group_id": await _playing_album(pool, p)}  # fmt: skip
     _now.update(at=time.monotonic(), value=value)
     return value

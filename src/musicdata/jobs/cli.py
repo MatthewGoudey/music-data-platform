@@ -384,9 +384,12 @@ def graph_verify_cmd(
 @graph_app.command("copy")
 def graph_copy_cmd(
     source: str = typer.Option(..., help="Environment to copy from, e.g. dev (.env.<source>)."),
+    replace: bool = typer.Option(
+        False, "--replace", help="Empty this environment's graph first (never prod)."
+    ),
 ) -> None:
-    """Copy the graph tables, ids and all, into this environment's empty graph tables
-    (graph spec 7.6). Run from the laptop: `musicdata --env prod graph copy --source dev`."""
+    """Copy the graph tables, ids and all, into this environment's graph tables (graph spec 7.6).
+    Refill dev from prod: `musicdata --env dev graph copy --source prod --replace`."""
     from dotenv import dotenv_values
 
     from musicdata.graph.copy import graph_copy
@@ -395,7 +398,7 @@ def graph_copy_cmd(
     url = dotenv_values(Path(f".env.{source}")).get("DATABASE_URL")
     if not url:
         raise typer.BadParameter(f"no DATABASE_URL in .env.{source}")
-    raise typer.Exit(runs.run("graph_copy", graph_copy(url), trigger=_trigger()))
+    raise typer.Exit(runs.run("graph_copy", graph_copy(url, replace), trigger=_trigger()))
 
 
 @graph_app.command("unmerge")
@@ -570,6 +573,38 @@ app.add_typer(lists_app, name="lists")
 
 documents_app = typer.Typer(no_args_is_help=True, help="Album documents (companion spec 7).")
 app.add_typer(documents_app, name="documents")
+
+
+@documents_app.command("copy")
+def documents_copy_cmd(
+    source: str = typer.Option(..., help="Environment to copy from, e.g. dev (.env.<source>)."),
+) -> None:
+    """Copy every ready deep dive, with its new claims and reader verdicts, from another
+    environment into this one: `musicdata --env prod documents copy --source dev`."""
+    from dotenv import dotenv_values
+
+    from musicdata.jobs import runs
+
+    url = dotenv_values(Path(f".env.{source}")).get("DATABASE_URL")
+    if not url:
+        raise typer.BadParameter(f"no DATABASE_URL in .env.{source}")
+
+    async def job(ctx) -> None:
+        import asyncpg
+
+        from musicdata.db import connection
+        from musicdata.worker import copy_documents
+
+        src = await asyncpg.connect(url)
+        try:
+            async with connection(ctx.pool) as conn:
+                out = await copy_documents(src, conn)
+        finally:
+            await src.close()
+        ctx.rows = out["documents"]
+        ctx.notes.update(out)
+
+    raise typer.Exit(runs.run("documents_copy", job, trigger=_trigger()))
 
 
 @documents_app.command("load")

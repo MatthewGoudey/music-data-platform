@@ -372,3 +372,102 @@ async def document_states(conn: asyncpg.Connection, release_group_id: int) -> di
             if r["kind"] in ready and r["stale"]:
                 out[r["kind"]]["status"] = "out_of_date"
     return out
+
+
+# --- moving documents between environments (companion spec change 2026-10-10) -----------------
+
+SOURCE_DOCS = """
+SELECT d.document_id, d.kind, d.body_md, d.citations::text AS citations, d.checks::text AS checks,
+       d.model, d.firecrawl_credits, rg.mbid::text AS mbid, rg.title
+  FROM album_document d JOIN release_group rg USING (release_group_id)
+ WHERE d.status = 'ready' AND d.kind = 'deep_dive' AND rg.mbid IS NOT NULL
+ ORDER BY d.document_id
+"""
+SOURCE_CLAIMS = """
+SELECT a.claim_label, a.predicate, a.qualifiers::text AS qualifiers, a.source, a.basis, a.evidence,
+       a.source_url, a.direction, a.extractor, a.reader_verdict, a.reader_reason,
+       s.type AS s_type, s.name AS s_name, s.mbid::text AS s_mbid,
+       o.type AS o_type, o.name AS o_name, o.mbid::text AS o_mbid
+  FROM assertion a
+  JOIN graph_batch b USING (batch_id)
+  JOIN entity s ON s.entity_id = a.subject_id
+  LEFT JOIN entity o ON o.entity_id = a.object_id
+ WHERE b.label = $1 AND a.status NOT IN ('rejected', 'superseded')
+ ORDER BY a.claim_label
+"""
+
+
+async def copy_documents(source: asyncpg.Connection, target: asyncpg.Connection) -> dict:
+    """Each ready deep dive of the source becomes the target album's next ready version (albums
+    matched by MBID); its D-batch claims and their reader verdicts go into the copy's own D batch,
+    names as written, for the target's `verify --pending`. Citations travel as resolved (URL,
+    label, title), so the page renders without the source's ids."""
+    from musicdata.graph.batch import store_reader_verdicts
+    from musicdata.graph.queries import post_assertions
+
+    out = {"documents": 0, "claims": 0, "skipped": []}
+    for d in await source.fetch(SOURCE_DOCS):
+        rg = await target.fetchval(
+            "SELECT release_group_id FROM release_group WHERE mbid = $1::uuid", d["mbid"]
+        )
+        if rg is None:
+            out["skipped"].append(d["title"])
+            continue
+        new = await target.fetchval(
+            """INSERT INTO album_document (release_group_id, kind, version, status, finished_at,
+                      model, body_md, citations, checks, firecrawl_credits)
+               VALUES ($1, $2, coalesce((SELECT max(version) FROM album_document
+                                          WHERE release_group_id = $1 AND kind = $2), 0) + 1,
+                       'writing', now(), $3, $4, $5::jsonb, $6::jsonb, $7)
+               RETURNING document_id""",
+            rg, d["kind"], d["model"], d["body_md"], d["citations"], d["checks"],
+            d["firecrawl_credits"],
+        )  # fmt: skip
+        label = batch_label(new)
+        await target.execute(
+            "INSERT INTO graph_batch (label, slice) VALUES ($1, 'document') ON CONFLICT DO NOTHING",
+            label,
+        )
+        rows = await source.fetch(SOURCE_CLAIMS, batch_label(d["document_id"]))
+        claims, verdicts = [], []
+
+        def ent(type_, name, mbid, doc_mbid=d["mbid"], doc_rg=rg):
+            if type_ == "album" and mbid == doc_mbid:
+                return {
+                    "type": "album",
+                    "name": name,
+                    "release_group_id": doc_rg,
+                }  # the document\'s album
+            return {"type": type_, "name": name, "mbid": mbid}
+
+        for n, r in enumerate(rows, 1):
+            claim_id = f"{label}-rg{rg}-L{n:03d}"
+            claims.append({
+                "claim_id": claim_id, "release_group_id": rg, "batch": label,
+                "predicate": r["predicate"], "qualifiers": json.loads(r["qualifiers"] or "{}"),
+                "subject": ent(r["s_type"], r["s_name"], r["s_mbid"]),
+                "object": ent(r["o_type"], r["o_name"], r["o_mbid"]),
+                "source": r["source"], "basis": r["basis"], "evidence": r["evidence"],
+                "source_url": r["source_url"], "direction": r["direction"],
+                "extractor": r["extractor"],
+            })  # fmt: skip
+            if r["reader_verdict"]:
+                verdicts.append({"claim_id": claim_id, "verdict": r["reader_verdict"],
+                                 "reason": r["reader_reason"]})  # fmt: skip
+        if claims:
+            await post_assertions(target, claims)
+        if verdicts:
+            await store_reader_verdicts(target, label, verdicts)
+        async with target.transaction():
+            await target.execute(
+                """UPDATE album_document SET status = 'superseded'
+                    WHERE release_group_id = $1 AND kind = $2 AND status = 'ready'""",
+                rg,
+                d["kind"],
+            )
+            await target.execute(
+                "UPDATE album_document SET status = 'ready' WHERE document_id = $1", new
+            )
+        out["documents"] += 1
+        out["claims"] += len(claims)
+    return out
