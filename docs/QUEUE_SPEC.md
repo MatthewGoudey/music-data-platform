@@ -516,3 +516,6 @@ priority Essential. Matt has played other Ratboys records but no session of this
   should still grab tastebreakers and revisits"): each page the list scrolls on to is built like the
   first — new albums, revisits, a thread and a Tastebreaker in the profile's composition — leaving
   out every album already on the page and their artists, with no pins and a seed of its own.
+- 2026-10-10 v21 (Matt: "Can you mix the cards all up? The ratio we have is fine but I like the cards
+  being mixed"): pins stay first; every other card interleaves in an order the page's seed draws,
+  each kind keeping its own order. The Tastebreaker's genres drop bracketed notes before splitting.

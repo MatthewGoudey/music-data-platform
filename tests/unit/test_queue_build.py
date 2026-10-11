@@ -220,7 +220,6 @@ def test_thread_slots_take_turns_across_finished_albums() -> None:
     assert thread[0].because == "Because you finished F1001: c300"
     slots = [i.slot for i in items]
     assert len(items) == 10 and slots.count("new") == 4  # 2 revisits, 3 threads, 1 wildcard
-    assert slots.index("thread") < slots.index("wildcard")
 
 
 def test_thread_slots_go_round_again_when_few_albums_finished() -> None:
@@ -282,3 +281,17 @@ def test_a_later_page_mixes_slots_and_skips_what_is_shown() -> None:
     assert not set(ids) & shown
     assert [i.slot for i in items].count("revisit") >= 1  # revisits still come
     assert ids[0] == 4  # new picks continue below what was shown
+
+
+def test_cards_are_mixed_but_pins_lead_and_each_kind_keeps_its_order() -> None:
+    cands = _cands()
+    threads = _threads(cands, {1001: [300, 301, 302]})
+    items = _build(cands=cands, thread=3, threads=threads, pins=[_item(7777, artist=7777)])
+    assert items[0].slot == "pinned"
+    slots = [i.slot for i in items[1:]]
+    assert slots != sorted(slots, key=["new", "revisit", "thread", "wildcard"].index)  # mixed
+    new = [i.release_group_id for i in items if i.slot == "new"]
+    assert new == sorted(new)  # best new album first among the new ones
+    assert _build(cands=cands, thread=3, threads=threads) == _build(
+        cands=cands, thread=3, threads=threads
+    )

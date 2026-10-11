@@ -218,4 +218,18 @@ def build(
         q.add(item, "tastebreaker")
     for item in wild:
         q.add(item, "wildcard")
-    return q.items
+    return mix(q.items, rng)
+
+
+def mix(items: list[Item], rng: random.Random) -> list[Item]:
+    """Queue spec v21 (Matt: "I like the cards being mixed"): pins stay first; the other slots
+    interleave in a seeded random order, each kind keeping its own order (the best new album
+    still comes before the second best)."""
+    pins = [i for i in items if i.slot == "pinned"]
+    rest = [i for i in items if i.slot != "pinned"]
+    by_slot: dict[str, list[Item]] = {}
+    for i in rest:
+        by_slot.setdefault(i.slot, []).append(i)
+    order = [i.slot for i in rest]
+    rng.shuffle(order)
+    return pins + [by_slot[s].pop(0) for s in order]

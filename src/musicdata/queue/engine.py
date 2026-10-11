@@ -144,9 +144,10 @@ SELECT t.from_release_group_id, f.title AS finished, t.to_release_group_id, t.co
 
 
 # An album's genres: list genre fields (RYM, Acclaimed Music) and the graph's has_genre claims.
-ALBUM_GENRES = """
+ALBUM_GENRES = r"""
 SELECT e.release_group_id AS rg, lower(trim(x)) AS genre
-  FROM list_entry e, unnest(string_to_array(e.facets ->> 'genre', ',')) x
+  FROM list_entry e,  -- bracketed notes ("jazz (specifically vocal jazz, …)") go before the split
+       unnest(string_to_array(regexp_replace(e.facets ->> 'genre', '\s*\([^)]*\)', '', 'g'), ',')) x
  WHERE e.facets ? 'genre' AND e.release_group_id = ANY($1::int[]) AND trim(x) <> ''
 UNION
 SELECT en.release_group_id, lower(o.name)
