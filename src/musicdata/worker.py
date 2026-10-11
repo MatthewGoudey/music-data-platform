@@ -52,6 +52,27 @@ async def fire_routine(text: str, client=None) -> dict:
     return {"fired": True, "session_url": r.json().get("claude_code_session_url")}
 
 
+async def notify_ready(title: str, artist: str, client=None) -> bool:
+    """A push to Matt's ntfy topic when a deep dive is ready. The message carries no link: ntfy
+    topics are not private, so the page token stays out of it (the Up next page links it). Never
+    raises: a missed push leaves the document ready all the same."""
+    import httpx
+
+    topic = get_settings().ntfy_topic
+    if not topic:
+        return False
+    try:
+        async with client or httpx.AsyncClient(timeout=10) as http:
+            r = await http.post(
+                f"https://ntfy.sh/{topic}",
+                content=f"{title} · {artist} is ready to read. Open Up next to read it.".encode(),
+                headers={"Title": "Deep dive ready", "Tags": "headphones"},
+            )
+        return r.status_code == 200
+    except Exception:
+        return False
+
+
 class DocumentError(ValueError):
     """A request the document flow refuses; the message says why."""
 
@@ -302,7 +323,18 @@ async def finish(conn: asyncpg.Connection, document_id: int, body: dict) -> dict
             document_id, text, json.dumps(cites), json.dumps(body.get("checks") or {}),
             body.get("model"), int(body.get("firecrawl_credits") or 0) + fetch_credits,
         )  # fmt: skip
-    return {"document_id": document_id, "status": "ready", "markers": len(cites)}
+    album = await conn.fetchrow(
+        """SELECT rg.title, a.name FROM release_group rg JOIN artist a ON a.artist_id = rg.artist_id
+            WHERE rg.release_group_id = $1""",
+        doc["release_group_id"],
+    )
+    pushed = await notify_ready(album["title"], album["name"]) if album else False
+    return {
+        "document_id": document_id,
+        "status": "ready",
+        "markers": len(cites),
+        "notified": pushed,
+    }
 
 
 OUT_OF_DATE = """

@@ -39,6 +39,10 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; letter-spac
 .mini a { color: var(--accent); font-weight: 700; }
 .headline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .profiles { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ready { display: grid; gap: 6px; }
+.ready .note { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 10px; background: var(--pin-bg); color: var(--pin); font-size: 14px; }
+.ready .note a { color: inherit; font-weight: 700; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.ready .note button { font: 600 13px var(--body); background: none; border: 0; color: inherit; cursor: pointer; }
 .search { display: flex; }
 .search input[type=search] { flex: 1; min-width: 0; font: 15px var(--body); padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); }
 .search input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -101,6 +105,7 @@ h2 { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercas
     </form>
     <div class="profiles" id="profiles"></div>
     <div class="sub" id="sub">Loading…</div>
+    <div class="ready" id="ready" hidden></div>
   </header>
   <section class="list" id="list" aria-label="Queue" aria-live="polite"></section>
   <section class="extra" id="recent-wrap" hidden aria-label="Recently finished">
@@ -198,7 +203,28 @@ function card(a, i) {
   </article>`;
 }
 
+function readySeen() {
+  try { return new Set(JSON.parse(localStorage.getItem("docs.seen") || "[]")); } catch (e) { return new Set(); }
+}
+function markSeen(id) {
+  const s = readySeen(); s.add(id);
+  try { localStorage.setItem("docs.seen", JSON.stringify([...s].slice(-50))); } catch (e) {}
+}
+function renderReady() {
+  const seen = readySeen();
+  const fresh = (data.documents_ready || []).filter(d => !seen.has(d.document_id));
+  $("ready").hidden = !fresh.length;
+  $("ready").innerHTML = fresh.map(d =>
+    `<div class="note"><a href="${esc(url(`/albums/${d.release_group_id}/documents/${d.kind}`))}" data-seen="${d.document_id}">Deep dive ready: ${esc(d.title)} · ${esc(d.artist)}</a><button type="button" data-dismiss="${d.document_id}" aria-label="Dismiss">✕</button></div>`).join("");
+}
+document.addEventListener("click", e => {
+  const a = e.target.closest("[data-seen]"), x = e.target.closest("[data-dismiss]");
+  if (a) markSeen(Number(a.dataset.seen));
+  if (x) { markSeen(Number(x.dataset.dismiss)); renderReady(); }
+});
+
 function render() {
+  renderReady();
   $("profiles").innerHTML = data.profiles.map(p => {
     if (p.name === "walk-back") {
       // a walk is entered from an album page; while on it, its chip leads back to that album

@@ -56,3 +56,26 @@ async def test_without_a_trigger_nothing_is_sent(monkeypatch) -> None:
     get_settings.cache_clear()
     assert (await fire_routine("x"))["fired"] is False
     get_settings.cache_clear()
+
+
+async def test_ready_push_names_the_album_and_carries_no_link(monkeypatch) -> None:
+    from musicdata.worker import notify_ready
+
+    monkeypatch.setenv("NTFY_TOPIC", "musicdata-test")
+    from musicdata.config import get_settings
+
+    get_settings.cache_clear()
+    seen = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.update(
+            url=str(request.url), title=request.headers["Title"], body=request.content.decode()
+        )
+        return httpx.Response(200)
+
+    assert await notify_ready(
+        "Stardust", "Willie Nelson", httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    )
+    assert seen["url"] == "https://ntfy.sh/musicdata-test" and seen["title"] == "Deep dive ready"
+    assert "Stardust · Willie Nelson" in seen["body"] and "?t=" not in seen["body"]
+    get_settings.cache_clear()

@@ -27,6 +27,7 @@ def _tokens(monkeypatch):
     monkeypatch.setenv("API_TOKEN", "test-token")
     monkeypatch.setenv("QUEUE_PAGE_TOKEN", PAGE)
     monkeypatch.delenv("ROUTINE_FIRE_URL", raising=False)  # a test never starts the real worker
+    monkeypatch.delenv("NTFY_TOPIC", raising=False)  # nor pushes to Matt's phone
     from musicdata.config import get_settings
 
     get_settings.cache_clear()
