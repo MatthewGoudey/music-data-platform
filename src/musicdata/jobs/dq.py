@@ -43,14 +43,29 @@ async def _listen_count(conn: asyncpg.Connection) -> Result:
     return round(gap * 100, 3), gap <= 0.005, {"listenbrainz": lb, "database": db}
 
 
+RECONCILE_MAX_AGE_DAYS = 8  # the reconcile workflow runs weekly
+
+
 async def _beyond_listenbrainz(conn: asyncpg.Connection) -> Result:
-    """More stored listens than ListenBrainz has means duplicates (or deletions upstream);
-    the 0.5% band above would hide a few dozen, so this one is exact."""
-    observed, _, details = await _listen_count(conn)
-    if observed is None:
-        return None, False, details
-    extra = int(details["database"]) - int(details["listenbrainz"])
-    return float(max(extra, 0)), extra <= 0, details
+    """Stored listens ListenBrainz no longer has (duplicates, or deletions upstream), from the
+    latest reconcile run, which pages the whole history: the listen-count endpoint drifts
+    (2026-10-12: ~300 below the history it serves), so it cannot answer this exactly."""
+    row = await conn.fetchrow(
+        f"""SELECT notes, started_at > now() - interval '{RECONCILE_MAX_AGE_DAYS} days' AS fresh
+              FROM pipeline_run WHERE job = 'reconcile' AND status = 'ok'
+             ORDER BY started_at DESC LIMIT 1"""
+    )
+    if row is None:
+        return None, False, {"reason": "no successful reconcile run; run `musicdata reconcile`"}
+    n = json.loads(row["notes"])
+    extra, ambiguous = int(n["extra"]), int(n["ambiguous"])
+    details: dict[str, object] = {
+        "listenbrainz_paged": n["listenbrainz_paged_count"],
+        "database": n["database_count"],
+        "ambiguous": ambiguous,
+        "fresh": row["fresh"],
+    }
+    return float(extra), extra == 0 and ambiguous == 0 and row["fresh"], details
 
 
 async def _zero(conn: asyncpg.Connection, sql: str) -> Result:

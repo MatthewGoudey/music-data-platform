@@ -83,6 +83,19 @@ def ingest(
 
 
 @app.command()
+def reconcile(
+    delete: bool = typer.Option(
+        False, "--delete", help="Delete the stored listens ListenBrainz no longer has."
+    ),
+) -> None:
+    """Page the whole ListenBrainz history and find stored listens it no longer has."""
+    from musicdata.ingest.reconcile import reconcile as reconcile_job
+    from musicdata.jobs import runs
+
+    raise typer.Exit(runs.run("reconcile", reconcile_job(delete=delete), trigger=_trigger()))
+
+
+@app.command()
 def resolve(
     limit: int = typer.Option(500, help="Max mapped release groups this run (1 req/s each)."),
     unmapped_limit: int = typer.Option(100, help="Max unmapped release groups this run."),
