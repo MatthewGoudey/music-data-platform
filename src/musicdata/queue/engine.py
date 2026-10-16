@@ -15,6 +15,7 @@ import asyncpg
 
 from musicdata.queue import config
 from musicdata.queue.build import build, day_seed
+from musicdata.queue.genres import album_genres
 from musicdata.queue.pools import due
 from musicdata.queue.score import Item, Profile, passes, score_candidates, why_line, why_part
 
@@ -143,37 +144,10 @@ SELECT t.from_release_group_id, f.title AS finished, t.to_release_group_id, t.co
 """
 
 
-# An album's genres: list genre fields (RYM, Acclaimed Music) and the graph's has_genre claims.
-ALBUM_GENRES = r"""
-SELECT e.release_group_id AS rg, lower(trim(x)) AS genre
-  FROM list_entry e,  -- bracketed notes ("jazz (specifically vocal jazz, …)") go before the split
-       unnest(string_to_array(regexp_replace(e.facets ->> 'genre', '\s*\([^)]*\)', '', 'g'), ',')) x
- WHERE e.facets ? 'genre' AND e.release_group_id = ANY($1::int[]) AND trim(x) <> ''
-UNION
-SELECT en.release_group_id, lower(o.name)
-  FROM assertion a
-  JOIN entity en ON en.entity_id = a.subject_id AND en.type = 'album'
-  JOIN entity o ON o.entity_id = a.object_id
- WHERE a.predicate = 'has_genre' AND a.status = 'accepted'
-   AND en.release_group_id = ANY($1::int[])
-"""
 RECENT = """
 SELECT DISTINCT release_group_id FROM album_session
  WHERE started_at > now() - make_interval(days => $1)
 """
-
-
-async def album_genres(conn: asyncpg.Connection, rgs: list[int]) -> dict[int, set[str]]:
-    out: dict[int, set[str]] = defaultdict(set)
-    if not rgs:
-        return out
-    if not await conn.fetchval("SELECT to_regclass('assertion') IS NOT NULL"):
-        q = ALBUM_GENRES.split("UNION")[0]
-    else:
-        q = ALBUM_GENRES
-    for r in await conn.fetch(q, rgs):
-        out[r["rg"]].add(r["genre"])
-    return out
 
 
 async def tastebreaker_choices(
@@ -189,7 +163,7 @@ async def tastebreaker_choices(
     pool = candidates[: max(config.TASTEBREAKER_POOL * 40, 1000)]
     genres = await album_genres(conn, [c.release_group_id for c in pool])
     eligible = [c for c in pool if genres.get(c.release_group_id)
-                and not (genres[c.release_group_id] & lately)]  # fmt: skip
+                and not (genres[c.release_group_id].keys() & lately)]  # fmt: skip
     first = [c for c in eligible if any(w["list"] == config.TASTEBREAKER_FIRST for w in c.why)]
     ranked = first or eligible
     if not ranked:
@@ -199,7 +173,7 @@ async def tastebreaker_choices(
     order = [pick] + [c for c in ranked if c is not pick]
 
     def because(c: Item) -> str:
-        g = ", ".join(sorted(genres[c.release_group_id])[:3])
+        g = ", ".join(sorted(genres[c.release_group_id].values())[:3])
         return f"Tastebreaker · {g} — nothing like it in your last {config.TASTEBREAKER_DAYS} days"
 
     return [(c, because(c)) for c in order]

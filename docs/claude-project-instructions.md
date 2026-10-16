@@ -33,7 +33,8 @@ Every listening endpoint takes the same window: `start_date` and `end_date`
 | Look up many names at once | `POST /artists/batch` with `{"names": ["Wilco", "Big Thief"]}` |
 | Albums by completion | `GET /albums?min_completion=0.8&sort=recent` |
 | Everything about an album | `GET /albums/{release_group_id}` (tracklist with plays per track, sessions) |
-| What Matt should hear next | `GET /next?profile=default` (also `home-genre`, `canon`; `shuffle=true` for a fresh draw); each album says why it is there |
+| What Matt should hear next | `GET /next?profile=default` (also `home-genre`, `canon`, `genre-week`; `shuffle=true` for a fresh draw); each album says why it is there |
+| This week's genre, or any genre's albums | `POST /query` with `SELECT * FROM genre_week ORDER BY week_start DESC LIMIT 1`; the page `/genres/{key}/page` (key: the name without accents, spaces or punctuation, e.g. `dreampop`) |
 | Progress through the lists | `GET /gaps` (per list), `GET /gaps?by=lane` or `?by=zone` (the V Atlas) |
 | The lists, or one list's albums | `GET /lists`, `GET /lists/rolling_stone_500?status=unheard&limit=50` (status: heard, started, unheard, needs_matching) |
 | Pin, snooze or hide an album in the queue | `POST /queue/{release_group_id}/pin` (also `unpin`, `bump`, `snooze?days=30`, `hide`, `unhide`) |

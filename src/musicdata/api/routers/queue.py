@@ -363,13 +363,21 @@ async def queue_data(
                 """SELECT p.name, p.description,
                           CASE p.name WHEN 'walk-back' THEN (SELECT l.name FROM list l
                                                               WHERE l.slug = 'graph_walk')
+                                      WHEN 'genre-week' THEN (SELECT l.name FROM list l
+                                                               WHERE l.slug = 'genre_week')
                           END AS label,
+                          CASE p.name WHEN 'genre-week' THEN (
+                              SELECT substring(e.added_by FROM '^genre:(.+)$')
+                                FROM list_entry e JOIN list l USING (list_id)
+                               WHERE l.slug = 'genre_week' LIMIT 1)
+                          END AS genre,
                           CASE p.name WHEN 'walk-back' THEN (
                               SELECT substring(e.added_by FROM 'graph:([0-9]+)')::int
                                 FROM list_entry e JOIN list l USING (list_id)
                                WHERE l.slug = 'graph_walk' LIMIT 1)
                           END AS origin
-                     FROM queue_profile p ORDER BY p.name <> 'default', p.name"""
+                     FROM queue_profile p
+                    ORDER BY p.name <> 'default', p.name <> 'genre-week', p.name"""
             )
         ]
         tag_names = [

@@ -17,6 +17,7 @@ from musicdata.graph.importer import ensure_album
 from musicdata.graph.queries import album_brief
 from musicdata.identity import title_key
 from musicdata.pages.common import esc, link, play_url, shell, site, src_tag
+from musicdata.queue.genres import key_of
 from musicdata.worker import document_states
 
 PRODUCER = re.compile(r"produc", re.IGNORECASE)
@@ -223,7 +224,9 @@ async def album_page(conn: asyncpg.Connection, release_group_id: int, t: str) ->
             for c in seen.values())))  # fmt: skip
     genres = [e for e in edges.get("genre_style", []) if e["predicate"] == "has_genre"]
     if genres:
-        rows.append(("Genres", ", ".join(esc(e["other"].get("name")) for e in genres[:8])
+        rows.append(("Genres", ", ".join(
+            f'<a href="{esc(link(f"/genres/{key_of(e["other"].get("name") or "")}/page", t))}">'
+            f'{esc(e["other"].get("name"))}</a>' for e in genres[:8])
                      + src_tag(genres[0]["sources"], genres[0]["source_url"])))  # fmt: skip
     for m in b["maps"]:
         c = m["coords"]

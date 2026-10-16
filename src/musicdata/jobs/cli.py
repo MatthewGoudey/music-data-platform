@@ -151,6 +151,15 @@ def derive(
     raise typer.Exit(code)
 
 
+@app.command("genre-week")
+def genre_week_cmd() -> None:
+    """Pick this week's genre if it has none, and rewrite the genre_week list (queue spec 10a)."""
+    from musicdata.jobs import runs
+    from musicdata.queue.genre_week import genre_week_job
+
+    raise typer.Exit(runs.run("genre_week", genre_week_job(), trigger=_trigger()))
+
+
 @app.command()
 def shows(
     sweep: bool = typer.Option(False, "--sweep", help="Read every venue, not just active ones."),

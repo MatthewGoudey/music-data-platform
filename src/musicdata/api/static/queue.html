@@ -356,6 +356,13 @@ function render() {
         ? `<a class="chip walk" aria-current="page" href="${esc(url(`/albums/${p.origin}/page`))}" title="Back to the album">← ${esc(p.label || "Walk back")}</a>`
         : `<span class="chip walk" aria-current="page">${esc(p.label || "Walk back")}</span>`;
     }
+    if (p.name === "genre-week") {
+      // queue spec 10a: shown once a genre is picked; while on it, a second chip opens its page
+      if (!p.genre) return "";
+      const on = p.name === profile;
+      const about = on ? `<a class="chip walk" href="${esc(url(`/genres/${encodeURIComponent(p.genre)}/page`))}" title="The genre's page">About this genre →</a>` : "";
+      return `<button class="chip" aria-pressed="${on}" data-profile="genre-week" title="${esc(p.description || "")}">${esc(p.label || "Genre of the week")}</button>${about}`;
+    }
     return `<button class="chip" aria-pressed="${p.name === profile}" data-profile="${esc(p.name)}" title="${esc(p.description || "")}">${esc(p.label || p.name)}</button>`;
   }).join("");
   const n = s => data.items.filter(i => i.slot === s).length;

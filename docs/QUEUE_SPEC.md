@@ -276,6 +276,38 @@ Filter keys a profile may use: `lists`, `goals`, `zones`, `layers`, `lanes`, `pr
 Language profiles arrive once language lists exist (section 15, later); until then `canon`
 fills the third starting slot (ADR 0013 amendment).
 
+## 10a. Genre of the week (v23)
+
+Each week (Monday, Chicago time) the system picks one genre on its own and the `genre-week`
+profile serves list albums that carry it. Matt can reroll it; nothing else needs him.
+
+- **Genres** (`queue/genres.py`): the list genre fields (`rym_top_5000`, `acclaimed_music_3000`,
+  `1001_albums`, `rolling_stone_500`) and accepted `has_genre` claims (Discogs styles). Bracketed
+  notes go, names split on commas and semicolons, `genre_aliases.csv` maps spellings and lost
+  characters, and Discogs groups and descriptors (`none`, `stage & screen`, `ballad`, `acoustic`)
+  drop. A genre's key has no accents, spaces or punctuation ("&" reads "and"); its name is the
+  best spelling seen. The Tastebreaker uses the same keys.
+- **Qualifies**: at least 20 unheard list albums, at most 250 list albums in all (umbrellas such
+  as "rock" never get a week), and no week of its own in the last 26 weeks.
+- **Kind**, by ISO week number mod 3:
+  - *near*: finished on at least 2 albums in the last 365 days; the 10 most finished.
+  - *adjacent*: finished on at most 1; at least 15% of its list albums carry one of Matt's top 10
+    genres (non-umbrella, finished on 2 or more); the 10 highest shares.
+  - *stretch*: finished on none; under 10% of its albums carry a top genre; any of them.
+  A kind with nothing qualifying hands the week to the next kind. The week seeds the draw.
+- **Reroll** draws another genre of the week's kind, never one rerolled away that week.
+- **List and profile**: the job rewrites the generated list `genre_week` ("Genre of the week:
+  <Name>") with every list album carrying the genre, most-listed and highest-placed first, each
+  note naming up to three lists and places. Profile `genre-week`: lists `genre_week`, breadth 1,
+  n 10, no revisits, no wildcard, no thread, affinity 0.1.
+- **Job**: `musicdata genre-week` in `daily-sync` after derive: picks when the week has no row
+  (table `genre_week`, migration 0029), otherwise refreshes the list.
+- **Page**: the chip "Genre of the week: <Name>" sits second on Up next; while it is on, a chip
+  links to `/genres/{key}/page`. The genre page lists the genre's list albums (unheard first,
+  then heard), this week's kind, why line and progress (albums finished since Monday), the genres
+  that share its albums, past weeks with what was finished, and Reroll. It shows no written
+  description: counts and list places only. Album pages link their genres to these pages.
+
 ## 11. Actions
 
 Every action is one tap on a queue card, and every one is optional.
@@ -522,3 +554,9 @@ priority Essential. Matt has played other Ratboys records but no session of this
 - 2026-10-10 v22 (Matt: "Slow scroll doesnt pull the header but fast scroll does"): the header
   returns on a fast flick up (upward speed above 1.2 px/ms over the last 120 ms) or near the top of
   the page; a slow scroll up leaves it away.
+- 2026-10-16 v23 (Matt: "a 'genre of the week' tab/feature"; chose list + Discogs genres, a fully
+  automatic pick, and a chip plus a genre page): section 10a. One genre vocabulary for the
+  Tastebreaker and the week (keys merge spellings; aliases restore lost characters), a weekly pick
+  rotating near / adjacent / stretch, the `genre_week` generated list and `genre-week` profile,
+  reroll, and genre pages. Measured in prod that day: 44% of list albums carry a genre; 232 genres
+  have 20 or more unheard list albums.

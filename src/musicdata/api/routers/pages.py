@@ -19,7 +19,9 @@ from musicdata.graph.generated import rebuild_following, walk
 from musicdata.ingest.parse import parse_listen
 from musicdata.pages.album import album_page
 from musicdata.pages.common import SUGGEST_JS, link
+from musicdata.pages.genre import genre_page
 from musicdata.pages.hub import entity_page, search_page, suggest
+from musicdata.queue.genre_week import pick
 
 router = APIRouter(tags=["pages"], dependencies=[Depends(page_or_bearer)])
 NOW_CACHE_SECONDS = 20
@@ -49,6 +51,24 @@ async def entity(entity_id: int, pool: Pool, t: Annotated[str, Query()] = ""):
     if rg:
         return RedirectResponse(link(f"/albums/{rg}/page", t), status_code=302)
     raise HTTPException(status_code=404, detail="no such page")
+
+
+@router.get("/genres/{key}/page", response_class=HTMLResponse)
+async def genre(key: str, pool: Pool, t: Annotated[str, Query()] = "") -> HTMLResponse:
+    """A genre's list albums; this week's genre also shows its progress (queue spec 10a)."""
+    async with connection(pool) as conn:
+        return HTMLResponse(await genre_page(conn, key, t))
+
+
+@router.post("/genre-week/reroll")
+async def genre_week_reroll(pool: Pool) -> dict[str, object]:
+    """Replace this week's genre with another of the same kind (queue spec 10a)."""
+    async with connection(pool) as conn:
+        try:
+            out = await pick(conn, reroll=True)
+        except LookupError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return {**out, "week": out["week"].isoformat()}
 
 
 @router.get("/pages/search", response_class=HTMLResponse)

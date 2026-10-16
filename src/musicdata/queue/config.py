@@ -64,3 +64,13 @@ TASTEBREAKER_DAYS = 60  # "lately": albums with a session in the last this-many 
 TASTEBREAKER_POOL = 25  # the day's pick is drawn from the best this-many breakers
 TASTEBREAKER_FIRST = "claude_canon"  # tier 1: Matt's most varied list
 MORE_N = 20  # albums per page when the list scrolls on (spec v20)
+
+# Genre of the week (queue spec 10a, v23)
+GENRE_WEEK_MIN_UNHEARD = 20  # a genre needs this many unheard list albums
+GENRE_WEEK_MAX_ALBUMS = 250  # and at most this many list albums: umbrellas ("rock") stay out
+GENRE_WEEK_NO_REPEAT = 26  # weeks before a genre can come back
+GENRE_WEEK_AFFINITY_DAYS = 365  # "what Matt plays": albums finished in the last this-many days
+GENRE_WEEK_TOP = 10  # his top genres by albums finished, for adjacent and stretch
+GENRE_WEEK_ADJACENT_SHARE = 0.15  # adjacent: at least this share of its albums carry a top genre
+GENRE_WEEK_STRETCH_SHARE = 0.1  # stretch: under this share do
+GENRE_WEEK_POOL = 10  # the week's draw is from the best this-many of its kind

@@ -58,7 +58,17 @@ any of these files, and log the change at its bottom.
   No Docker: integration tests run against Neon dev with `--env dev` or `DATABASE_URL` set (ADR 0005).
 - Run any job against an environment from the laptop: `uv run musicdata --env dev --plain-logs <job>`.
 
-## Current state (2026-10-10, v0.5.0: Phase 6 live in prod)
+## Current state (2026-10-16)
+Genre of the week (queue spec 10a, v23; migration 0029): `musicdata genre-week` runs in
+`daily-sync` after derive, picks the week's genre (near / adjacent / stretch by ISO week) from the
+list genres and Discogs styles (`queue/genres.py`, aliases in `queue/genre_aliases.csv`), and
+rewrites the generated list `genre_week` for the `genre-week` profile; genre pages at
+`/genres/{key}/page`, reroll at `POST /genre-week/reroll`. Listens are reconciled weekly against the
+whole ListenBrainz history (`musicdata reconcile`, `reconcile.yml`); dq's
+`listens_beyond_listenbrainz` reads it. The database limit is 2 GB (import stops at 1,850 MB);
+Neon Free holds 1 GB, so the plan moves to Launch before prod passes 1 GB (about Nov 4) — Matt's step.
+
+## Earlier state (2026-10-10, v0.5.0: Phase 6 live in prod)
 Prod is the home of everything: the graph is built once there every night (near-queue, heard
 albums, atlas, neighbours; 400 imports and 500 credits a night) and dev is refilled from it with
 `musicdata --env dev graph copy --source prod --replace`. Deep dives are requested from album pages
