@@ -339,7 +339,7 @@ behind it.
 | --- | --- | --- |
 | Firecrawl | Block C's default scope: about 2,100 albums not yet fetched × 5–7 credits ≈ 10,000–15,000 once, then ~1,000–3,000 a month; deep dives up to 100 each | Matt's go on Block C approves up to 15,000 for the default scope; 500 per nightly run; check G8 counts `source_fetch` credits (documents' page fetches included) plus documents' search credits against `GRAPH_MONTHLY_CREDITS` |
 | MusicBrainz | ~8 requests per album: ~4,500 default albums over ~11 nights at 400 a night | 1 request/second |
-| Neon | prod is 279 MB; the default scope adds ~150,000 claims and their entities, about 150 MB (measure after the first 1,000 albums) | G7 under 800 MB; stop the default import and report at 650 MB |
+| Neon | prod is 279 MB; the default scope adds ~150,000 claims and their entities, about 150 MB (measure after the first 1,000 albums) | G7 under 2,048 MB (2 GB); stop the default import and report at 1,850 MB |
 | Claude | worker runs (an idle run is one API call); deep dives are the big users | Matt's plan |
 | GitHub Actions | the nightly graph workflow, prod only | free on a public repo |
 | Money | none | the API upgrade in 8.2 only on Matt's go |
@@ -520,3 +520,7 @@ changes code ends with a version tag on Matt's go; the queue changes only with B
   artist, whether or not the graph has met it (an album with no MusicBrainz match shows as "not
   matched yet", without a link). Every search box autocompletes (`GET /pages/suggest`): up to 3
   people, bands, labels or studios, the best known first, then albums.
+- 2026-10-16 (Matt: "Set the max size of the db to 2GB"): G7's limit is 2,048 MB (was 800) and the
+  default import stops at 1,850 MB (was 650), leaving room for listens, shows and nightly churn.
+  Finishing every list album is estimated at 1.6–1.9 GB of database. Neon's Free plan holds 1 GB
+  per project, so prod (and dev, refilled from prod) moves to Launch before the database passes 1 GB.

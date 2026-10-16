@@ -381,7 +381,7 @@ async def write_album(
     return len(rows)
 
 
-DB_STOP_MB = 650  # companion spec 9: stop the default import and report at 650 MB
+DB_STOP_MB = 1850  # companion spec 9: stop the default import and report at 1,850 MB
 ERRORS_MAX = 20  # a run that fails this many albums stops and fails (MusicBrainz down)
 
 

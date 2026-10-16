@@ -149,7 +149,7 @@ Gate: C1–C5 and G1–G8 green in prod. Prod runs only `v*` tags; Phase 6 ships
       Firecrawl spend; report coverage, credits and database size after three nights.
       Built 2026-10-10 (v0.4.3, Matt's go): `graph near-queue` (each profile's top 300, slice
       `near_queue`), `--scope default` (opened → near-queue → heard → atlas, only albums that still
-      need the step); import 400 a night, stops at 650 MB; fetch 500 credits a night, 15,000 in all.
+      need the step); import 400 a night, stops at 1,850 MB (G7 limit 2 GB, 2026-10-16); fetch 500 credits a night, 15,000 in all.
       First prod run started by hand 2026-10-10; report after three nights (2026-10-13).
 - [x] Block D — migration 0021; `graph connections` (nightly) and `graph threads` (end of
       `derive`); the brief gains `connections`.

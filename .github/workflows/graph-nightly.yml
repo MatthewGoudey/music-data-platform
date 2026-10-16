@@ -3,7 +3,7 @@ name: graph-nightly
 # Companion spec 3.7. Prod runs after daily-sync completes, on the latest v* tag; dev runs by
 # workflow_dispatch only. Phase 6 Block C (Matt's go, 2026-10-10): the near-queue set, then the
 # default scope's import (400 albums), fetch (500 credits a night, 15,000 in all) and facts, then
-# link, verify --pending, connections (Block D) and dq. The import stops at 650 MB of database (spec section 9).
+# link, verify --pending, connections (Block D) and dq. The import stops at 1,850 MB of database (spec section 9).
 on:
   workflow_run:
     workflows: ["daily-sync"]

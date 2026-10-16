@@ -15,7 +15,7 @@ from musicdata.graph.verify import Lookups, evidence_check, kind, norm
 
 Result = tuple[float | None, bool, dict[str, object]]
 NO_GRAPH: Result = (None, True, {"reason": "no graph tables"})
-DB_SIZE_MAX_MB = 800
+DB_SIZE_MAX_MB = 2048
 FIRECRAWL_KEY = r"(?<![0-9a-f])fc-[0-9a-f]{32}(?![0-9a-f])"
 
 G1 = """
