@@ -97,3 +97,12 @@ def test_why_lines():
     assert "finished 5 albums" in why_line("near", {"finished": 5}, names)
     assert "alongside folk rock" in why_line("adjacent", {"with": "folkrock", "shared": 4}, names)
     assert why_line("stretch", {}, names).startswith("A stretch")
+
+
+def test_discogs_groups_never_get_a_week(monkeypatch):
+    idx = _index()
+    for rg in range(100, 104):
+        idx.genres[rg] = {"electronic"}
+        idx.lists[rg] = [("Rate Your Music: Top 5,000", rg, 5000)]
+    assert all(k != "electronic" for kind in ("near", "adjacent", "stretch")
+               for k, _ in candidates(idx, kind, set()))  # fmt: skip

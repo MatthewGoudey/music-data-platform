@@ -74,3 +74,8 @@ GENRE_WEEK_TOP = 10  # his top genres by albums finished, for adjacent and stret
 GENRE_WEEK_ADJACENT_SHARE = 0.15  # adjacent: at least this share of its albums carry a top genre
 GENRE_WEEK_STRETCH_SHARE = 0.1  # stretch: under this share do
 GENRE_WEEK_POOL = 10  # the week's draw is from the best this-many of its kind
+# Discogs top-level groups too broad for a week whatever their size (keys; jazz, blues, folk,
+# country and reggae stay: each is one coherent genre)
+GENRE_WEEK_UMBRELLAS = frozenset(
+    {"rock", "pop", "electronic", "hiphop", "funksoul", "latin", "world", "classical"}
+)

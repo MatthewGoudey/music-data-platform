@@ -288,7 +288,9 @@ profile serves list albums that carry it. Matt can reroll it; nothing else needs
   drop. A genre's key has no accents, spaces or punctuation ("&" reads "and"); its name is the
   best spelling seen. The Tastebreaker uses the same keys.
 - **Qualifies**: at least 20 unheard list albums, at most 250 list albums in all (umbrellas such
-  as "rock" never get a week), and no week of its own in the last 26 weeks.
+  as "rock" never get a week), not a Discogs group too broad for a week whatever its size (rock,
+  pop, electronic, hip hop, funk / soul, latin, world, classical), and no week of its own in the
+  last 26 weeks.
 - **Kind**, by ISO week number mod 3:
   - *near*: finished on at least 2 albums in the last 365 days; the 10 most finished.
   - *adjacent*: finished on at most 1; at least 15% of its list albums carry one of Matt's top 10

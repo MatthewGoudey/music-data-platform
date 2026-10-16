@@ -35,7 +35,7 @@ LIST_ALBUMS = """
 WITH sizes AS (SELECT list_id, count(*) AS size FROM list_entry GROUP BY list_id)
 SELECT e.release_group_id AS rg, l.name AS list, min(e.position) AS position, s.size
   FROM list_entry e JOIN list l USING (list_id) JOIN sizes s USING (list_id)
- WHERE e.release_group_id IS NOT NULL AND l.source NOT LIKE 'generated:%'
+ WHERE e.release_group_id IS NOT NULL AND coalesce(l.source, '') NOT LIKE 'generated:%'
  GROUP BY e.release_group_id, l.name, s.size
 """
 HEARD = "SELECT release_group_id FROM release_group_stat WHERE full_sessions > 0"
@@ -101,8 +101,10 @@ def candidates(idx: Index, kind: str, exclude: set[str]) -> list[tuple[str, dict
     """Qualifying genres of one kind, best first, each with the numbers behind it."""
     total, unheard = idx.totals()
     ok = [k for k in total if unheard[k] >= config.GENRE_WEEK_MIN_UNHEARD
-          and total[k] <= config.GENRE_WEEK_MAX_ALBUMS and k not in exclude]  # fmt: skip
+          and total[k] <= config.GENRE_WEEK_MAX_ALBUMS and k not in exclude
+          and k not in config.GENRE_WEEK_UMBRELLAS]  # fmt: skip
     umbrella = {k for k in total if total[k] > config.GENRE_WEEK_MAX_ALBUMS}
+    umbrella |= config.GENRE_WEEK_UMBRELLAS
     top = [k for k, n in idx.finished.most_common() if n >= 2 and k not in umbrella]
     top = top[: config.GENRE_WEEK_TOP]
 
