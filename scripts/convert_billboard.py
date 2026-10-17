@@ -8,8 +8,9 @@ Artist, Rank, ...). Albums are scored by staying power in Matt's listening lifet
     score = weeks charted since 2005 + 0.3 × weeks before + 2 × weeks in the top 10
 
 so classics still charting today rank beside his generation's albums. Greatest hits and
-compilations are left out (they can never count as heard), as are rows credited only to
-"Soundtrack" or "Various Artists". The top TOP entries become the list (QUEUE_SPEC v12):
+compilations stay in (QUEUE_SPEC v24: a sitting through 80% of one is hearing it); rows
+credited only to "Soundtrack" or "Various Artists" are left out (no artist to resolve).
+The top TOP entries become the list (QUEUE_SPEC v12, v24):
 position = rank, year = first chart year, priority Essential to 250 and Recommended to
 1,000, then Deep cut. Both files stay in seeds/lists/, which is not published.
 """
@@ -17,23 +18,16 @@ position = rank, year = first chart year, priority Essential to 250 and Recommen
 from __future__ import annotations
 
 import csv
-import re
 import sys
 from collections import defaultdict
 from pathlib import Path
 
-TOP = 2500
+TOP = 2678  # 2,500 until compilations returned (v24): every album then on the list stays
 LIFETIME_FROM = "2005"
 BEFORE_WEIGHT = 0.3
 TOP10_BONUS = 2
 SHARED = ["position", "artist", "album", "year", "priority", "genre", "descriptors", "note"]
 NO_ARTIST = {"soundtrack", "various artists"}
-COMPILATION = re.compile(
-    r"greatest hits|\bbest of\b|\bhits\b|\bcollection\b|anthology|\bessential\b|\bgold\b"
-    r"|number ones|#1'?s|^legend\b|^chronicle\b|^curtain call|the very best"
-    r"|^now that'?s|^now!?\s*\d|^kidz bop|^totally hits|^1$|^diamonds$",
-    re.IGNORECASE,
-)
 
 
 def clean_artist(name: str) -> str:
@@ -56,8 +50,6 @@ def rank_albums(rows: list[dict[str, str]], top: int = TOP) -> list[dict[str, ob
     for r in rows:
         artist, album = clean_artist(r["Artist"]), r["Song"].strip()
         if not artist or not album or artist.casefold() in NO_ARTIST:
-            continue
-        if COMPILATION.search(album):
             continue
         a = albums[(artist, album)]
         rank = int(r["Rank"])

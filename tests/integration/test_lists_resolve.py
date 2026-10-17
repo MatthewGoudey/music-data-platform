@@ -95,8 +95,8 @@ async def test_a_new_group_is_created_and_a_merge_carries_its_entries(conn) -> N
     )
 
 
-async def test_entries_resolved_to_a_compilation_are_rejected(conn) -> None:
-    from musicdata.lists.compilations import REJECT
+async def test_entries_set_aside_as_compilations_come_back(conn) -> None:
+    from musicdata.lists.compilations import RESTORE
 
     artist = await conn.fetchval(
         "INSERT INTO artist (name, norm_key) VALUES ('Zz Hits Band', 'zz hits band') "
@@ -114,17 +114,18 @@ async def test_entries_resolved_to_a_compilation_are_rejected(conn) -> None:
     for album, rg in (("Zz Collected", comp), ("Zz Studio", studio)):
         await conn.execute(
             """INSERT INTO list_entry (list_id, raw_artist, raw_album, artist_key, album_key,
-                                       release_group_id, resolve_status)
-               VALUES ($1, 'Zz Hits Band', $2, 'zz hits band', lower($2), $3, 'resolved')""",
+                                       release_group_id, resolve_status, review_status)
+               VALUES ($1, 'Zz Hits Band', $2, 'zz hits band', lower($2), $3, 'resolved',
+                       'rejected')""",
             list_id,
             album,
             rg,
         )
-    rows = await conn.fetch(REJECT, "zz_pop")
+    rows = await conn.fetch(RESTORE, "zz_pop")
     assert [r["raw_album"] for r in rows] == ["Zz Collected"]
     statuses = dict(
         await conn.fetch(
             "SELECT raw_album, review_status FROM list_entry WHERE list_id = $1", list_id
         )
     )
-    assert statuses == {"Zz Collected": "rejected", "Zz Studio": "accepted"}
+    assert statuses == {"Zz Collected": "accepted", "Zz Studio": "rejected"}  # other reasons stay

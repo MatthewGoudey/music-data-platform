@@ -695,15 +695,15 @@ def lists_copy_resolutions(
     raise typer.Exit(runs.run("lists_copy", lists_copy(url), trigger=_trigger()))
 
 
-@lists_app.command("reject-compilations")
-def lists_reject_compilations(
+@lists_app.command("restore-compilations")
+def lists_restore_compilations(
     list_: str = typer.Option(..., "--list", help="List slug, e.g. billboard_200."),
 ) -> None:
-    """Set aside a list's entries that resolved to a compilation (never heard as an album)."""
+    """Take back a list's entries set aside for resolving to a compilation (heard at 80%)."""
     from musicdata.jobs import runs
-    from musicdata.lists.compilations import reject_compilations
+    from musicdata.lists.compilations import restore_compilations
 
-    raise typer.Exit(runs.run("lists_reject", reject_compilations(list_), trigger=_trigger()))
+    raise typer.Exit(runs.run("lists_restore", restore_compilations(list_), trigger=_trigger()))
 
 
 @lists_app.command("resolve")
