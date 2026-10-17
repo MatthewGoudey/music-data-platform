@@ -107,7 +107,10 @@ async def tag_now_playing(pool: Pool, tag: Annotated[str, Query()]):
             known = await Known.load(conn)
             for artist in (p.album_artist.name, p.artist.name):
                 rg = known.find(
-                    Album(artist, p.release_name, norm_key(artist), group_key(p.release_name), None)
+                    Album(
+                        artist, p.release_name, norm_key(artist), group_key(p.release_name), None
+                    ),
+                    mapped_only=False,  # any album in the library can carry a tag
                 )
                 if rg:
                     break

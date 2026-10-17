@@ -46,7 +46,7 @@ async def apply_manual_tracklists(conn: asyncpg.Connection, path: Path = SEED) -
     not_found = 0
     for r in read_manual(path):
         album = Album(r["artist"], r["album"], norm_key(r["artist"]), group_key(r["album"]), None)
-        rg_id = known.find(album)
+        rg_id = known.find(album, mapped_only=False)  # a hand count fits an unmapped group too
         if rg_id is None:
             not_found += 1
         else:
