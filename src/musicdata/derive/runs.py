@@ -203,8 +203,8 @@ async def place_runs(conn: asyncpg.Connection) -> dict[str, int]:
     return {
         "runs": len(runs),
         "runs_placed": runs_placed,
-        "listens_moved": sum(1 for r in moved if r["was"] != r["rg"]),
-        "listens_released": int(released.split()[-1]),
+        "run_listens_moved": sum(1 for r in moved if r["was"] != r["rg"]),
+        "run_listens_released": int(released.split()[-1]),
     }
 
 
