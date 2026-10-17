@@ -88,3 +88,36 @@ A group whose tracklist cannot be resolved holds no session, so derive also fold
 into the one mapped namesake (same album key, same artist or the credit's lead artist) whose
 tracklist is resolved or not yet fetched (`derive/fold.py`). In prod this covered 15 albums and
 203 listens, RAM among them (98 listens, then 5 full sessions in dev).
+
+## Amendment (2026-10-17): whole sittings, and compilations at 80%
+
+Matt played *The Velvet Underground & Nico* front to back and ListenBrainz filed the tracks under
+four compilations. The player reported "The Velvet Underground & Nico 45th Anniversary", which the
+edition rule did not strip (it now cuts a bare trailing "<n>th Anniversary [Edition]", plus Spanish
+and Portuguese edition words and K-pop's " - The 2nd Album"). A sweep of prod found 219 of 6,561
+album runs still scattered, for reasons no per-listen rule can see. Three rules close them:
+
+- **Runs.** A run is consecutive listens under one reported album, each within 30 minutes. Its
+  candidates are mapped groups with the reported key, or by one of its artists with a key that nearly
+  matches or extends it ("Cuttin' Grass - Vol. 2 (Cowboy Arms Sessions)" for "Cuttin' Grass Vol. 2:
+  The Cowboy Arms Sessions"). The one group whose tracklist places the most of its titles (at least
+  80%; ties to the reported key, then recording matches, then listens held) takes the matched
+  listens, marked `listen.placed_by = 'run'` (migration 0030); the reported-album rule and the
+  stray-track redirect skip them. Twins split by recordings (Twin Fantasy), MusicBrainz duplicates by
+  coverage (Minewest Emo).
+- **Compilations at 80% (Matt).** A compilation or box set wins a run only when the run covers 80% of
+  its tracklist: that is listening to the compilation, and it holds the session (sessions no longer
+  exclude compilations). A listen on a compilation outside such a run goes to its track's home album:
+  the one album or EP by the listen's or the compilation's artist holding the recording (by MBID, else
+  by title among groups with no secondary types; several go to the earliest). A rarity stays. This
+  replaces "compilation plays stay on the compilation" above, and Cap'n Jazz EPs played from the
+  anthology under 80% still go to their EPs.
+- **Evidence for unmapped groups.** The unmapped tail counts the artist's listens reported under a
+  group's name but filed elsewhere, and their titles: Nilsson Schmilsson held 2 of its 23 plays and
+  was never searched. Lists resolve to a known group only when it is mapped.
+
+Simulated on prod before release: 7,225 of 8,149 runs placed, 1,153 listens moved (Their Greatest
+Hits 1971–1975 266, Harbor 218, Cuttin' Grass 51), and 1,761 compilation listens sent to their home
+albums. `tests/integration/fixtures/listen_homes.json` holds one scenario per failure family; the
+dq check `album_runs_scattered_pct` (≤ 2% of the last 30 days' runs) watches for new ones without
+reading album names, and `musicdata identity impact` lists what a key rule change would move.

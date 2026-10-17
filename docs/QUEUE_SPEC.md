@@ -562,3 +562,14 @@ priority Essential. Matt has played other Ratboys records but no session of this
   rotating near / adjacent / stretch, the `genre_week` generated list and `genre-week` profile,
   reroll, and genre pages. Measured in prod that day: 44% of list albums carry a genre; 232 genres
   have 20 or more unheard list albums.
+- 2026-10-17 v24 (Matt: "80 means im listening to a compilation but outside that it should go to its
+  home album", and "if we have a list somewhere where we got rid of compilations lets undo that"):
+  a compilation or box set can be heard. A sitting that covers 80% or more of a compilation's
+  tracklist is listening to the compilation and holds its session; any other listen on a
+  compilation goes to its track's home album (ADR 0015 amendment 2026-10-17, `derive/runs.py`).
+  The v12 rejection is undone: `lists restore-compilations` returned the 80 entries set aside
+  (`billboard_200` 49, `rym_top_5000` 31) and `lists reject-compilations` is gone. The Billboard
+  converter keeps greatest hits and compilations; the list grows to 2,678 so every album already
+  on it stays (Matt), and rows credited only to "Various Artists" or "Soundtrack" stay out (Matt).
+  Lists resolve to a known group only when it is mapped; an unmapped namesake is the fallback after
+  a search, searched again every 30 days (57 list albums sat on groups that can never hold a session).
