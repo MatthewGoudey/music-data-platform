@@ -78,7 +78,18 @@ class ListenBrainzClient:
                 continue
             r.raise_for_status()
             await self._respect_rate_limit(r.headers)
-            return r.json()
+            try:
+                return r.json()
+            except ValueError:
+                # A 200 whose body is not JSON (prod rekey, 2026-10-17, page 76): a hiccup on
+                # their side. Retry; at the end raise a transport error so paging shrinks/waits.
+                if attempt == attempts:
+                    raise httpx.RemoteProtocolError(
+                        "listenbrainz sent a body that is not JSON", request=r.request
+                    ) from None
+                log.warning("listenbrainz sent a non-JSON body; retrying")
+                await asyncio.sleep(delay)
+                delay *= 2
         raise RuntimeError("unreachable")
 
     @staticmethod

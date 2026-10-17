@@ -125,3 +125,22 @@ async def test_a_long_outage_still_fails(monkeypatch) -> None:
 
     with pytest.raises(httpx.HTTPStatusError):
         await _collect(_client(handler), None)
+
+
+async def test_a_body_that_is_not_json_is_retried(monkeypatch) -> None:
+    """Prod rekey, 2026-10-17: a 200 with a non-JSON body on page 76 failed the whole job."""
+    import musicdata.clients.listenbrainz as lb
+
+    monkeypatch.setattr(lb.asyncio, "sleep", _no_wait)
+    timestamps = list(range(1000, 1020))
+    serve, _ = _fake(timestamps, page_size=1000)
+    garbled = {"left": 5}  # past both attempts of a page, so paging shrinks and carries on
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/listens") and garbled["left"] > 0:
+            garbled["left"] -= 1
+            return httpx.Response(200, text="<html>upstream hiccup</html>")
+        return serve(request)
+
+    seen = await _collect(_client(handler), None)
+    assert set(seen) == set(timestamps)
