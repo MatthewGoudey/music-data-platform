@@ -58,7 +58,15 @@ any of these files, and log the change at its bottom.
   No Docker: integration tests run against Neon dev with `--env dev` or `DATABASE_URL` set (ADR 0005).
 - Run any job against an environment from the laptop: `uv run musicdata --env dev --plain-logs <job>`.
 
-## Current state (2026-10-16)
+## Current state (2026-10-17)
+Where listens land (ADR 0015 amendment 2026-10-17, queue spec v24, migration 0030): derive places
+whole sittings by the group whose tracklist plays them (`derive/runs.py`, `listen.placed_by`); a
+compilation is heard when a sitting covers 80% of it, and other compilation listens go to their
+home albums. Lists took their compilations back (`lists restore-compilations`; Billboard 2,678).
+Before changing a key rule, run `musicdata --env prod identity impact`; the scenarios in
+`tests/integration/fixtures/listen_homes.json` and dq `album_runs_scattered_pct` guard placement.
+
+## Earlier state (2026-10-16)
 Genre of the week (queue spec 10a, v23; migration 0029): `musicdata genre-week` runs in
 `daily-sync` after derive, picks the week's genre (near / adjacent / stretch by ISO week) from the
 list genres and Discogs styles (`queue/genres.py`, aliases in `queue/genre_aliases.csv`), and
