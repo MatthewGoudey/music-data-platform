@@ -1,0 +1,124 @@
+{
+  "_comment": "Where a played run's listens must land (derive: go_home, place_runs, leave_compilations, redirects; then sessions). One case per failure family found in prod on 2026-10-17. A track or play is 'Title' or 'Title@recording'; the same recording on two groups is the same MBID. 'on' is the group ListenBrainz filed each play under, cycled. 'expect' maps a play title (or '*') to the group it must end on; 'sessions' maps a group to the session it must hold ('full', or 'complete' for every track heard).",
+  "cases": [
+    {
+      "name": "velvet underground 45th anniversary",
+      "family": "edition wording the key did not strip",
+      "groups": {
+        "album": {"title": "Zz Velvet & Nico", "tracks": ["Sunday Morning", "Waiting for the Man", "Femme Fatale", "Venus in Furs", "Run Run Run", "All Tomorrows Parties", "Heroin", "There She Goes Again", "Ill Be Your Mirror", "Black Angels Death Song", "European Son"]},
+        "comp": {"title": "Zz Down for You Is Up", "flags": ["compilation"], "tracks": ["Waiting for the Man", "Run Run Run", "Black Angels Death Song", "Zz Other 1", "Zz Other 2"]},
+        "box": {"title": "Zz Verve MGM Albums", "flags": ["box_set"], "tracks": ["There She Goes Again", "European Son", "Zz Other 3"]}
+      },
+      "reported": "Zz Velvet & Nico 45th Anniversary",
+      "plays": ["Sunday Morning", "Waiting for the Man", "Femme Fatale", "Venus in Furs", "Run Run Run", "All Tomorrows Parties", "Heroin", "There She Goes Again", "Ill Be Your Mirror", "Black Angels Death Song", "European Son"],
+      "on": ["album", "comp", "box"],
+      "expect": {"*": "album"},
+      "sessions": {"album": "complete"}
+    },
+    {
+      "name": "harbor flagged a box set",
+      "family": "MusicBrainz flags a real album as a compilation or box set",
+      "groups": {
+        "harbor": {"title": "Zz Harbor", "flags": ["box_set"], "tracks": ["h1", "h2", "h3", "h4", "h5", "h6", "h7", "h8", "h9", "h10"]},
+        "ep": {"title": "Zz Tytto EP", "tracks": ["h1", "h2", "h3", "t4"]}
+      },
+      "reported": "Zz Harbor",
+      "plays": ["h1", "h2", "h3", "h4", "h5", "h6", "h7", "h8", "h9"],
+      "on": ["ep"],
+      "expect": {"*": "harbor"},
+      "sessions": {"harbor": "full"}
+    },
+    {
+      "name": "greatest hits played through",
+      "family": "a compilation played through counts as the compilation",
+      "groups": {
+        "first": {"title": "Zz First Album", "tracks": ["g0", "g1", "g2", "g3", "g4"]},
+        "second": {"title": "Zz Second Album", "tracks": ["g5", "g6", "g7", "g8", "g9"]},
+        "hits": {"title": "Zz Greatest Hits 1971-1975", "flags": ["compilation"], "tracks": ["g0", "g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8", "g9"]}
+      },
+      "reported": "Zz Greatest Hits 1971-1975 (2013 Remaster)",
+      "plays": ["g0", "g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8"],
+      "on": ["first", "second"],
+      "expect": {"*": "hits"},
+      "sessions": {"hits": "full"}
+    },
+    {
+      "name": "three songs from the greatest hits",
+      "family": "compilation listens outside a play-through go to their home albums",
+      "groups": {
+        "first": {"title": "Zz Hits Band First", "tracks": ["k0", "k1", "k2", "k3", "k4"]},
+        "second": {"title": "Zz Hits Band Second", "tracks": ["k5", "k6", "k7", "k8", "k9"]},
+        "hits": {"title": "Zz Hits Band Best Of", "flags": ["compilation"], "tracks": ["k0", "k1", "k2", "k3", "k4", "k5", "k6", "k7", "k8", "k9", "k rarity"]}
+      },
+      "reported": "Zz Hits Band Best Of",
+      "plays": ["k1", "k6", "k8", "k rarity"],
+      "on": ["hits"],
+      "expect": {"k1": "first", "k6": "second", "k8": "second", "k rarity": "hits"}
+    },
+    {
+      "name": "cuttin grass title drift",
+      "family": "the player's album name and MusicBrainz's differ",
+      "groups": {
+        "grass": {"title": "Zz Cuttin Grass Vol. 2: The Cowboy Arms Sessions", "tracks": ["c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8"]},
+        "sailor": {"title": "Zz Sailors Guide", "tracks": ["c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "s9"]}
+      },
+      "reported": "Zz Cuttin Grass - Vol. 2 (Cowboy Arms Sessions)",
+      "plays": ["c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8"],
+      "on": ["sailor"],
+      "expect": {"*": "grass"},
+      "sessions": {"grass": "complete"}
+    },
+    {
+      "name": "twin fantasy twins",
+      "family": "one name, two albums: the recordings decide",
+      "groups": {
+        "mirror": {"title": "Zz Twin Fantasy (Mirror to Mirror)", "tracks": ["my boy@m1", "beach life@m2", "stop smoking@m3", "sober to death@m4"]},
+        "face": {"title": "Zz Twin Fantasy (Face to Face)", "tracks": ["my boy@f1", "beach life@f2", "stop smoking@f3", "sober to death@f4"]}
+      },
+      "reported": "Zz Twin Fantasy",
+      "plays": ["my boy@f1", "beach life@f2", "stop smoking@f3", "sober to death@f4"],
+      "on": ["mirror"],
+      "expect": {"*": "face"},
+      "sessions": {"face": "complete"}
+    },
+    {
+      "name": "ram medley",
+      "family": "track titles drift inside the right album",
+      "groups": {
+        "ram": {"title": "Zz Ram", "tracks": ["Too Many People", "3 Legs", "Dear Boy", "Uncle Albert / Admiral Halsey", "Smile Away", "Eat at Home"]}
+      },
+      "reported": "Zz Ram",
+      "plays": ["Too Many People", "3 Legs", "Dear Boy", "Uncle Albert / Admiral Halsey - Medley@x1", "Smile Away", "Eat at Home"],
+      "on": ["ram"],
+      "expect": {"*": "ram"},
+      "sessions": {"ram": "complete"}
+    },
+    {
+      "name": "anthology under 80 percent",
+      "family": "compilation listens outside a play-through go to their home albums",
+      "groups": {
+        "ep1": {"title": "Zz Burritos EP", "type": "EP", "tracks": ["a1", "a2", "a3", "a4"]},
+        "ep2": {"title": "Zz Kites EP", "type": "EP", "tracks": ["b1", "b2", "b3", "b4"]},
+        "anthology": {"title": "Zz Analphabetapolothology", "flags": ["compilation"], "tracks": ["a1", "a2", "a3", "a4", "b1", "b2", "b3", "b4"]}
+      },
+      "reported": "Zz Analphabetapolothology",
+      "plays": ["a1", "a2", "a3", "a4", "b1"],
+      "on": ["anthology"],
+      "expect": {"a1": "ep1", "a2": "ep1", "a3": "ep1", "a4": "ep1", "b1": "ep2"},
+      "sessions": {"ep1": "complete"}
+    },
+    {
+      "name": "b sides reported, album played",
+      "family": "the expanded form of an album stays on the album (unchanged rule)",
+      "groups": {
+        "play": {"title": "Zz Play", "tracks": ["p1", "p2", "p3", "p4", "p5"]},
+        "bsides": {"title": "Zz Play & Play: The B Sides", "flags": ["compilation"], "tracks": ["p1", "p2", "p3", "p4", "p5", "b1", "b2", "b3", "b4", "b5", "b6", "b7"]}
+      },
+      "reported": "Zz Play & Play: The B Sides",
+      "plays": ["p1", "p2", "p3", "p4", "p5"],
+      "on": ["play"],
+      "expect": {"*": "play"},
+      "sessions": {"play": "complete"}
+    }
+  ]
+}
