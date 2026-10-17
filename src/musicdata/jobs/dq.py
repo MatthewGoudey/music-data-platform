@@ -301,6 +301,61 @@ async def _artist_count(conn: asyncpg.Connection) -> Result:
     return float(stat), stat == listened, {"artist_stat": stat, "distinct_in_listen": listened}
 
 
+SCATTER_DAYS = 30
+SCATTER_MAX_PCT = 2.0
+
+
+async def _scattered_runs(conn: asyncpg.Connection) -> Result:
+    """Album runs of the last 30 days (4+ titles under one reported album) that one group by the
+    run's artists plays (derive/runs.py `choose`, any title) while the run sits elsewhere. It
+    reads no album names, so it finds what the name rules miss: the Velvet Underground session
+    of 2026-10-17 scattered over four compilations would have shown here the next morning."""
+    from musicdata.derive import runs as placed
+    from musicdata.derive.sessions import TrackRef, _Matcher
+
+    recent = placed.LISTENS.replace(
+        "WHERE l.reported_key IS NOT NULL",
+        f"WHERE l.reported_key IS NOT NULL AND l.listened_at > now() - interval '{SCATTER_DAYS} days'",
+    )
+    runs = [r for r in placed.split_runs(await conn.fetch(recent)) if len(r.titles) >= 4]
+    if not runs:
+        return 0.0, True, {"runs": 0}
+    artists = sorted(set().union(*(r.artists for r in runs)))
+    groups = {
+        g["release_group_id"]: g
+        for g in await conn.fetch(placed.GROUPS + " AND g.artist_id = ANY($1::int[])", artists)
+    }
+    by_artist: dict[int, list[int]] = {}
+    for g in groups.values():
+        by_artist.setdefault(g["artist_id"], []).append(g["release_group_id"])
+    tracks: dict[int, list[TrackRef]] = {}
+    for t in await conn.fetch(placed.TRACKS, list(groups)):
+        tracks.setdefault(t["release_group_id"], []).append(
+            TrackRef(t["position"], t["mbid"], t["norm_title"], t["title"])
+        )
+    matchers = {rg: _Matcher(ts) for rg, ts in tracks.items()}
+    scattered = []
+    for run in runs:
+        cands = {rg for a in run.artists for rg in by_artist.get(a, [])}
+        picked = placed.choose(run, cands, groups, matchers)
+        if picked is None:
+            continue
+        rg, ids = picked
+        on = sum(1 for r in run.listens if r["release_group_id"] == rg)
+        if on < 0.8 * len(run.listens):
+            scattered.append(
+                {
+                    "at": run.listens[0]["listened_at"].isoformat(timespec="minutes"),
+                    "reported": run.key,
+                    "listens": len(run.listens),
+                    "on_album": on,
+                    "album_id": rg,
+                }
+            )
+    pct = round(100 * len(scattered) / len(runs), 2)
+    return pct, pct <= SCATTER_MAX_PCT, {"runs": len(runs), "scattered": scattered[:25]}
+
+
 async def _sync_wall_time(conn: asyncpg.Connection) -> Result:
     rows = await conn.fetch(
         """SELECT DISTINCT ON (job) job, extract(epoch FROM finished_at - started_at) AS secs
@@ -323,6 +378,7 @@ CHECKS = (
     Check("heavy_albums_resolved_pct", ">= 90", _heavy_resolved),
     Check("sessions_split_across_aliases", "= 0", _split_sessions),
     Check("listening_runs_split_across_groups", "report", _split_runs),
+    Check("album_runs_scattered_pct", f"<= {SCATTER_MAX_PCT}", _scattered_runs),
     Check("completion_overshoot_pct", "<= 2", _overshoot),
     Check("artist_stat_matches_listens", "exact", _artist_count),
     Check("daily_sync_minutes", "< 15", _sync_wall_time),
