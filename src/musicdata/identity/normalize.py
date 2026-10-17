@@ -21,6 +21,8 @@ album_key(title): the same pipeline, after stripping edition markers:
     (deluxe, remaster, expanded, anniversary, bonus, edition, version, reissue,
     mono, stereo, explicit, clean, complete, legacy) is removed;
   - a trailing " - <...> edition/version/remaster/deluxe" suffix is removed;
+  - a bare trailing "<n>th Anniversary [Deluxe|Expanded|…] [Edition]" after a title is
+    removed ("Exodus 30th Anniversary Edition" → exodus); "40th Anniversary Collection" stays;
   - "EP" is deliberately kept: "Lately EP" and "Lately" are different keys;
   - a re-recording named for its artist ("Red (Taylor's Version)") is a different album,
     not an edition, so "<name>'s Version" stays in the key.
@@ -50,6 +52,14 @@ _BRACKET_EDITION = re.compile(
 )
 _TRAILING_EDITION = re.compile(
     rf"\s+[-–—]\s+[^-–—]*\b(?:{_EDITION_WORDS})\b[^-–—]*$",
+    re.IGNORECASE,
+)
+# "The Velvet Underground & Nico 45th Anniversary" as players report it: no bracket, no
+# dash. Only a bare anniversary with optional edition words is cut, and only after a
+# title ("40th Anniversary Collection" and "Bad Boys 10th Anniversary… The Hits" stay).
+_BARE_ANNIVERSARY = re.compile(
+    r"(?<=\S)\s+\d+(?:st|nd|rd|th)\s+anniversary"
+    r"(?:\s+(?:super\s+)?(?:deluxe|expanded|remaster(?:ed)?|special))*(?:\s+edition)?\s*$",
     re.IGNORECASE,
 )
 _FEAT = re.compile(
@@ -128,7 +138,9 @@ def _keep_remakes(match: re.Match[str]) -> str:
 
 def _strip_editions(title: str) -> str:
     s = _BRACKET_EDITION.sub(_keep_remakes, str(title))
-    return _TRAILING_EDITION.sub(_keep_remakes, s)
+    s = _TRAILING_EDITION.sub(_keep_remakes, s)
+    cut = _BARE_ANNIVERSARY.sub("", s)
+    return s if cut.strip().casefold() in ("", "the") else cut
 
 
 def strip_edition_markers(title: str) -> str:
