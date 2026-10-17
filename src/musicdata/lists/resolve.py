@@ -4,9 +4,11 @@ Pending entries go in order of importance (the atlas, then heavier lists, Essent
 ranked positions). Entries on several lists with the same keys and year are one album
 and settle together. For each:
 
-1. **Already known.** The artist by alias or key, then that artist's release group with
-   the album key, whose first-release year (when both are known) is within ±1. One such
-   group, preferring mapped ones, resolves it at no request.
+1. **Already known.** The artist by alias or key, then that artist's mapped release group
+   with the album key, whose first-release year (when both are known) is within ±1. One such
+   group resolves it at no request. An unmapped namesake is only the fallback when the search
+   finds nothing, and such an entry is searched again every 30 days (2026-10-17: Nilsson
+   Schmilsson and 56 other list albums sat on groups that can never hold a session).
 2. **MusicBrainz search** by title and artist, then by the title cut before its edition
    words; the rules in `lists/match.py` choose. A winner not yet in the database is
    created with its artist through the identity rules resolve uses; the normal resolve
@@ -57,7 +59,12 @@ PENDING = """
    WHERE e.review_status = 'accepted'
      AND (e.resolve_status = 'pending'
           OR (e.resolve_status = 'resolved' AND e.release_group_id IS NULL)
-          OR ($1::bool AND e.resolve_status = 'unresolved'))
+          OR ($1::bool AND e.resolve_status = 'unresolved')
+          OR (e.resolve_status = 'resolved'  -- settled on a group MusicBrainz never mapped
+              AND EXISTS (SELECT 1 FROM release_group g
+                           WHERE g.release_group_id = e.release_group_id AND g.mbid IS NULL)
+              AND coalesce((e.resolve_detail->>'tried_at')::timestamptz, '-infinity')
+                  < now() - interval '30 days'))
 """
 
 
@@ -120,7 +127,9 @@ class Known:
             )
         return k
 
-    def find(self, album: Album) -> int | None:
+    def find(self, album: Album, *, mapped_only: bool = True) -> int | None:
+        """The one known group. Unmapped groups count only as the fallback after a search
+        (`mapped_only=False`): one can never hold a session (Nilsson Schmilsson, 2026-10-17)."""
         artists: set[int] = set()
         for name in artist_variants(album.raw_artist):
             artists |= self.by_alias.get(name, set()) | self.by_key.get(norm_key(name), set())
@@ -136,7 +145,7 @@ class Known:
             }
         )
         mapped = [g for g in found if g[1]]
-        found = mapped or found
+        found = mapped if mapped or mapped_only else found
         return found[0][0] if len(found) == 1 else None
 
     def add(self, rg_id: int, artist_id: int, key: str, year: int | None) -> None:
@@ -267,6 +276,12 @@ def lists_resolve(*, limit: int, retry: bool = False) -> JobFn:
                         detail["mbid"] = cands[0].mbid
                     elif status == "ambiguous":
                         detail["candidates"] = [c.detail() for c in cands[:8]]
+                    if rg_id is None and (local := known.find(a, mapped_only=False)):
+                        status, rg_id = (
+                            "resolved",
+                            local,
+                        )  # the unmapped namesake, until a search wins
+                        detail.update(via="known", unmapped=True)
                     await settle(conn, a.entry_ids, status, rg_id, detail)
                 counts[status] += len(a.entry_ids)
                 if i % 200 == 0:

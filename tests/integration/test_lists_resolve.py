@@ -60,6 +60,18 @@ async def test_a_known_album_resolves_by_key_and_year(conn) -> None:
     assert known.find(album) is None  # two candidates: MusicBrainz decides
 
 
+async def test_an_unmapped_namesake_is_only_the_fallback(conn) -> None:
+    artist = await conn.fetchval(
+        "INSERT INTO artist (name, norm_key) VALUES ('Zz Schmilsson', 'zz schmilsson') "
+        "RETURNING artist_id"
+    )
+    unmapped = await _group(conn, artist, "Zz Schmilsson", "zz schmilsson", 1971, None)
+    known = await Known.load(conn)
+    album = Album("Zz Schmilsson", "Zz Schmilsson", "zz schmilsson", "zz schmilsson", 1971)
+    assert known.find(album) is None  # search MusicBrainz first: this group never holds a session
+    assert known.find(album, mapped_only=False) == unmapped
+
+
 async def test_a_new_group_is_created_and_a_merge_carries_its_entries(conn) -> None:
     c = Candidate(
         mbid="00000000-0000-4000-8000-0000000000c1",

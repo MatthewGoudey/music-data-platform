@@ -1,6 +1,7 @@
 """The unmapped tail: release groups ListenBrainz could not map, settled by tracklist overlap.
 
-For each unmapped group with enough listens (most-listened first):
+For each unmapped group with enough listens (most-listened first), counting the artist's
+listens reported under its name that ListenBrainz filed elsewhere, and their titles too:
 
 1. Mapped groups of the same artist and key already in the database are the candidates
    (no request needed). This is the case ingest leaves apart on purpose.
@@ -107,18 +108,31 @@ async def merge_release_group(conn: asyncpg.Connection, src: int, dst: int) -> N
     )
 
 
+# The evidence for a group is its own listens plus the artist's listens reported under its name
+# but filed elsewhere by ListenBrainz: Nilsson Schmilsson held 2 of its plays, the rest sat on
+# compilations, so it never reached the minimum and was never searched (2026-10-17).
+EVIDENCE = """
+    ((SELECT count(*) FROM listen l WHERE l.release_group_id = rg.release_group_id)
+     + (SELECT count(*) FROM listen l
+         WHERE l.artist_id = rg.artist_id AND l.reported_key = rg.norm_key
+           AND l.release_group_id IS DISTINCT FROM rg.release_group_id))
+"""
+
 PENDING_UNMAPPED = f"""
     FROM release_group rg
     JOIN artist a USING (artist_id)
-    JOIN listen l USING (release_group_id)
     LEFT JOIN release_group_tracklist t USING (release_group_id)
    WHERE rg.mbid IS NULL
      AND (t.release_group_id IS NULL
           OR (t.source = 'unresolved'
               AND ($4::bool OR t.resolved_at < now() - interval '{RETRY_AFTER}')))
      AND ($3::int[] IS NULL OR rg.release_group_id = ANY($3::int[]))
-   GROUP BY rg.release_group_id, a.name, a.mbid
-  HAVING count(*) >= $1
+     AND {EVIDENCE} >= $1
+"""
+
+LISTENED = """
+    SELECT DISTINCT norm_title FROM listen
+     WHERE release_group_id = $1 OR (artist_id = $2 AND reported_key = $3)
 """
 
 
@@ -225,7 +239,7 @@ async def resolve_unmapped(
             f"""SELECT rg.release_group_id, rg.title, rg.norm_key, rg.artist_id,
                        a.name AS artist_name, a.mbid::text AS artist_mbid
                   {PENDING_UNMAPPED}
-                 ORDER BY count(*) DESC, rg.release_group_id
+                 ORDER BY {EVIDENCE} DESC, rg.release_group_id
                  LIMIT $2""",
             min_listens,
             limit,
@@ -235,9 +249,7 @@ async def resolve_unmapped(
     for row in todo:
         rg_id = row["release_group_id"]
         async with connection(pool) as conn:
-            listened = await _titles(
-                conn, "SELECT DISTINCT norm_title FROM listen WHERE release_group_id = $1", rg_id
-            )
+            listened = await _titles(conn, LISTENED, rg_id, row["artist_id"], row["norm_key"])
             local = await conn.fetch(
                 """SELECT rg.release_group_id, t.source
                      FROM release_group rg
