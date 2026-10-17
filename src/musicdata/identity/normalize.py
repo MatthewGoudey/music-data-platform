@@ -21,6 +21,8 @@ album_key(title): the same pipeline, after stripping edition markers:
     (deluxe, remaster, expanded, anniversary, bonus, edition, version, reissue,
     mono, stereo, explicit, clean, complete, legacy) is removed;
   - a trailing " - <...> edition/version/remaster/deluxe" suffix is removed;
+  - Spanish and Portuguese edition words count too ("Hasta la Raíz (Edición Especial)");
+  - a trailing " - The 2nd Album" or "(The 1st Mini Album)" is removed;
   - a bare trailing "<n>th Anniversary [Deluxe|Expanded|…] [Edition]" after a title is
     removed ("Exodus 30th Anniversary Edition" → exodus); "40th Anniversary Collection" stays;
   - "EP" is deliberately kept: "Lately EP" and "Lately" are different keys;
@@ -44,7 +46,8 @@ import unicodedata
 
 _EDITION_WORDS = (
     r"deluxe|remaster(?:ed)?|expanded|anniversary|bonus|special|edition|version|"
-    r"reissue|mono|stereo|explicit|clean|complete|legacy"
+    r"reissue|mono|stereo|explicit|clean|complete|legacy|"
+    r"edici[oó]n|edi[cç][aã]o|especial|remasterizad[oa]|versi[oó]n"  # "(Edición Especial)"
 )
 _BRACKET_EDITION = re.compile(
     rf"\s*[\(\[][^\)\]]*\b(?:{_EDITION_WORDS})\b[^\)\]]*[\)\]]",
@@ -60,6 +63,12 @@ _TRAILING_EDITION = re.compile(
 _BARE_ANNIVERSARY = re.compile(
     r"(?<=\S)\s+\d+(?:st|nd|rd|th)\s+anniversary"
     r"(?:\s+(?:super\s+)?(?:deluxe|expanded|remaster(?:ed)?|special))*(?:\s+edition)?\s*$",
+    re.IGNORECASE,
+)
+# K-pop numbering MusicBrainz leaves off: "LEMONADE - The 2nd Album", "Savage (The 1st Mini Album)".
+_ORDINAL_ALBUM = re.compile(
+    r"\s+[-–—:]\s+the\s+\d+(?:st|nd|rd|th)\s+(?:mini\s+)?album\s*$"
+    r"|\s*[\(\[]the\s+\d+(?:st|nd|rd|th)\s+(?:mini\s+)?album[\)\]]",
     re.IGNORECASE,
 )
 _FEAT = re.compile(
@@ -139,6 +148,7 @@ def _keep_remakes(match: re.Match[str]) -> str:
 def _strip_editions(title: str) -> str:
     s = _BRACKET_EDITION.sub(_keep_remakes, str(title))
     s = _TRAILING_EDITION.sub(_keep_remakes, s)
+    s = _ORDINAL_ALBUM.sub("", s)
     cut = _BARE_ANNIVERSARY.sub("", s)
     return s if cut.strip().casefold() in ("", "the") else cut
 
@@ -168,6 +178,7 @@ _ROMAN = {
 }  # fmt: skip
 _NUMBERED = re.compile(r"\b(part|pt|vol|volume|chapter|act|movement|no)\s+([ivx]+|\d+)\b")
 _LIVE_TAIL = re.compile(r"\s+live\s+(?:at|in|from|on)\s.*$")
+_MEDLEY_TAIL = re.compile(r"(?<=\S)\s+(?:medley|reprise)$")
 
 
 def _numbered(match: re.Match[str]) -> str:
@@ -185,6 +196,8 @@ def loose_title_keys(title: str) -> set[str]:
       State Prison, Folsom, CA (1st Show) - January 1968)" → "folsom prison blues";
     - a track MusicBrainz joins with " / " also answers to each half ("Part 3: Pursuance
       / Part 4: Psalm");
+    - a trailing "medley" or "reprise" goes ("Uncle Albert / Admiral Halsey - Medley" →
+      "uncle albert admiral halsey"); a reprise of a title the album has twice names neither;
     - a medley or suite named "Title: subtitles" also answers to the part before the colon,
       as players often report it ("Country Girl: Whiskey Boot Hill – Down, Down, Down –
       “Country Girl” (I Think You’re Pretty)" → "country girl").
@@ -200,6 +213,8 @@ def loose_title_keys(title: str) -> set[str]:
         out.add(key)
         if stripped := _LIVE_TAIL.sub("", key).strip():
             out.add(stripped)
+        if (bare := _MEDLEY_TAIL.sub("", key)) and bare != key:
+            out.add(bare)
         if ":" in part and (head := _NUMBERED.sub(_numbered, title_key(part.split(":", 1)[0]))):
             out.add(head)
     return out

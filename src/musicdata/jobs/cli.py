@@ -614,6 +614,18 @@ app.add_typer(lists_app, name="lists")
 documents_app = typer.Typer(no_args_is_help=True, help="Album documents (companion spec 7).")
 app.add_typer(documents_app, name="documents")
 
+identity_app = typer.Typer(no_args_is_help=True, help="Identity keys (identity/normalize.py).")
+app.add_typer(identity_app, name="identity")
+
+
+@identity_app.command("impact")
+def identity_impact() -> None:
+    """Show every stored key the working tree's rules would change (run before a key change)."""
+    from musicdata.identity.impact import identity_impact as impact_job
+    from musicdata.jobs import runs
+
+    raise typer.Exit(runs.run("identity_impact", impact_job(), trigger=_trigger()))
+
 
 @documents_app.command("copy")
 def documents_copy_cmd(
