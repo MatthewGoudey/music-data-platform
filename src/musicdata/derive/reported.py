@@ -42,6 +42,7 @@ GO_HOME = f"""
           FROM listen l
           JOIN release_group cur ON cur.release_group_id = l.release_group_id
          WHERE l.reported_key IS NOT NULL AND cur.norm_key <> l.reported_key
+           AND l.placed_by IS NULL  -- a run placed it (derive/runs.py)
            AND l.reported_key NOT LIKE cur.norm_key || ' %'
     ), cand AS (
         SELECT a.listen_id, a.from_rg, a.cur_eligible, h.release_group_id AS to_rg

@@ -1,5 +1,6 @@
-"""The derive job: listens sent home to the album the player reported, stray tracks moved,
-album sessions (incremental), the stat tables (rebuilt).
+"""The derive job: listens sent home to the album the player reported, whole sittings placed
+by the album they played (derive/runs.py), stray tracks moved, album sessions (incremental),
+the stat tables (rebuilt).
 
 A release group is rebuilt when anything under it changed since the last derive run:
 new listens, a new tracklist, or new metadata (a merge bumps `updated_at`). `full`
@@ -17,6 +18,7 @@ from musicdata.db import connection
 from musicdata.derive.fold import fold_untracked
 from musicdata.derive.redirects import apply_redirects
 from musicdata.derive.reported import go_home
+from musicdata.derive.runs import leave_compilations, place_runs
 from musicdata.derive.sessions import (
     Play,
     Session,
@@ -239,8 +241,12 @@ def derive(*, full: bool = False) -> JobFn:
     async def _run(ctx: RunContext) -> None:
         async with connection(ctx.pool) as conn:
             since = None if full else await conn.fetchval(LAST_RUN)
-            # Listens go home, then strays move; the groups they touch count as changed below.
+            # Listens go home, whole sittings go to the album they played, compilation listens
+            # outside one go to their home album, then strays move; the groups they touch count
+            # as changed below.
             home = await go_home(conn)
+            runs = await place_runs(conn)
+            left = await leave_compilations(conn)
             moved = await apply_redirects(conn)
             folded = await fold_untracked(conn)
             if since is None:
@@ -271,6 +277,8 @@ def derive(*, full: bool = False) -> JobFn:
             sessions_full=totals["full"],
             sessions_partial=totals["partial"],
             **home,
+            **runs,
+            **left,
             **moved,
             **folded,
         )

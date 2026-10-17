@@ -8,8 +8,9 @@
   tracks match nothing: they stay real listens but never advance completion.
 - completion = distinct tracklist positions heard ÷ track count, capped at 1.0.
 - full at ≥ 0.8; partial at ≥ 0.25 with at least 3 tracks; anything less is no session.
-- Only albums and EPs with a resolved tracklist that are neither compilations nor box
-  sets have sessions (`eligible`).
+- Only albums and EPs with a resolved tracklist have sessions (`eligible`). Compilations and
+  box sets hold them too since 2026-10-17: a sitting through 80% of one is listening to it
+  (derive/runs.py), and listens outside such a sitting leave for their home albums.
 """
 
 from __future__ import annotations
@@ -56,12 +57,8 @@ class Session:
 def eligible(
     primary_type: str | None, is_compilation: bool, is_box_set: bool, track_count: int | None
 ) -> bool:
-    return (
-        primary_type in SESSION_TYPES
-        and not is_compilation
-        and not is_box_set
-        and bool(track_count)
-    )
+    """The flags stay in the signature for callers; a compilation can be heard (2026-10-17)."""
+    return primary_type in SESSION_TYPES and bool(track_count)
 
 
 class _Matcher:

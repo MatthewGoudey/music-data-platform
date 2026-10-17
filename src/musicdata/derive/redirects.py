@@ -68,6 +68,7 @@ APPLY = """
         UPDATE listen l SET release_group_id = d.to_release_group_id
           FROM release_group_redirect d
          WHERE l.recording_mbid = d.recording_mbid
+           AND l.placed_by IS NULL  -- a run placed it (derive/runs.py)
            AND l.release_group_id = d.from_release_group_id
            AND l.reported_key IS DISTINCT FROM
                (SELECT g.norm_key FROM release_group g WHERE g.release_group_id = l.release_group_id)

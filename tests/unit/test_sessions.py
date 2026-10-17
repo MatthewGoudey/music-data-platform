@@ -62,8 +62,8 @@ def test_eligibility() -> None:
     assert eligible("Album", False, False, 10)
     assert eligible("EP", False, False, 4)
     assert not eligible("Single", False, False, 2)
-    assert not eligible("Album", True, False, 10)
-    assert not eligible("Album", False, True, 40)
+    assert eligible("Album", True, False, 10)  # a compilation can be heard (2026-10-17)
+    assert eligible("Album", False, True, 40)
     assert not eligible("Album", False, False, None)
     assert not eligible(None, False, False, 10)
 
