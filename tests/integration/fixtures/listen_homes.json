@@ -119,6 +119,45 @@
       "on": ["play"],
       "expect": {"*": "play"},
       "sessions": {"play": "complete"}
+    },
+    {
+      "name": "trio with credit",
+      "family": "track titles drift inside the right album (2026-10-18)",
+      "groups": {
+        "trio": {"title": "Zz Trio Harmony", "tracks": ["The Pain of Loving You", "Making Plans", "To Know Him Is to Love Him", "Hobos Meditation", "Wildflowers", "Telling Me Lies", "My Dear Companion", "Those Memories of You", "Ive Had Enough", "Rosewood Casket", "Farther Along"]},
+        "other": {"title": "Zz Trio Leftovers", "tracks": ["Zz Leftover 1", "Zz Leftover 2"]}
+      },
+      "reported": "Zz Trio Harmony Sessions",
+      "plays": ["The Pain of Loving You", "Making Plans", "To Know Him Is to Love Him", "Hobos Meditation", "Wildflowers", "Telling Me Lies (with Dolly Parton & Emmy Lou Harris)", "My Dear Companion", "Those Memories of You", "Ive Had Enough", "Rosewood Casket", "Farther Along"],
+      "on": ["trio", "trio", "trio", "trio", "trio", "other", "trio", "trio", "trio", "trio", "trio"],
+      "expect": {"*": "trio"},
+      "sessions": {"trio": "complete"}
+    },
+    {
+      "name": "tribute without its article",
+      "family": "the player's album name and MusicBrainz's differ (2026-10-20)",
+      "groups": {
+        "tribute": {"title": "A Tribute to the Zz Fiddle Player in the World: Or, My Salute", "tracks": ["Brown Skinned Gal", "Right or Wrong", "Brain Cloudy Blues", "Stay a Little Longer", "Misery", "Time Changes Everything", "San Antonio Rose", "I Knew the Moment I Lost You", "Roly Poly", "Old Fashioned Love", "Corrine Corrina", "Take Me Back to Tulsa"]},
+        "silver": {"title": "Zz Silver Eagle Show", "tracks": ["San Antonio Rose@sar silver eagle", "Zz Silver 2", "Zz Silver 3"]}
+      },
+      "reported": "Tribute To The Zz Fiddle Player",
+      "plays": ["Brown Skinned Gal", "Right or Wrong", "Brain Cloudy Blues", "Stay a Little Longer", "Misery", "Time Changes Everything", "San Antonio Rose@sar silver eagle", "I Knew the Moment I Lost You", "Roly Poly", "Old Fashioned Love", "Corrine Corrina", "Take Me Back to Tulsa"],
+      "on": ["tribute", "tribute", "tribute", "tribute", "tribute", "tribute", "silver", "tribute", "tribute", "tribute", "tribute", "tribute"],
+      "expect": {"*": "tribute"},
+      "sessions": {"tribute": "complete"}
+    },
+    {
+      "name": "box set takes",
+      "family": "a box set's title is another take: it goes home by recording only (2026-10-18)",
+      "groups": {
+        "box": {"title": "Zz Bootleg Vol. 9: The Cellar Tapes", "flags": ["box_set"], "tracks": ["Open the Door Zz@odz", "Million Dollar Zz@mdz", "One Too Many Mornings@otm cellar", "Zz Hurt Anymore@zha", "Zz Cellar 1", "Zz Cellar 2", "Zz Cellar 3", "Zz Cellar 4", "Zz Cellar 5", "Zz Cellar 6", "Zz Cellar 7", "Zz Cellar 8", "Zz Cellar 9", "Zz Cellar 10", "Zz Cellar 11", "Zz Cellar 12"]},
+        "album": {"title": "Zz Times They Are", "tracks": ["One Too Many Mornings", "Zz Times 1", "Zz Times 2", "Zz Times 3", "Zz Times 4", "Zz Times 5", "Zz Times 6", "Zz Times 7", "Zz Times 8", "Zz Times 9"]}
+      },
+      "reported": "Zz The Cellar Tapes: Bootleg Vol. 9",
+      "plays": ["Open the Door Zz@odz", "Million Dollar Zz@mdz", "One Too Many Mornings@otm cellar", "Zz Hurt Anymore@zha"],
+      "on": ["box"],
+      "expect": {"*": "box"},
+      "sessions": {}
     }
   ]
 }

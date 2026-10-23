@@ -10,7 +10,8 @@ album is a compilation. For each run of at least three titles:
 
 - the candidates are mapped groups with a resolved tracklist that have the reported key, or that
   belong to one of the run's artists (or their current groups' artists) and whose key nearly
-  matches it or extends it either way ("Tangle" and "Tangle EP");
+  matches it, extends it either way ("Tangle" and "Tangle EP") or has its words in another
+  order, a leading "a" or "an" aside;
 - each candidate scores the run's titles its tracklist places (recording MBID, title key, then
   the loose keys sessions use); the one top scorer placing at least 80% of them wins, ties going
   to the group with the reported key, then to more recording matches, then to the group already
@@ -22,7 +23,9 @@ The winner's matched listens move to it and are marked `placed_by = 'run'`; the 
 skip them. Then a listen on a compilation or box set that no run placed goes to its track's home
 album: the one album or EP (not a compilation, resolved tracklist) by the listen's artist or the
 compilation's that holds the recording, by MBID, else by title among groups with no secondary
-types; several go to the earliest; a tie or none leaves it (a rarity has no other home).
+types; several go to the earliest; a tie or none leaves it (a rarity has no other home). A box
+set's listen goes home by MBID only: its titles are mostly other takes ("One Too Many Mornings"
+from The Basement Tapes Complete is not the Times They Are A-Changin' recording; queue spec v25).
 """
 
 from __future__ import annotations
@@ -94,12 +97,24 @@ def split_runs(listens: list[asyncpg.Record]) -> list[Run]:
     return [run for run in runs if len(run.titles) >= MIN_TITLES]
 
 
+def _bare(key: str) -> str:
+    """The key without a leading "a" or "an" (keys already drop "the")."""
+    head, _, rest = key.partition(" ")
+    return rest if head in ("a", "an") and rest else key
+
+
 def related(reported: str, key: str) -> bool:
-    """A key the player's album name may stand for: nearly equal, or one extends the other."""
+    """A key the player's album name may stand for: nearly equal, one extends the other, or the
+    same words in another order, once a leading article goes ("Tribute To The Best Damn Fiddle
+    Player" for "A Tribute to the Best Damn Fiddle Player in the World: Or, My Salute to Bob
+    Wills"; "The Basement Tapes Complete: The Bootleg Series, Vol. 11" for "The Bootleg Series,
+    Vol. 11: The Basement Tapes Complete")."""
+    reported, key = _bare(reported), _bare(key)
     return (
         titles_match(reported, key)
         or key.startswith(reported + " ")
         or reported.startswith(key + " ")
+        or sorted(reported.split()) == sorted(key.split())
     )
 
 
@@ -238,7 +253,7 @@ REAL = ELIGIBLE  # an album or EP with a resolved tracklist, never a compilation
 LEAVE_COMPILATIONS = f"""
     WITH away AS (
         SELECT l.listen_id, l.release_group_id AS from_rg, l.recording_mbid, l.norm_title,
-               l.artist_id, c.artist_id AS comp_artist
+               l.artist_id, c.artist_id AS comp_artist, c.is_box_set AS from_box
           FROM listen l
           JOIN release_group c ON c.release_group_id = l.release_group_id
          WHERE (c.is_compilation OR c.is_box_set) AND l.placed_by IS NULL
@@ -255,7 +270,8 @@ LEAVE_COMPILATIONS = f"""
           JOIN release_group g ON g.artist_id IN (a.artist_id, a.comp_artist)
           JOIN release_group_track t ON t.release_group_id = g.release_group_id
                                     AND t.norm_title = a.norm_title
-         WHERE coalesce(cardinality(g.secondary_types), 0) = 0 AND {REAL}
+         WHERE NOT a.from_box  -- a box set's title is mostly another take (queue spec v25)
+           AND coalesce(cardinality(g.secondary_types), 0) = 0 AND {REAL}
     ), best AS (  -- by MBID before by title, then the earliest year; ties name no home
         SELECT DISTINCT ON (listen_id) listen_id, from_rg, to_rg,
                count(*) OVER (PARTITION BY listen_id, how, first_release_year) AS tied,

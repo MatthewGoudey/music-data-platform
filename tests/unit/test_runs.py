@@ -59,6 +59,15 @@ def test_related_keys() -> None:
     assert not related("cuttin grass vol 1", "cuttin grass vol 2")  # numbers must agree
     assert not related("tangle", "tango in the night")
     assert related("tangle", "tangled")  # only a candidate: its tracklist still has to play the run
+    assert related(  # Merle Haggard, 2026-10-20: no leading "A", no subtitle
+        "tribute to the best damn fiddle player",
+        "a tribute to the best damn fiddle player in the world or my salute to bob wills",
+    )
+    assert related(  # the player turned the title around
+        "basement tapes complete the bootleg series vol 11",
+        "bootleg series vol 11 the basement tapes complete",
+    )
+    assert not related("a", "an")
 
 
 def test_the_scattered_album_goes_to_the_group_that_plays_it() -> None:

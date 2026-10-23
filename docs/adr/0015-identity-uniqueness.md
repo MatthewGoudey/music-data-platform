@@ -121,3 +121,9 @@ Hits 1971–1975 266, Harbor 218, Cuttin' Grass 51), and 1,761 compilation liste
 albums. `tests/integration/fixtures/listen_homes.json` holds one scenario per failure family; the
 dq check `album_runs_scattered_pct` (≤ 2% of the last 30 days' runs) watches for new ones without
 reading album names, and `musicdata identity impact` lists what a key rule change would move.
+
+Addendum (2026-10-22, queue spec v25): a box set's listen goes home by recording MBID only; the
+title fallback stays for compilations. Run candidates also match a key without a leading "a"/"an"
+or with its words in another order, and `loose_title_keys` drops a bracketed "(with …)" credit.
+The fixture gains one scenario for each (trio with credit, tribute without its article, box set
+takes); migration 0032 repairs the 37 listens the box-set title rule had moved.

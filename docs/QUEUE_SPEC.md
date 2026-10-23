@@ -573,3 +573,14 @@ priority Essential. Matt has played other Ratboys records but no session of this
   on it stays (Matt), and rows credited only to "Various Artists" or "Soundtrack" stay out (Matt).
   Lists resolve to a known group only when it is mapped; an unmapped namesake is the fallback after
   a search, searched again every 30 days (57 list albums sat on groups that can never hold a session).
+- 2026-10-22 v25 (Matt: "attempt the fixes", answering "Should I go ahead with these, including
+  the box-set rule change?"): a box set's listen goes to its home album by recording MBID only,
+  never by title: a box set's titles are mostly other takes ("One Too Many Mornings" from The
+  Basement Tapes Complete went to The Times They Are A-Changin' on 2026-10-18). Migration 0032 moved
+  back the 37 listens the title rule had sent away while the player reported the box set. Two
+  matching fixes ride along without changing a rule here: a sitting's candidates include its
+  artist's groups whose key matches once a leading "a"/"an" goes or has the same words in another
+  order (Merle Haggard's *A Tribute to the Best Damn Fiddle Player…*), and a track title answers
+  without a bracketed "(with …)" credit (Trio's "Telling Me Lies (with Dolly Parton & Emmy Lou
+  Harris)"). Dq `album_runs_scattered_pct` now also counts a run with any one listen its album
+  plays filed elsewhere.

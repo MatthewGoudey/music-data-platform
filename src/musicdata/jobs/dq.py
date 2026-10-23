@@ -307,7 +307,8 @@ SCATTER_MAX_PCT = 2.0
 
 async def _scattered_runs(conn: asyncpg.Connection) -> Result:
     """Album runs of the last 30 days (4+ titles under one reported album) that one group by the
-    run's artists plays (derive/runs.py `choose`, any title) while the run sits elsewhere. It
+    run's artists plays (derive/runs.py `choose`, any title) while the run, or any listen of it
+    that group plays, sits elsewhere. It
     reads no album names, so it finds what the name rules miss: the Velvet Underground session
     of 2026-10-17 scattered over four compilations would have shown here the next morning."""
     from musicdata.derive import runs as placed
@@ -342,13 +343,17 @@ async def _scattered_runs(conn: asyncpg.Connection) -> Result:
             continue
         rg, ids = picked
         on = sum(1 for r in run.listens if r["release_group_id"] == rg)
-        if on < 0.8 * len(run.listens):
+        # one track the album plays filed elsewhere is enough: San Antonio Rose on another
+        # Merle Haggard album (2026-10-20) left 10 of 12 on the right one
+        astray = set(ids) - {r["listen_id"] for r in run.listens if r["release_group_id"] == rg}
+        if on < 0.8 * len(run.listens) or astray:
             scattered.append(
                 {
                     "at": run.listens[0]["listened_at"].isoformat(timespec="minutes"),
                     "reported": run.key,
                     "listens": len(run.listens),
                     "on_album": on,
+                    "astray": len(astray),
                     "album_id": rg,
                 }
             )
