@@ -63,6 +63,9 @@ jobs:
       - name: verify pending
         id: verify
         if: always()
+        # a backlog drains over nights (each chunk of albums commits); the step's own limit keeps
+        # the job's 240 minutes for the steps after it and the failure push
+        timeout-minutes: 100
         run: uv run musicdata graph verify --pending
       - name: connections
         id: connections
