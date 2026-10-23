@@ -90,7 +90,8 @@ async def record(job: str, fn: JobFn, *, trigger: str = "manual") -> int:
             err = f"{type(exc).__name__}: {exc}\n{traceback.format_exc()}"
             await _finish(ctx, "failed", err)
             log.error(
-                "job failed", extra={"job": job, "env": env, "run_id": run_id, "error": str(exc)}
+                "job failed",
+                extra={"job": job, "env": env, "run_id": run_id, "error": str(exc) or repr(exc)},
             )
             return 1
         await _finish(ctx, "ok", None)

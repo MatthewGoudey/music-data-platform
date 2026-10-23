@@ -25,22 +25,33 @@ from musicdata.graph import names
 from musicdata.graph.claims import claim_key
 from musicdata.graph.entities import ART
 
+# Name pairs first, then the albums of just those entities through the subject and object
+# indexes: an album set over the whole assertion table, probed once per pair, ran past the
+# 60 s command timeout once prod held 200,000 claims (graph-nightly 2026-10-18 to 10-22).
 PAIRS = """
-WITH alb AS (
-    SELECT subject_id AS e, album_context AS a FROM assertion
-     WHERE album_context IS NOT NULL AND status <> 'superseded'
+WITH pair AS (
+    SELECT l.entity_id AS loose, f.entity_id AS firm, l.name AS loose_name, f.name AS firm_name,
+           l.type AS loose_type, f.type AS firm_type, l.norm_key
+      FROM entity l
+      JOIN entity f ON f.norm_key = l.norm_key AND f.mbid IS NOT NULL
+       AND f.entity_id <> l.entity_id
+       AND (f.type = l.type OR (f.type IN ('artist', 'person') AND l.type IN ('artist', 'person')))
+     WHERE l.mbid IS NULL AND l.local_key IS NULL
+),
+ent AS (SELECT loose AS e FROM pair UNION SELECT firm FROM pair),
+alb AS (
+    SELECT a.subject_id AS e, a.album_context AS a FROM assertion a JOIN ent ON ent.e = a.subject_id
+     WHERE a.album_context IS NOT NULL AND a.status <> 'superseded'
     UNION
-    SELECT object_id, album_context FROM assertion
-     WHERE object_id IS NOT NULL AND album_context IS NOT NULL AND status <> 'superseded'
+    SELECT a.object_id, a.album_context FROM assertion a JOIN ent ON ent.e = a.object_id
+     WHERE a.album_context IS NOT NULL AND a.status <> 'superseded'
+),
+shared AS (
+    SELECT DISTINCT p.loose, p.firm
+      FROM pair p JOIN alb x ON x.e = p.loose JOIN alb y ON y.e = p.firm AND y.a = x.a
 )
-SELECT l.entity_id AS loose, f.entity_id AS firm, l.name AS loose_name, f.name AS firm_name,
-       l.type AS loose_type, f.type AS firm_type, l.norm_key,
-       EXISTS (SELECT 1 FROM alb x JOIN alb y ON x.a = y.a
-                WHERE x.e = l.entity_id AND y.e = f.entity_id) AS shared_album
-  FROM entity l
-  JOIN entity f ON f.norm_key = l.norm_key AND f.mbid IS NOT NULL AND f.entity_id <> l.entity_id
-   AND (f.type = l.type OR (f.type IN ('artist', 'person') AND l.type IN ('artist', 'person')))
- WHERE l.mbid IS NULL AND l.local_key IS NULL
+SELECT p.*, s.loose IS NOT NULL AS shared_album
+  FROM pair p LEFT JOIN shared s ON s.loose = p.loose AND s.firm = p.firm
 """
 
 
