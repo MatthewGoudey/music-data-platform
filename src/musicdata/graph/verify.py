@@ -118,6 +118,13 @@ NOT_PLACES = {"various", "several", "multiple", "unknown", "other"}  # "Various 
 _STUDIO_SUFFIX = re.compile(r"\s+(recording\s+)?studios?(\s+\w+)?$")
 
 
+def entity_aliases(attrs: dict) -> list[str]:
+    """The other names an entity has gone by: entities merged into it (spec v10) and names it
+    held before an import renamed it (spec v13)."""
+    merged = [m["entity"]["name"] for m in attrs.get("merged") or []]
+    return [*merged, *(attrs.get("names") or [])]
+
+
 def name_on_page(name: str, page: str, *, place: bool = False) -> bool:
     """An extracted name is on its (normalised) page, quote marks aside (`"Sneaky" Pete
     Kleinow`); a place also passes without a trailing "Studio(s)" word ("Wally Heider" for

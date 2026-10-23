@@ -15,6 +15,7 @@ from musicdata.graph.seed import read_predicates
 from musicdata.graph.verify import (
     PRED,
     Lookups,
+    entity_aliases,
     match_key,
     name_on_page,
     norm,
@@ -212,6 +213,27 @@ def test_firecrawl_name_missing_from_the_page_is_rejected() -> None:
 
     c = _one(_rerun(change), label)
     assert "extracted name not on the cached page" in c["fails"]
+
+
+def test_firecrawl_name_an_import_renamed_still_passes() -> None:
+    """Spec v13: an entity renamed by a later import keeps its old name in `attrs.names`."""
+    label = next(c["claim_id"] for c in t1_claims() if c["source"] == "firecrawl_json")
+
+    def change(claims: list[dict]) -> None:
+        c = _one(claims, label)
+        who = "object" if c["predicate"] == "recorded_at" else "subject"
+        old = c[who]["name"]
+        c[who] = {**c[who], "name": "Nobody Imaginary",
+                  "aliases": entity_aliases({"names": [old]})}  # fmt: skip
+
+    c = _one(_rerun(change), label)
+    assert "extracted name not on the cached page" not in c["fails"]
+
+
+def test_entity_aliases_merged_then_former_names() -> None:
+    attrs = {"merged": [{"entity": {"name": "Sound Shop"}}], "names": ["Carter Family"]}
+    assert entity_aliases(attrs) == ["Sound Shop", "Carter Family"]
+    assert entity_aliases({}) == []
 
 
 def test_atlas_note_citing_the_same_page_counts_once() -> None:

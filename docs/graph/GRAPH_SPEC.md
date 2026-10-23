@@ -392,7 +392,7 @@ those entities for the next batch.
 | Check | Passes when | On failure |
 | --- | --- | --- |
 | Structure | the predicate exists; subject and object types fit it; `sounds_like` is `inferred`; `influenced_by` is `reported` or `documented`; every lineage claim from `claude` has `direction = 'subject_newer'` | `rejected` |
-| Evidence | text claims: the quote, split on " … ", appears verbatim in the normalised fetch body or atlas field (normaliser: strip markdown links with titles and nested parentheses, citation markers, emphasis; unify quotes; collapse whitespace; lower-case). `field:` evidence: the value appears on the page. `firecrawl_json`: the person or place name appears on its page, quote marks aside; a place also passes without a trailing "Studio(s)" word when 5 or more characters remain ("Wally Heider" for "Wally Heider Studios") | `rejected` |
+| Evidence | text claims: the quote, split on " … ", appears verbatim in the normalised fetch body or atlas field (normaliser: strip markdown links with titles and nested parentheses, citation markers, emphasis; unify quotes; collapse whitespace; lower-case). `field:` evidence: the value appears on the page. `firecrawl_json`: the person or place name (or a name it has gone by: merged entities' names, and names held before an import renamed it, `attrs.names`) appears on its page, quote marks aside; a place also passes without a trailing "Studio(s)" word when 5 or more characters remain ("Wally Heider" for "Wally Heider Studios") | `rejected` |
 | Dates | lineage: the object's year (album first release, recording first release, artist begin; a joint credit's earliest part) is not later than the subject's; passes when either year is unknown | `rejected` |
 | First recording | `covers`: no MusicBrainz recording of the work predates the object's | `rejected` |
 | Databases | MusicBrainz or Discogs records the same credit, membership, label, studio, or cover order (for credits on other albums, fetch that album's baseline) | adds to `support`; a contradiction rejects |
@@ -629,3 +629,8 @@ Tests:
   30 predicates.
 - 2026-10-10 (Matt: "Drop the gate entirely and remove it from the spec. Tag now."): no graph work waits on a period of use; prod builds the graph
   once and dev is refilled from prod.
+- 2026-10-22: v13 (Matt: "Keep old names"). `graph import` renames an MBID entity to the name the
+  latest source credits; the old name now stays in `attrs.names`, and the Firecrawl name-on-page
+  check (verify and G2) accepts it, as it does merged names. Migration 0031 recovered the names
+  already lost from accepted Wikipedia personnel evidence (G2 failed from 2026-10-20 on "Carter
+  Family" after the entity became "The Carter Family", and on "Geary Lanier").

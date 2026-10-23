@@ -278,6 +278,16 @@ async def slice_targets(
     return sorted(rows, key=order_key)
 
 
+# A source that names an MBID differently renames the entity; the old name stays in
+# `attrs.names` so claims accepted under it still pass the name-on-page check (spec v13).
+KEEP_OLD_NAME = """attrs = CASE WHEN entity.name = EXCLUDED.name
+                            OR COALESCE(entity.attrs -> 'names', '[]'::jsonb) ? entity.name
+                       THEN entity.attrs
+                       ELSE jsonb_set(entity.attrs, '{names}',
+                                      COALESCE(entity.attrs -> 'names', '[]'::jsonb)
+                                      || to_jsonb(entity.name)) END"""
+
+
 async def ensure_entity(conn: asyncpg.Connection, ent: Ent, cache: dict) -> int:
     """The entity for a claim's subject or object: one per MusicBrainz ID (one per artist
     across artist and person), else one per type and name key."""
@@ -287,10 +297,10 @@ async def ensure_entity(conn: asyncpg.Connection, ent: Ent, cache: dict) -> int:
     key = norm_key(ent.name) or ent.name.casefold()
     if ent.mbid and ent.type in ("artist", "person"):
         eid = await conn.fetchval(
-            """INSERT INTO entity (type, name, norm_key, mbid)
+            f"""INSERT INTO entity (type, name, norm_key, mbid)
                VALUES ($1, $2, $3, $4)
                ON CONFLICT (mbid) WHERE mbid IS NOT NULL AND type IN ('artist','person')
-                  DO UPDATE SET name = EXCLUDED.name,
+                  DO UPDATE SET name = EXCLUDED.name, {KEEP_OLD_NAME},
                                 type = CASE WHEN EXCLUDED.type = 'person' THEN 'person'
                                             ELSE entity.type END
                RETURNING entity_id""",
@@ -301,10 +311,10 @@ async def ensure_entity(conn: asyncpg.Connection, ent: Ent, cache: dict) -> int:
         )
     elif ent.mbid:
         eid = await conn.fetchval(
-            """INSERT INTO entity (type, name, norm_key, mbid)
+            f"""INSERT INTO entity (type, name, norm_key, mbid)
                VALUES ($1, $2, $3, $4)
                ON CONFLICT (type, mbid) WHERE mbid IS NOT NULL AND type NOT IN ('artist','person')
-                  DO UPDATE SET name = EXCLUDED.name
+                  DO UPDATE SET name = EXCLUDED.name, {KEEP_OLD_NAME}
                RETURNING entity_id""",
             ent.type,
             ent.name,

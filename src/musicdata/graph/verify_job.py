@@ -23,7 +23,16 @@ from musicdata.graph import names
 from musicdata.graph.baseline import url_links
 from musicdata.graph.importer import slice_targets
 from musicdata.graph.merge import candidates, merge, resolve_posted_names
-from musicdata.graph.verify import DB, LINEAGE, Lookups, kind, match_key, norm, verify
+from musicdata.graph.verify import (
+    DB,
+    LINEAGE,
+    Lookups,
+    entity_aliases,
+    kind,
+    match_key,
+    norm,
+    verify,
+)
 from musicdata.jobs.runs import JobFn, RunContext
 from musicdata.log import get_logger
 from musicdata.resolve.canonical import choose_release
@@ -65,7 +74,7 @@ def _entity(r: asyncpg.Record) -> dict:
             e[k] = attrs[k]
     if r["atlas_id"]:
         e["atlas_id"] = r["atlas_id"]
-    aliases = [m["entity"]["name"] for m in attrs.get("merged") or []]
+    aliases = entity_aliases(attrs)
     if aliases:
         e["aliases"] = aliases
     return e

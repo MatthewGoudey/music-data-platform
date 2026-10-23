@@ -11,7 +11,7 @@ import asyncpg
 
 from musicdata.config import get_settings
 from musicdata.graph.fetch import MONTH_SPENT
-from musicdata.graph.verify import Lookups, evidence_check, kind, norm
+from musicdata.graph.verify import Lookups, entity_aliases, evidence_check, kind, norm
 
 Result = tuple[float | None, bool, dict[str, object]]
 NO_GRAPH: Result = (None, True, {"reason": "no graph tables"})
@@ -62,8 +62,8 @@ SELECT 'pipeline_run', count(*) FROM pipeline_run WHERE notes::text ~ '{FIRECRAW
 """
 
 
-def _merged_names(merged: str | None) -> list[str]:
-    return [m["entity"]["name"] for m in json.loads(merged)] if merged else []
+def _aliases(names: str | None) -> list[str]:
+    return entity_aliases(json.loads(names)) if names else []
 
 
 async def has_graph(conn: asyncpg.Connection) -> bool:
@@ -88,7 +88,10 @@ async def g2_evidence(conn: asyncpg.Connection) -> Result:
     rows = await conn.fetch(
         """SELECT a.claim_label, a.predicate, a.source, a.extractor, a.basis, a.evidence,
                   a.source_url, s.name AS s_name, o.name AS o_name,
-                  s.attrs -> 'merged' AS s_merged, o.attrs -> 'merged' AS o_merged
+                  jsonb_build_object('merged', s.attrs -> 'merged', 'names', s.attrs -> 'names')
+                      ::text AS s_names,
+                  jsonb_build_object('merged', o.attrs -> 'merged', 'names', o.attrs -> 'names')
+                      ::text AS o_names
              FROM assertion a JOIN entity s ON s.entity_id = a.subject_id
              LEFT JOIN entity o ON o.entity_id = a.object_id
             WHERE a.status = 'accepted' AND a.extractor IN ('claude', 'firecrawl_json')
@@ -103,8 +106,8 @@ async def g2_evidence(conn: asyncpg.Connection) -> Result:
             "basis": r["basis"],
             "evidence": r["evidence"],
             "source_url": r["source_url"],
-            "subject": {"name": r["s_name"], "aliases": _merged_names(r["s_merged"])},
-            "object": {"name": r["o_name"] or "", "aliases": _merged_names(r["o_merged"])},
+            "subject": {"name": r["s_name"], "aliases": _aliases(r["s_names"])},
+            "object": {"name": r["o_name"] or "", "aliases": _aliases(r["o_names"])},
         }
         for r in rows
     ]
