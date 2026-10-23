@@ -103,8 +103,9 @@ async def _build(conn, i: int, case: dict) -> tuple[dict[str, int], dict[int, st
         on = case["on"][n % len(case["on"])]
         lid = await conn.fetchval(
             """INSERT INTO listen (listened_at, artist_id, release_group_id, track_name,
-                                   norm_title, artist_name, release_name, recording_mbid)
-               VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING listen_id""",
+                                   norm_title, artist_name, release_name, recording_mbid,
+                                   reported_key)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING listen_id""",
             start + timedelta(minutes=4 * n),
             artist,
             groups[on],
@@ -113,15 +114,18 @@ async def _build(conn, i: int, case: dict) -> tuple[dict[str, int], dict[int, st
             artist_name,
             case["reported"],
             _mbid(name, f"rec/{rec}"),
+            album_key(case["reported"]),  # as ingest stores it
         )
         plays[lid] = title
     return groups, plays
 
 
-async def test_played_runs_land_on_the_album_played(conn) -> None:
+@pytest.mark.parametrize("mode", ["nightly", "catch_up"])
+async def test_played_runs_land_on_the_album_played(conn, mode: str) -> None:
+    before = await conn.fetchval("SELECT now()")  # the cases' loaded_at, inside this transaction
     built = [await _build(conn, i, case) for i, case in enumerate(CASES)]
     await go_home(conn)
-    await place_runs(conn)
+    await place_runs(conn, loaded_since=before if mode == "catch_up" else None)
     await leave_compilations(conn)
     await apply_redirects(conn)
     all_groups = [rg for groups, _ in built for rg in groups.values()]
@@ -155,3 +159,25 @@ async def test_played_runs_land_on_the_album_played(conn) -> None:
             if not ok:
                 failures.append(f"{case['name']}: {key} session {dict(best or {})}, want {kind}")
     assert not failures, "\n".join(failures)
+
+
+async def test_catch_up_leaves_marks_before_its_span(conn) -> None:
+    """The catch-up derive decides only the runs around new listens; a run mark from before
+    them stays for the nightly derive, which decides every run."""
+    artist = await conn.fetchval(
+        "INSERT INTO artist (name, norm_key) VALUES ('Zz Homes old', 'zz homes old') RETURNING artist_id"
+    )
+    old = await conn.fetchval(
+        """INSERT INTO listen (listened_at, artist_id, track_name, norm_title, artist_name,
+                               release_name, reported_key, placed_by, loaded_at)
+           VALUES ('1990-01-01', $1, 'Zz', 'zz', 'Zz Homes old', 'Zz', 'zz', 'run', '1990-01-01')
+           RETURNING listen_id""",
+        artist,
+    )
+    before = await conn.fetchval("SELECT now()")
+    await _build(conn, 0, CASES[0])
+    assert (await place_runs(conn, loaded_since=before))["runs"] > 0
+    assert await conn.fetchval("SELECT placed_by FROM listen WHERE listen_id = $1", old) == "run"
+    await conn.execute("DROP TABLE run_place")  # ON COMMIT DROP waits for the outer rollback
+    await place_runs(conn)
+    assert await conn.fetchval("SELECT placed_by FROM listen WHERE listen_id = $1", old) is None

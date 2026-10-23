@@ -147,9 +147,32 @@ def choose(
     return scored[0][1], scored[0][2]
 
 
-async def place_runs(conn: asyncpg.Connection) -> dict[str, int]:
-    """Decide every run, then apply: moves, marks, and unmarks of listens no run places now."""
-    runs = split_runs(await conn.fetch(LISTENS))
+RECENT_FROM = """
+    SELECT min(listened_at) FROM listen WHERE loaded_at >= $1 AND reported_key IS NOT NULL
+"""
+RECENT_LISTENS = LISTENS.replace(
+    "WHERE l.reported_key IS NOT NULL",
+    "WHERE l.reported_key IS NOT NULL AND l.listened_at >= $1",
+)
+RECENT_LOOKBACK = timedelta(days=1)  # a sitting that began before the new listens
+
+
+async def place_runs(conn: asyncpg.Connection, *, loaded_since=None) -> dict[str, int]:
+    """Decide every run, then apply: moves, marks, and unmarks of listens no run places now.
+
+    With `loaded_since` (the catch-up derive in the API, a 256 MB machine: every run's listens
+    take about 185 MB) only the runs around listens loaded since then are decided, and only
+    listens from the first of them on are unmarked; the nightly derive decides every run."""
+    scope_from = None
+    if loaded_since is None:
+        runs = split_runs(await conn.fetch(LISTENS))
+    else:
+        start = await conn.fetchval(RECENT_FROM, loaded_since)
+        if start is None:
+            return {"runs": 0, "runs_placed": 0, "run_listens_moved": 0, "run_listens_released": 0}
+        rows = await conn.fetch(RECENT_LISTENS, start - RECENT_LOOKBACK)
+        runs = [run for run in split_runs(rows) if run.listens[-1]["listened_at"] >= start]
+        scope_from = min([start, *(run.listens[0]["listened_at"] for run in runs)])
     groups = {g["release_group_id"]: g for g in await conn.fetch(GROUPS)}
     by_key: dict[str, list] = defaultdict(list)
     by_artist: dict[int, list] = defaultdict(list)
@@ -191,7 +214,9 @@ async def place_runs(conn: asyncpg.Connection) -> dict[str, int]:
         released = await conn.execute(
             """UPDATE listen l SET placed_by = NULL
                 WHERE l.placed_by = 'run'
-                  AND NOT EXISTS (SELECT 1 FROM run_place p WHERE p.listen_id = l.listen_id)"""
+                  AND ($1::timestamptz IS NULL OR l.listened_at >= $1)
+                  AND NOT EXISTS (SELECT 1 FROM run_place p WHERE p.listen_id = l.listen_id)""",
+            scope_from,
         )
         touched = {r["rg"] for r in moved if r["was"] != r["rg"]} | {
             r["was"] for r in moved if r["was"] is not None and r["was"] != r["rg"]

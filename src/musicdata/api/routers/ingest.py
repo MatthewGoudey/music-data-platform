@@ -29,7 +29,7 @@ async def _catch_up() -> None:
     from musicdata.jobs.runs import record
 
     if await record("ingest", ingest(), trigger="catch-up") == 0:
-        if await record("derive", derive(), trigger="catch-up") == 0:
+        if await record("derive", derive(catch_up=True), trigger="catch-up") == 0:
             from musicdata.graph.connections import graph_threads
 
             await record("graph_threads", graph_threads(), trigger="catch-up")
@@ -40,6 +40,14 @@ async def start_catch_up(pool) -> bool:
     if _running:
         return False
     async with connection(pool) as conn:
+        # A catch-up lives in this process and takes seconds; one still 'running' after 15
+        # minutes died with its machine (out of memory, autostop) and blocks nothing.
+        await conn.execute(
+            """UPDATE pipeline_run SET status = 'failed', finished_at = now(),
+                      error = 'interrupted: the API process ended before the job finished'
+                WHERE trigger = 'catch-up' AND status = 'running'
+                  AND started_at < now() - interval '15 minutes'"""
+        )
         recent = await conn.fetchval(
             f"""SELECT 1 FROM pipeline_run
                  WHERE job IN ('ingest', 'derive')

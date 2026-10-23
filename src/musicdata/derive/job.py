@@ -237,7 +237,10 @@ async def _rebuild_chunk(conn: asyncpg.Connection, rg_ids: list[int]) -> int:
     return len(found)
 
 
-def derive(*, full: bool = False) -> JobFn:
+def derive(*, full: bool = False, catch_up: bool = False) -> JobFn:
+    """`catch_up` (the Check button, in the API process) places only the runs around the
+    listens loaded since the last derive; the nightly derive places every run."""
+
     async def _run(ctx: RunContext) -> None:
         async with connection(ctx.pool) as conn:
             since = None if full else await conn.fetchval(LAST_RUN)
@@ -245,7 +248,7 @@ def derive(*, full: bool = False) -> JobFn:
             # outside one go to their home album, then strays move; the groups they touch count
             # as changed below.
             home = await go_home(conn)
-            runs = await place_runs(conn)
+            runs = await place_runs(conn, loaded_since=since if catch_up else None)
             left = await leave_compilations(conn)
             moved = await apply_redirects(conn)
             folded = await fold_untracked(conn)
