@@ -5,7 +5,9 @@ listens reported under its name that ListenBrainz filed elsewhere, and their tit
 
 1. Mapped groups of the same artist and key already in the database are the candidates
    (no request needed). This is the case ingest leaves apart on purpose.
-2. Otherwise MusicBrainz search supplies up to three candidates whose title has the same key.
+2. Otherwise MusicBrainz search supplies up to three candidates whose title has the same key,
+   or the same key after the artist's name ("At San Quentin" ~ MusicBrainz's "Johnny Cash at
+   San Quentin", 2026-10-28).
    A title that finds nothing is searched again cut before its edition words
    ("DAMN. COLLECTORS EDITION." → "DAMN. COLLECTORS" → "DAMN."), since an edition is
    a release inside the group, not a group of its own. The artist narrows the search:
@@ -13,7 +15,9 @@ listens reported under its name that ListenBrainz filed elsewhere, and their tit
    and finally not at all (compilations credit "Various Artists"); a title-only winner
    must share at least two played titles.
 3. The candidate whose tracklist shares the most titles with what was actually played wins.
-   Titles match exactly or nearly ("luv sic pt3" ~ "luv sic part 3") with equal numbers.
+   Titles match exactly or nearly ("luv sic pt3" ~ "luv sic part 3") with equal numbers, by
+   their loose keys as derive matches them ("Wanted Man - Live at San Quentin State Prison,
+   San Quentin, CA - February 1969" ~ "Wanted Man").
    A tie, or no overlap at all, is recorded as unresolved with the reason, for review.
 
 A winner already in the database absorbs the unmapped group (listens and aliases move,
@@ -30,7 +34,12 @@ import asyncpg
 
 from musicdata.clients.musicbrainz import MusicBrainzClient, NotFoundError
 from musicdata.db import connection
-from musicdata.identity import album_key, has_edition_marker, strip_edition_markers
+from musicdata.identity import (
+    album_key,
+    has_edition_marker,
+    loose_title_keys,
+    strip_edition_markers,
+)
 from musicdata.resolve.canonical import Resolution, resolve_group
 from musicdata.resolve.job import RETRY_AFTER, write_resolution, write_unresolved
 
@@ -49,8 +58,27 @@ def titles_match(a: str, b: str) -> bool:
     return SequenceMatcher(None, a, b).ratio() >= NEAR
 
 
+def _loose(title: str) -> set[str]:
+    return {title} | loose_title_keys(title)
+
+
 def _shared(listened: set[str], titles: set[str]) -> int:
-    return sum(1 for t in listened if t in titles or any(titles_match(t, x) for x in titles))
+    """How many listened titles the tracklist holds, matched by loose keys on both sides."""
+    keys = {k for x in titles for k in _loose(x)}
+    return sum(
+        1
+        for t in listened
+        if any(k in keys or any(titles_match(k, x) for x in keys) for k in _loose(t))
+    )
+
+
+def same_album_title(hit_title: str, search_title: str, artist_name: str) -> bool:
+    """The same album key, or the same once the artist's name leads one of the two titles
+    ("At San Quentin" ~ "Johnny Cash at San Quentin")."""
+    hit, wanted, artist = album_key(hit_title), album_key(search_title), album_key(artist_name)
+    if hit == wanted:
+        return True
+    return bool(artist) and (hit == f"{artist} {wanted}" or wanted == f"{artist} {hit}")
 
 
 def search_titles(title: str) -> list[str]:
@@ -159,7 +187,7 @@ async def _candidates(
                     break
                 if int(hit.get("score", 0)) < MIN_SCORE:
                     continue
-                if album_key(hit.get("title", "")) != album_key(search_title):
+                if not same_album_title(hit.get("title", ""), search_title, artist_name):
                     continue
                 try:
                     res = resolve_group(await mb.releases_of_group(hit["id"]))

@@ -76,3 +76,23 @@ def test_artist_searches_narrow_then_widen() -> None:
         (None, None),
     ]
     assert artist_searches("Nujabes", "mbid-1") == [("Nujabes", "mbid-1"), (None, None)]
+
+
+def test_live_tails_count_as_overlap() -> None:
+    """At San Quentin as Pano Scrobbler reports it (2026-10-24)."""
+    played = {
+        "wanted man live at san quentin state prison san quentin ca february 1969",
+        "i walk the line live at san quentin state prison san quentin ca february 1969",
+    }
+    winner, _ = pick_by_overlap(played, {"sq": {"wanted man", "i walk the line", "san quentin"}})
+    assert winner == "sq"
+
+
+def test_the_artist_name_may_lead_the_album_title() -> None:
+    from musicdata.resolve.unmapped import same_album_title
+
+    assert same_album_title("Johnny Cash at San Quentin", "At San Quentin", "Johnny Cash")
+    assert same_album_title("At San Quentin", "Johnny Cash at San Quentin", "Johnny Cash")
+    assert same_album_title("Rumours", "Rumours", "Fleetwood Mac")
+    assert not same_album_title("Johnny Cash at Folsom Prison", "At San Quentin", "Johnny Cash")
+    assert not same_album_title("Waylon at San Quentin", "At San Quentin", "Johnny Cash")
