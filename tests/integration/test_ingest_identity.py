@@ -150,6 +150,47 @@ async def test_rekey_moves_a_listen_off_a_comma_joined_artist(conn) -> None:
     assert moved == "zz rekey lead"
 
 
+async def test_a_comma_joined_name_goes_to_its_known_first_artist(conn) -> None:
+    """Pano Scrobbler sends "Wednesday, Advance Base" with no artist list (2026-11-01)."""
+    index = await IdentityIndex.load(conn)
+    await index.write_page(
+        conn,
+        [
+            _listen(946684830, "Zz Head Band", "A", artist_mbid=NIRVANA_US),
+            _listen(946684831, "Zz Tyler, Zz The Creator", "B", artist_mbid=NIRVANA_UK),
+            _listen(946684832, "Zz Head Band, Zz Guest", "C"),
+            _listen(946684833, "Zz Tyler, Zz The Creator", "D"),
+            _listen(946684834, "Zz Unknown Lead, Zz Guest", "E"),
+        ],
+    )
+    rows = await conn.fetch(
+        """SELECT extract(epoch FROM l.listened_at)::int AS ts, a.norm_key
+             FROM listen l JOIN artist a USING (artist_id)
+            WHERE l.listened_at BETWEEN to_timestamp(946684832) AND to_timestamp(946684834)
+            ORDER BY 1"""
+    )
+    assert [r["norm_key"] for r in rows] == [
+        "zz head band",
+        "zz tyler zz the creator",
+        "zz unknown lead zz guest",
+    ]
+
+
+async def test_rekey_moves_a_stored_comma_name_to_its_known_first_artist(conn) -> None:
+    index = await IdentityIndex.load(conn)
+    p = _listen(946684835, "Zz Rekey Head, Zz Guest", "C")
+    await index.write_page(conn, [p])  # no mapped "Zz Rekey Head" yet: the whole name stays
+    assert await _artist_rows(conn, "zz rekey head zz guest")
+    await index.write_page(conn, [_listen(946684836, "Zz Rekey Head", "A", artist_mbid=NIRVANA_US)])
+    result = await index.write_page(conn, [p], rekey=True)
+    assert result.listens_rekeyed == 1
+    moved = await conn.fetchval(
+        """SELECT a.mbid::text FROM listen l JOIN artist a USING (artist_id)
+            WHERE l.listened_at = to_timestamp(946684835)"""
+    )
+    assert moved == NIRVANA_US
+
+
 async def test_rekey_follows_a_title_key_change_and_collapses_its_duplicate(conn) -> None:
     index = await IdentityIndex.load(conn)
     raw = {

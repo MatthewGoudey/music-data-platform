@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 
 import asyncpg
 
+from musicdata.identity import norm_key
 from musicdata.ingest.parse import Credit, ParsedListen
 
 UNTITLED = "untitled"
@@ -197,6 +198,7 @@ class IdentityIndex:
         if create:
             await self._insert_artists(conn, create, result)
 
+        credits = [self._known_head(a) for a in credits]
         unmapped_new: dict[str, str] = {}
         for a in credits:
             if a.mbid is None and self.artists.find(None, a.key) is None:
@@ -213,6 +215,19 @@ class IdentityIndex:
                 raise RuntimeError(f"artist not resolved after write: {a}")
             ids.append(found)
         return ids
+
+    def _known_head(self, credit: Credit) -> Credit:
+        """An unmapped "A, B, C" goes to A when A is exactly one mapped artist and the whole
+        name is none: Pano Scrobbler joins a track's artists with commas and sends no artist
+        list ("Wednesday, Advance Base", 2026-11-01). Mapped names keep their commas
+        ("Tyler, The Creator"); stored comma rows are unmapped, so a rekey still moves them."""
+        if credit.mbid or ", " not in credit.name or credit.key in self.artists.mapped:
+            return credit
+        head = credit.name.split(", ", 1)[0].strip()
+        key = norm_key(head)
+        if key and len(self.artists.mapped.get(key, ())) == 1:
+            return Credit(name=head, mbid=None, key=key)
+        return credit
 
     async def _insert_artists(
         self,

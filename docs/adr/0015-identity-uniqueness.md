@@ -127,3 +127,14 @@ title fallback stays for compilations. Run candidates also match a key without a
 or with its words in another order, and `loose_title_keys` drops a bracketed "(with …)" credit.
 The fixture gains one scenario for each (trio with credit, tribute without its article, box set
 takes); migration 0032 repairs the 37 listens the box-set title rule had moved.
+
+## Amendment (2026-11-01): a comma-joined name goes to its known first artist
+
+Pano Scrobbler sends a multi-artist track as one comma-joined `artist_name` with no artist list
+and no album artist ("Wednesday, Advance Base", "THAO, Tune-Yards, The Linda Lindas"), so
+`primary_artist` kept the whole string and ingest made an artist of it: 581 such rows held 1,722
+listens on 2026-11-01. Ingest now gives an unmapped "A, B, …" to A when A's key names exactly one
+mapped artist and the whole name names none (`IdentityIndex._known_head`). A mapped name keeps
+its commas ("Tyler, The Creator"), and a first name with no MBID changes nothing ("Malibu Ken,
+Aesop Rock" stays). Stored comma rows are unmapped, so `ingest --rekey` moves their listens:
+275 rows, about 1,150 listens, in prod.
