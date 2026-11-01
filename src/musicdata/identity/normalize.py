@@ -181,6 +181,7 @@ _NUMBERED = re.compile(r"\b(part|pt|vol|volume|chapter|act|movement|no)\s+([ivx]
 _LIVE_TAIL = re.compile(r"\s+live\s+(?:at|in|from|on)\s.*$")
 _MEDLEY_TAIL = re.compile(r"(?<=\S)\s+(?:medley|reprise)$")
 _WITH_CREDIT = re.compile(r"\s*[\(\[]with\s[^\)\]]*[\)\]]", re.IGNORECASE)
+_LEADING_BRACKET = re.compile(r"^\s*[\(\[][^\)\]]*[\)\]]\s*(?=\S)")
 
 
 def _numbered(match: re.Match[str]) -> str:
@@ -204,12 +205,15 @@ def loose_title_keys(title: str) -> set[str]:
       as players often report it ("Country Girl: Whiskey Boot Hill – Down, Down, Down –
       “Country Girl” (I Think You’re Pretty)" → "country girl");
     - a bracketed "(with …)" credit goes: "Telling Me Lies (with Dolly Parton & Emmy Lou
-      Harris)" → "telling me lies" (Trio, 2026-10-18).
+      Harris)" → "telling me lies" (Trio, 2026-10-18);
+    - a leading bracketed phrase goes: "(There'll Be) Peace in the Valley" → "peace in the
+      valley" (At San Quentin, 2026-11-01).
     """
     if not title:
         return set()
     parts = [title, *(p for p in str(title).split(" / ") if " / " in str(title))]
     parts += [bare for p in parts if (bare := _WITH_CREDIT.sub("", p)) != p]
+    parts += [bare for p in parts if (bare := _LEADING_BRACKET.sub("", p)) != p]
     out: set[str] = set()
     for part in parts:
         key = _NUMBERED.sub(_numbered, title_key(part))

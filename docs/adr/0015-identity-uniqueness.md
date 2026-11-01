@@ -138,3 +138,10 @@ mapped artist and the whole name names none (`IdentityIndex._known_head`). A map
 its commas ("Tyler, The Creator"), and a first name with no MBID changes nothing ("Malibu Ken,
 Aesop Rock" stays). Stored comma rows are unmapped, so `ingest --rekey` moves their listens:
 275 rows, about 1,150 listens, in prod.
+
+Addendum (2026-11-01): sessions match a title the album has twice to its first track, as an exact
+title already did ("San Quentin" on *At San Quentin*); a loose key that different titles share
+still names neither. `loose_title_keys` also drops a leading bracketed phrase ("(There'll Be)
+Peace in the Valley" → "peace in the valley"). Replayed on prod's 16,155 albums with
+tracklists: 4 albums changed, none lost a track (Otis Blue 10 → 11 of 11; At San Quentin 5 → 7
+of 9 before its run placement).

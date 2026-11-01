@@ -124,3 +124,17 @@ def test_a_name_two_tracks_share_matches_neither() -> None:
     m = _Matcher(tracks)
     assert m.position(Play(T0, None, "interlude", "Interlude")) is None
     assert m.position(Play(T0, None, "interlude rain", "Interlude: Rain")) == 7
+
+
+def test_san_quentin_as_pano_scrobbler_reports_it() -> None:
+    """A title the album has twice names its first track; a leading "(There'll Be)" goes
+    (Oct 24, 2026: five of nine matched before)."""
+    from musicdata.derive.sessions import _Matcher
+
+    tracks = [TrackRef(5, None, "san quentin", "San Quentin"),
+              TrackRef(6, None, "san quentin", "San Quentin"),
+              TrackRef(9, None, "peace in the valley", "Peace in the Valley")]  # fmt: skip
+    tail = " - Live at San Quentin State Prison, San Quentin, CA - February 1969"
+    m = _Matcher(tracks)
+    assert m.position(Play(T0, None, "", "San Quentin" + tail)) == 5
+    assert m.position(Play(T0, None, "", "(There'll Be) Peace in the Valley" + tail)) == 9

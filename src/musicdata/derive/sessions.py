@@ -71,11 +71,15 @@ class _Matcher:
                 self.by_mbid.setdefault(t.recording_mbid, t.position)
             self.by_title.setdefault(t.norm_title, t.position)
         owners: dict[str, set[int]] = {}
+        titles: dict[str, set[str]] = {}
         for t in tracks:  # after every exact title, so a loose key never shadows one
             for k in loose_title_keys(t.title or t.norm_title):
                 owners.setdefault(k, set()).add(t.position)
-        # a loose key two tracks share ("Interlude: A", "Interlude: B" → "interlude") names neither
-        self.by_loose = {k: next(iter(p)) for k, p in owners.items() if len(p) == 1}
+                titles.setdefault(k, set()).add(t.norm_title)
+        # a loose key two different titles share ("Interlude: A", "Interlude: B" → "interlude")
+        # names neither; a title the album has twice ("San Quentin") names the first, as an
+        # exact title does (2026-11-01)
+        self.by_loose = {k: min(p) for k, p in owners.items() if len(titles[k]) == 1}
 
     def position(self, play: Play) -> int | None:
         if play.recording_mbid and play.recording_mbid in self.by_mbid:
