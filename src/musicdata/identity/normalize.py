@@ -284,6 +284,7 @@ _PARENTHESES = re.compile(r"\s*\([^()]*\)")
 _NON_ARTIST = re.compile(
     r"\btribute\b|\bin concert\b|\bmusic of\b|\byears of\b|\bcelebrat\w*|\bsalute to\b"
     r"|\bthe making of\b|\blive to film\b|\bfilm with live\b|\bscreening\b"
+    r"|\bvs\.?\s"  # "Grunge VS Nu Metal Ft. …": a theme night of tribute acts (2026-11-01)
     r"|\b(?:a|the)\s+[^,/()]{2,40}?\s+show\b",  # "A Pink Floyd Show": a tribute act's billing
     re.IGNORECASE,
 )
