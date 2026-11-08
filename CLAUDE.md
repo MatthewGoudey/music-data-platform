@@ -61,7 +61,7 @@ any of these files, and log the change at its bottom.
 ## Current state (2026-11-08)
 Heard tab (queue spec v26, v27): the Up next page's Heard tab, which replaced Recent listens, lists every album with a full session,
 newest full listen first, with up to three genre chips that filter it (`GET /queue/heard`,
-`ranked_genres` in `queue/genres.py`). Dev on push; prod with the next `v*` tag.
+`ranked_genres` in `queue/genres.py`). In prod since v0.6.8 (2026-11-08).
 
 ## Earlier state (2026-10-17)
 Where listens land (ADR 0015 amendment 2026-10-17, queue spec v24, migration 0030): derive places
