@@ -129,6 +129,24 @@ def index_rows(rows: list[tuple[int, str]]) -> tuple[dict[int, set[str]], dict[s
     return by_rg, best_names(spellings)
 
 
+def ranked_genres(rows: list[tuple[int, str]]) -> dict[int, list[tuple[str, str]]]:
+    """Each album's genres as (key, name), the most cited for that album first, then the
+    genre seen on the most albums in `rows` (the broad one before the narrow), then by name."""
+    per_rg: dict[int, Counter[str]] = defaultdict(Counter)
+    spellings: dict[str, Counter[str]] = defaultdict(Counter)
+    for rg, raw in rows:
+        for name in split_genres(raw):
+            key = genre_key(name)
+            per_rg[rg][key] += 1
+            spellings[key][name] += 1
+    names = best_names(spellings)
+    albums = Counter(k for keys in per_rg.values() for k in keys)
+    return {
+        rg: [(k, names[k]) for k in sorted(cited, key=lambda k: (-cited[k], -albums[k], names[k]))]
+        for rg, cited in per_rg.items()
+    }
+
+
 async def album_genres(conn: asyncpg.Connection, rgs: list[int]) -> dict[int, dict[str, str]]:
     """Each album's genres as key -> name."""
     if not rgs:

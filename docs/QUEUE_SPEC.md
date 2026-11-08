@@ -343,6 +343,7 @@ they are, and the queue reads nothing from them. Revisit them when Matt asks.
 | `GET /profiles`, `PUT /profiles/{name}` | read and edit profiles |
 | `POST /tags/{name}/apply`, `POST /tags/{name}/remove` | tag or untag release groups: `{"release_group_ids": [...]}` |
 | `POST /tag-now-playing?tag=workout` | tag whatever ListenBrainz `playing-now` reports (Block F) |
+| `GET /queue/heard?offset=0&limit=100&genre=` | the Heard tab (v26): every album with a full session, newest full listen first: `total`, `offset`, `genre`, `genre_name`, `items[]` with `release_group_id`, `album`, `artist`, `year`, `last_full_at`, `full_count`, `manual` (every full session marked by hand), `genres[]` (`key`, `name`, at most three); `genre` is a genre key and keeps only that genre's albums |
 
 ## 13. The `/queue` page
 
@@ -356,6 +357,16 @@ One phone-width column, albums only:
    Play · Pin · Snooze 30 · Snooze 90 · Mark played · Not for me · Tag.
 3. **Progress strip** at the foot: heard / total for each list and for the atlas's Core zone,
    from `/gaps`.
+4. **Heard tab** (v26), from `GET /queue/heard`: every album Matt has played through, on a list or
+   not. An album is in it when it has a full session (section 6, read from `album_session` at read
+   time, so Mark played shows at once); its date is its latest full session, and the tab runs
+   newest first under month headings (Chicago time), 100 rows at a time as it scrolls. Each row:
+   album (linked to its page) · artist, the date, the year, "played through N×" from the second
+   time, "marked played" when every full session was manual, and up to three genre chips. Genres are
+   section 10a's vocabulary (list genres plus accepted `has_genre` claims), the ones most cited for
+   that album first, then the ones on the most heard albums; an album with none shows no chips.
+   A chip filters the tab to that genre (any of the album's genres, not only the three shown), with
+   a link to the genre page and Show all.
 
 ## 14. Acceptance checks
 
@@ -584,3 +595,7 @@ priority Essential. Matt has played other Ratboys records but no session of this
   without a bracketed "(with …)" credit (Trio's "Telling Me Lies (with Dolly Parton & Emmy Lou
   Harris)"). Dq `album_runs_scattered_pct` now also counts a run with any one listen its album
   plays filed elsewhere.
+- 2026-11-08 v26 (Matt: "a tab that catalogues all fully listen albums with basic genre info and
+  ordered chronologically by last full listen"; chose a tab on the Up next page, up to three genre
+  chips, and chips that filter): the Heard tab (section 13 item 4) and `GET /queue/heard` (section
+  12). No rule changes: heard is section 6's full session, genres are section 10a's vocabulary.

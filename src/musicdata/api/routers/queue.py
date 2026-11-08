@@ -27,6 +27,8 @@ from musicdata.db import connection
 from musicdata.lists.progress import progress
 from musicdata.queue import config
 from musicdata.queue.engine import UnknownProfileError, next_queue
+from musicdata.queue.genres import ranked_genres, raw_rows
+from musicdata.queue.genres import title as genre_title
 
 router = APIRouter(tags=["queue"])
 
@@ -192,6 +194,68 @@ async def queue_recent(pool: Pool):
                 }
                 for r in rows
             ]
+        }
+    )
+
+
+HEARD_GENRES = 3  # genre chips per album on the Heard tab
+
+HEARD = """
+WITH last_full AS (
+  SELECT release_group_id, max(started_at) AS last_full_at, count(*) AS full_count,
+         bool_and(source = 'manual') AS manual_only
+    FROM album_session WHERE session_type = 'full' GROUP BY release_group_id)
+SELECT lf.release_group_id, lf.last_full_at, lf.full_count, lf.manual_only,
+       rg.title AS album, rg.first_release_year AS year, a.name AS artist
+  FROM last_full lf
+  JOIN release_group rg USING (release_group_id)
+  JOIN artist a ON a.artist_id = rg.artist_id
+ ORDER BY lf.last_full_at DESC, lf.release_group_id
+"""
+
+
+@router.get("/queue/heard", dependencies=[Depends(page_or_bearer)])
+async def queue_heard(
+    pool: Pool,
+    offset: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=500)] = 100,
+    genre: str | None = None,
+):
+    """The Heard tab (spec v26): every album played through at least once, newest full
+    listen first, each with up to three genres. `genre` (a genre key) keeps only that genre's
+    albums; `total` counts what the filter keeps."""
+    async with connection(pool) as conn:
+        rows = await conn.fetch(HEARD)
+        genres = ranked_genres(await raw_rows(conn, [r["release_group_id"] for r in rows]))
+    genre_name = None
+    if genre:
+        rows = [
+            r for r in rows if any(k == genre for k, _ in genres.get(r["release_group_id"], []))
+        ]
+        genre_name = next((n for gs in genres.values() for k, n in gs if k == genre), None)
+    page = rows[offset : offset + limit]
+    return render_object(
+        {
+            "total": len(rows),
+            "offset": offset,
+            "genre": genre,
+            "genre_name": genre_title(genre_name) if genre_name else None,
+            "items": [
+                {
+                    "release_group_id": r["release_group_id"],
+                    "album": r["album"],
+                    "artist": r["artist"],
+                    "year": r["year"],
+                    "last_full_at": r["last_full_at"],
+                    "full_count": r["full_count"],
+                    "manual": r["manual_only"],
+                    "genres": [
+                        {"key": k, "name": genre_title(n)}
+                        for k, n in genres.get(r["release_group_id"], [])[:HEARD_GENRES]
+                    ],
+                }
+                for r in page
+            ],
         }
     )
 

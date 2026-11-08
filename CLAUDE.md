@@ -58,7 +58,12 @@ any of these files, and log the change at its bottom.
   No Docker: integration tests run against Neon dev with `--env dev` or `DATABASE_URL` set (ADR 0005).
 - Run any job against an environment from the laptop: `uv run musicdata --env dev --plain-logs <job>`.
 
-## Current state (2026-10-17)
+## Current state (2026-11-08)
+Heard tab (queue spec v26): the Up next page's Heard tab lists every album with a full session,
+newest full listen first, with up to three genre chips that filter it (`GET /queue/heard`,
+`ranked_genres` in `queue/genres.py`). Dev on push; prod with the next `v*` tag.
+
+## Earlier state (2026-10-17)
 Where listens land (ADR 0015 amendment 2026-10-17, queue spec v24, migration 0030): derive places
 whole sittings by the group whose tracklist plays them (`derive/runs.py`, `listen.placed_by`); a
 compilation is heard when a sitting covers 80% of it, and other compilation listens go to their

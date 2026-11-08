@@ -1,6 +1,14 @@
 from collections import Counter
 
-from musicdata.queue.genres import best_names, genre_key, index_rows, key_of, split_genres, title
+from musicdata.queue.genres import (
+    best_names,
+    genre_key,
+    index_rows,
+    key_of,
+    ranked_genres,
+    split_genres,
+    title,
+)
 
 
 def test_spellings_share_a_key():
@@ -51,3 +59,19 @@ def test_title_keeps_acronyms():
     assert title("uk bass") == "UK bass"
     assert title("musique concrète") == "Musique concrète"
     assert title("idm") == "IDM"
+
+
+def test_ranked_genres_put_the_most_cited_then_the_broadest_first():
+    rows = [
+        (1, "Rock; Psychedelic Rock"),  # two lists say rock for album 1
+        (1, "rock"),
+        (1, "Krautrock"),
+        (2, "Psychedelic rock, Rock"),
+        (3, "Psychedelic Rock"),
+    ]
+    ranked = ranked_genres(rows)
+    assert [k for k, _ in ranked[1]] == ["rock", "psychedelicrock", "krautrock"]
+    # psychedelic rock is on three albums, rock on two: the broader-seen one leads on a tie
+    assert [k for k, _ in ranked[2]] == ["psychedelicrock", "rock"]
+    assert ranked[3] == [("psychedelicrock", "psychedelic rock")]
+    assert 4 not in ranked

@@ -32,6 +32,7 @@ Every listening endpoint takes the same window: `start_date` and `end_date`
 | Everything about an artist | `GET /artists/{artist_id}` |
 | Look up many names at once | `POST /artists/batch` with `{"names": ["Wilco", "Big Thief"]}` |
 | Albums by completion | `GET /albums?min_completion=0.8&sort=recent` |
+| Every album Matt has played through, newest full listen first, with genres | `GET /queue/heard?limit=500` (`offset` pages; `genre=<key>` keeps one genre, e.g. `genre=folkrock`) |
 | Everything about an album | `GET /albums/{release_group_id}` (tracklist with plays per track, sessions) |
 | What Matt should hear next | `GET /next?profile=default` (also `home-genre`, `canon`, `genre-week`; `shuffle=true` for a fresh draw); each album says why it is there |
 | This week's genre, or any genre's albums | `POST /query` with `SELECT * FROM genre_week ORDER BY week_start DESC LIMIT 1`; the page `/genres/{key}/page` (key: the name without accents, spaces or punctuation, e.g. `dreampop`) |

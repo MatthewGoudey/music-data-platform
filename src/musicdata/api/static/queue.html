@@ -109,6 +109,13 @@ h2 { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercas
   align-items: center; font-size: 14px; max-width: calc(100% - 32px); box-shadow: 0 6px 24px rgb(0 0 0 / .25); }
 .toast button { font: 700 14px var(--body); background: none; border: 0; color: inherit; text-decoration: underline; cursor: pointer; }
 .error { color: #b42318; font-size: 13px; }
+.genres { display: inline-flex; flex-wrap: wrap; gap: 4px; vertical-align: baseline; }
+.genre { font: 600 11.5px var(--body); border: 1px solid var(--line); background: transparent; color: var(--ink);
+  border-radius: 999px; padding: 1px 8px; cursor: pointer; }
+.genre[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.filter { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.filter a { color: var(--accent); font-weight: 700; }
+.mini .what a { color: inherit; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
 .tags { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
 .tag { font: 600 12px var(--body); border: 1px dashed var(--line); background: transparent; color: var(--ink); border-radius: 999px; padding: 5px 10px; cursor: pointer; }
 .tag[aria-pressed="true"] { border-style: solid; border-color: var(--accent); color: var(--accent); }
@@ -126,6 +133,7 @@ h2 { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercas
     <nav class="tabs" role="tablist" aria-label="Sections">
       <button class="tab" role="tab" data-tab="upnext" aria-selected="true">Up next</button>
       <button class="tab" role="tab" data-tab="recent" aria-selected="false">Recent listens</button>
+      <button class="tab" role="tab" data-tab="heard" aria-selected="false">Heard</button>
       <button class="tab" role="tab" data-tab="shows" aria-selected="false">Shows</button>
       <button class="tab" role="tab" data-tab="progress" aria-selected="false">Progress</button>
     </nav>
@@ -144,6 +152,11 @@ h2 { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercas
       <h2>Recently finished</h2>
       <div id="recent"></div>
     </section>
+  </div>
+  <div class="panel" data-panel="heard" hidden>
+    <div class="sub" id="heard-sub">Loading…</div>
+    <section class="extra" id="heard" aria-label="Albums played through" aria-live="polite"></section>
+    <div class="more" id="heard-more"></div>
   </div>
   <div class="panel" data-panel="shows" hidden>
     <section class="extra" id="sales-wrap" hidden aria-label="Not on sale yet">
@@ -253,14 +266,89 @@ window.addEventListener("scroll", () => {
   lastY = y;
 }, { passive: true });
 
-// Tabs: Up next, Recent listens, Shows, Progress.
+// Tabs: Up next, Recent listens, Heard, Shows, Progress.
 function showTab(name) {
   document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.tab === name)));
   document.querySelectorAll(".panel").forEach(p => { p.hidden = p.dataset.panel !== name; });
   $("profiles").hidden = name !== "upnext";
   try { localStorage.setItem("queue.tab", name); } catch (e) {}
   window.scrollTo(0, 0);
+  if (name === "heard" && !heard.started) loadHeard();
 }
+
+// Queue spec v26: the Heard tab, every album played through, newest full listen first, a
+// month heading over each month, 100 at a time as the list scrolls. A genre chip filters it.
+const HEARD_PAGE = 100;
+const MONTH = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric", timeZone: "America/Chicago" });
+const heard = { started: false, busy: false, done: false, offset: 0, genre: null, lastMonth: null, seq: 0 };
+function heardRow(i) {
+  const chips = i.genres.map(g => `<button class="genre" type="button" data-genre="${esc(g.key)}"
+    aria-pressed="${g.key === heard.genre}">${esc(g.name)}</button>`).join("");
+  const bits = [i.year ? esc(i.year) : "", i.full_count > 1 ? `played through ${i.full_count}×` : "",
+                i.manual ? "marked played" : ""].filter(Boolean).join(" · ");
+  return `<div class="mini">
+    <div class="what"><a href="${esc(url(`/albums/${i.release_group_id}/page`))}">${esc(i.album)}</a> <span>· ${esc(i.artist)}</span></div>
+    <div class="when">${DAY.format(new Date(i.last_full_at))}</div>
+    <div class="detail">${bits}${bits && chips ? " · " : ""}${chips ? `<span class="genres">${chips}</span>` : ""}</div></div>`;
+}
+function heardSub(m) {
+  const n = m.total.toLocaleString("en-US");
+  if (!heard.genre) {
+    $("heard-sub").textContent = `${n} album${m.total === 1 ? "" : "s"} played through, newest first`;
+    return;
+  }
+  const name = m.genre_name || heard.genre;
+  $("heard-sub").innerHTML = `<span class="filter"><span>${n} ${esc(name)} album${m.total === 1 ? "" : "s"} played through</span>
+    <a href="${esc(url(`/genres/${encodeURIComponent(heard.genre)}/page`))}">Genre page</a>
+    <button class="chip" type="button" data-genre-clear>Show all</button></span>`;
+}
+async function loadHeard(reset = false) {
+  if (reset) {
+    Object.assign(heard, { done: false, offset: 0, lastMonth: null, busy: false, seq: heard.seq + 1 });
+    $("heard").innerHTML = "";
+    $("heard-sub").textContent = "Loading…";
+  }
+  if (heard.busy || heard.done) return;
+  heard.started = true;
+  heard.busy = true;
+  const seq = heard.seq;
+  $("heard-more").textContent = "Loading more…";
+  try {
+    const params = { offset: heard.offset, limit: HEARD_PAGE };
+    if (heard.genre) params.genre = heard.genre;
+    const r = await fetch(url("/queue/heard", params));
+    if (!r.ok) throw new Error(`${r.status}`);
+    const m = await r.json();
+    if (seq !== heard.seq) return;  // a newer filter took over
+    heardSub(m);
+    let html = "";
+    for (const i of m.items) {
+      const month = MONTH.format(new Date(i.last_full_at));
+      if (month !== heard.lastMonth) { html += `<h2>${esc(month)}</h2>`; heard.lastMonth = month; }
+      html += heardRow(i);
+    }
+    $("heard").insertAdjacentHTML("beforeend", html);
+    heard.offset += m.items.length;
+    heard.done = heard.offset >= m.total || !m.items.length;
+    $("heard-more").textContent = heard.done
+      ? (m.total ? "That's every album played through." : "Nothing played through yet.") : "";
+  } catch (e) {
+    if (seq === heard.seq) $("heard-more").textContent = `Couldn't load (${e.message}). Scroll again to retry.`;
+  } finally {
+    if (seq === heard.seq) heard.busy = false;
+  }
+}
+new IntersectionObserver(es => { if (heard.started && es.some(x => x.isIntersecting)) loadHeard(); },
+                         { rootMargin: "600px" }).observe($("heard-more"));
+document.querySelector('[data-panel="heard"]').addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  if (b.dataset.genre !== undefined) heard.genre = heard.genre === b.dataset.genre ? null : b.dataset.genre;
+  else if (b.dataset.genreClear !== undefined) heard.genre = null;
+  else return;
+  window.scrollTo(0, 0);
+  loadHeard(true);
+});
 document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => showTab(t.dataset.tab)));
 
 function card(a, i) {
@@ -484,6 +572,7 @@ async function checkListens() {
     }
     await load({ again: true });
     loadExtras();
+    if (heard.started) loadHeard(true);
     toast(started || s.new_listens
       ? `Listens checked: ${s.new_listens} new`
       : `Up to date: listens checked ${ago(s.last_checked)}`);

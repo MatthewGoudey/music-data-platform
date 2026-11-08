@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+from datetime import datetime
 
 import asyncpg
 import pytest
@@ -369,3 +370,104 @@ def test_twin_listings_are_one_show_with_pooled_sale_times(client) -> None:
         assert client.get("/queue/sales?t=page-token").status_code == 200
     finally:
         asyncio.run(_drop_twins(ids))
+
+
+async def _heard_cleanup(conn: asyncpg.Connection) -> None:
+    await conn.execute("DELETE FROM list_entry WHERE raw_album LIKE 'Zz Heard%'")
+    await conn.execute("DELETE FROM list WHERE slug = 'zz_heard'")
+    await conn.execute(
+        """DELETE FROM album_session WHERE release_group_id IN
+             (SELECT release_group_id FROM release_group WHERE title LIKE 'Zz Heard%')"""
+    )
+    await conn.execute("DELETE FROM release_group WHERE title LIKE 'Zz Heard%'")
+    await conn.execute("DELETE FROM artist WHERE name LIKE 'Zz Heard%'")
+
+
+async def _heard_seed() -> dict[str, int]:
+    """Four made-up albums with manual sessions in 2099, so they lead the Heard tab: Older is
+    played through twice, Newer once, Partial only partly, Never not at all. Older and Partial
+    carry the made-up list genre "Zzheard Alpha"."""
+    conn = await asyncpg.connect(os.environ["DATABASE_URL"])
+    try:
+        await _heard_cleanup(conn)
+        artist = await conn.fetchval(
+            "INSERT INTO artist (name, norm_key) VALUES ('Zz Heard Band', 'zz heard band') RETURNING artist_id"
+        )
+        list_id = await conn.fetchval(
+            """INSERT INTO list (slug, name, goal, ranked)
+               VALUES ('zz_heard', 'Zz Heard: list', 'canon', false) RETURNING list_id"""
+        )
+        ids = {}
+        for n, name in enumerate(("Older", "Newer", "Partial", "Never"), start=1):
+            title = f"Zz Heard {name}"
+            ids[name] = await conn.fetchval(
+                """INSERT INTO release_group (artist_id, title, norm_key, first_release_year)
+                   VALUES ($1, $2, lower($2), 1999) RETURNING release_group_id""",
+                artist,
+                title,
+            )
+            if name in ("Older", "Partial"):
+                await conn.execute(
+                    """INSERT INTO list_entry (list_id, position, raw_artist, raw_album, artist_key,
+                                               album_key, release_group_id, resolve_status, facets)
+                       VALUES ($1, $2, 'Zz Heard Band', $3, 'zz heard band', lower($3), $4,
+                               'resolved', '{"genre": "Zzheard Alpha, Zzheard Beta"}'::jsonb)""",
+                    list_id,
+                    n,
+                    title,
+                    ids[name],
+                )
+        sessions = [
+            ("Older", "2099-01-01", "full"),
+            ("Older", "2099-02-01", "full"),
+            ("Newer", "2099-03-01", "full"),
+            ("Partial", "2099-04-01", "partial"),
+        ]
+        for name, at, kind in sessions:
+            await conn.execute(
+                """INSERT INTO album_session (release_group_id, started_at, ended_at, tracks_played,
+                                              track_count, completion, session_type, source)
+                   VALUES ($1, $2::timestamptz, $2::timestamptz, 5, 10, $3, $4, 'manual')""",
+                ids[name],
+                datetime.fromisoformat(at + "T12:00:00+00:00"),
+                1.0 if kind == "full" else 0.5,
+                kind,
+            )
+        return ids
+    finally:
+        await conn.close()
+
+
+async def _heard_drop() -> None:
+    conn = await asyncpg.connect(os.environ["DATABASE_URL"])
+    try:
+        await _heard_cleanup(conn)
+    finally:
+        await conn.close()
+
+
+def test_queue_heard_lists_albums_played_through_newest_first(client) -> None:
+    ids = asyncio.run(_heard_seed())
+    try:
+        assert client.get("/queue/heard").status_code == 401
+        page = client.get("/queue/heard?t=page-token&limit=2").json()
+        assert [i["release_group_id"] for i in page["items"]] == [ids["Newer"], ids["Older"]]
+        older = page["items"][1]
+        assert older["full_count"] == 2 and older["manual"] is True and older["year"] == 1999
+        assert older["last_full_at"].startswith("2099-02-01")
+        assert [g["key"] for g in older["genres"]] == ["zzheardalpha", "zzheardbeta"]
+        assert page["items"][0]["genres"] == []
+        assert page["total"] >= 2
+        nxt = client.get("/queue/heard?t=page-token&limit=2&offset=1").json()
+        assert nxt["items"][0]["release_group_id"] == ids["Older"]
+
+        only = client.get("/queue/heard?t=page-token&genre=zzheardalpha").json()
+        assert only["total"] == 1 and only["genre_name"] == "Zzheard alpha"
+        assert [i["release_group_id"] for i in only["items"]] == [ids["Older"]]
+        everything = {
+            i["release_group_id"]
+            for i in client.get("/queue/heard?t=page-token&limit=500").json()["items"]
+        }
+        assert ids["Partial"] not in everything and ids["Never"] not in everything
+    finally:
+        asyncio.run(_heard_drop())
