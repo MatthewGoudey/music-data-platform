@@ -304,10 +304,8 @@ def test_check_listens_starts_a_catch_up_and_reports(client, monkeypatch) -> Non
     assert {"running", "last_checked", "new_listens"} <= set(s)
 
 
-def test_queue_trial_sections_recent_and_shows(client) -> None:
-    assert client.get("/queue/recent").status_code == 401
-    recent = client.get("/queue/recent?t=page-token")
-    assert recent.status_code == 200 and isinstance(recent.json()["items"], list)
+def test_queue_shows_section(client) -> None:
+    assert client.get("/queue/shows").status_code == 401
     shows = client.get("/queue/shows?t=page-token")
     assert shows.status_code == 200 and isinstance(shows.json()["items"], list)
     for s in shows.json()["items"]:

@@ -151,51 +151,8 @@ async def check_listens_status(pool: Pool):
     return render_object(await _check_status(pool))
 
 
-RECENT_DAYS = 30
-RECENT_CARDS = 8
 SHOW_DAYS = 180
 SHOW_CARDS = 50
-
-
-@router.get("/queue/recent", dependencies=[Depends(page_or_bearer)])
-async def queue_recent(pool: Pool):
-    """Trial section (spec v7): albums played through in the last 30 days, newest first,
-    each with its history line."""
-    async with connection(pool) as conn:
-        rows = await conn.fetch(
-            f"""SELECT DISTINCT ON (s.release_group_id)
-                       s.release_group_id, s.started_at, s.source, rg.title AS album,
-                       a.name AS artist, st.full_sessions, st.best_completion,
-                       st.tracks_heard, st.track_count
-                  FROM album_session s
-                  JOIN release_group rg USING (release_group_id)
-                  JOIN artist a ON a.artist_id = rg.artist_id
-                  LEFT JOIN release_group_stat st USING (release_group_id)
-                 WHERE s.started_at > now() - interval '{RECENT_DAYS} days'
-                   AND s.session_type = 'full'
-                 ORDER BY s.release_group_id, s.started_at DESC"""
-        )
-    rows = sorted(rows, key=lambda r: r["started_at"], reverse=True)[:RECENT_CARDS]
-    return render_object(
-        {
-            "items": [
-                {
-                    "release_group_id": r["release_group_id"],
-                    "album": r["album"],
-                    "artist": r["artist"],
-                    "played_at": r["started_at"],
-                    "manual": r["source"] == "manual",
-                    "history": history_line(
-                        r["full_sessions"],
-                        r["best_completion"],
-                        r["tracks_heard"],
-                        r["track_count"],
-                    ),
-                }
-                for r in rows
-            ]
-        }
-    )
 
 
 HEARD_GENRES = 3  # genre chips per album on the Heard tab

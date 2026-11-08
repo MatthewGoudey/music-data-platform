@@ -357,7 +357,7 @@ One phone-width column, albums only:
    Play · Pin · Snooze 30 · Snooze 90 · Mark played · Not for me · Tag.
 3. **Progress strip** at the foot: heard / total for each list and for the atlas's Core zone,
    from `/gaps`.
-4. **Heard tab** (v26), from `GET /queue/heard`: every album Matt has played through, on a list or
+4. **Heard tab** (v26; it replaced Recent listens and `GET /queue/recent` in v27), from `GET /queue/heard`: every album Matt has played through, on a list or
    not. An album is in it when it has a full session (section 6, read from `album_session` at read
    time, so Mark played shows at once); its date is its latest full session, and the tab runs
    newest first under month headings (Chicago time), 100 rows at a time as it scrolls. Each row:
@@ -599,3 +599,6 @@ priority Essential. Matt has played other Ratboys records but no session of this
   ordered chronologically by last full listen"; chose a tab on the Up next page, up to three genre
   chips, and chips that filter): the Heard tab (section 13 item 4) and `GET /queue/heard` (section
   12). No rule changes: heard is section 6's full session, genres are section 10a's vocabulary.
+- 2026-11-08 v27 (Matt: "Can we just replace recent listens with this tab? This does the same job
+  better"): the Heard tab takes the place of Recent listens; "Recently finished" (v7) and
+  `GET /queue/recent` are gone. A saved Recent listens tab opens Heard.

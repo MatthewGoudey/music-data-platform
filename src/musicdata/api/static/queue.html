@@ -132,7 +132,6 @@ h2 { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercas
       <button class="chip" id="check" type="button" title="Check listens">Check</button></div>
     <nav class="tabs" role="tablist" aria-label="Sections">
       <button class="tab" role="tab" data-tab="upnext" aria-selected="true">Up next</button>
-      <button class="tab" role="tab" data-tab="recent" aria-selected="false">Recent listens</button>
       <button class="tab" role="tab" data-tab="heard" aria-selected="false">Heard</button>
       <button class="tab" role="tab" data-tab="shows" aria-selected="false">Shows</button>
       <button class="tab" role="tab" data-tab="progress" aria-selected="false">Progress</button>
@@ -146,12 +145,6 @@ h2 { font: 700 13px var(--mono); letter-spacing: .08em; text-transform: uppercas
     <div class="inprogress" id="inprogress" hidden></div>
     <section class="list" id="list" aria-label="Queue" aria-live="polite"></section>
     <div class="more" id="more">Loading more…</div>
-  </div>
-  <div class="panel" data-panel="recent" hidden>
-    <section class="extra" id="recent-wrap" hidden aria-label="Recently finished">
-      <h2>Recently finished</h2>
-      <div id="recent"></div>
-    </section>
   </div>
   <div class="panel" data-panel="heard" hidden>
     <div class="sub" id="heard-sub">Loading…</div>
@@ -266,7 +259,7 @@ window.addEventListener("scroll", () => {
   lastY = y;
 }, { passive: true });
 
-// Tabs: Up next, Recent listens, Heard, Shows, Progress.
+// Tabs: Up next, Heard, Shows, Progress (Heard replaced Recent listens, spec v27).
 function showTab(name) {
   document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.tab === name)));
   document.querySelectorAll(".panel").forEach(p => { p.hidden = p.dataset.panel !== name; });
@@ -512,18 +505,6 @@ function saleLine(s) {
 
 async function loadExtras() {
   try {
-    const r = await fetch(url("/queue/recent"));
-    if (r.ok) {
-      const items = (await r.json()).items;
-      $("recent").innerHTML = items.map(i => `<div class="mini">
-        <div class="what">${esc(i.album)} <span>· ${esc(i.artist)}</span></div>
-        <div class="when">${DAY.format(new Date(i.played_at))}</div>
-        <div class="detail">${esc(i.history)}${i.manual ? " · marked played" : ""}</div></div>`).join("")
-        || `<p class="meta">Nothing played through in the last 30 days.</p>`;
-      $("recent-wrap").hidden = false;
-    }
-  } catch (e) {}
-  try {
     const r = await fetch(url("/queue/sales"));
     if (r.ok) {
       const items = (await r.json()).items;
@@ -642,7 +623,7 @@ document.addEventListener("click", async e => {
 });
 load();
 loadExtras();
-try { const t = localStorage.getItem("queue.tab"); if (t && t !== "upnext") showTab(t); } catch (e) {}
+try { let t = localStorage.getItem("queue.tab"); if (t === "recent") t = "heard"; if (t && t !== "upnext") showTab(t); } catch (e) {}
 </script>
 </body>
 </html>

@@ -59,7 +59,7 @@ any of these files, and log the change at its bottom.
 - Run any job against an environment from the laptop: `uv run musicdata --env dev --plain-logs <job>`.
 
 ## Current state (2026-11-08)
-Heard tab (queue spec v26): the Up next page's Heard tab lists every album with a full session,
+Heard tab (queue spec v26, v27): the Up next page's Heard tab, which replaced Recent listens, lists every album with a full session,
 newest full listen first, with up to three genre chips that filter it (`GET /queue/heard`,
 `ranked_genres` in `queue/genres.py`). Dev on push; prod with the next `v*` tag.
 
